@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Peregrinacion CNC Corrientes 2026</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
+<style>
+:root{
+  --green:#1a7a56;--green-2:#2d9e6e;--green-soft:#e8f5ef;
+  --blue:#1a5fa8;--blue-soft:#e9f1fb;
+  --amber:#b96f08;--amber-soft:#fff4de;
+  --red:#b83232;--red-soft:#fdecea;
+  --ink:#17211b;--muted:#647067;--line:#dde3de;
+  --paper:#ffffff;--bg:#f6f8f6;--soft:#edf1ee;
+  --radius:10px;--shadow:0 8px 28px rgba(18,33,24,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans",Arial,sans-serif;font-size:15px;line-height:1.5}
+button,input,select{font:inherit}
+.page{display:none;min-height:100vh}.page.active{display:block}.page.center.active{display:flex}
+.center{align-items:center;justify-content:center;padding:28px 16px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.login{width:100%;max-width:430px;padding:28px}
+.home{width:100%;max-width:760px;padding:28px}
+.brand{font-family:"DM Serif Display",serif;font-size:2rem;line-height:1.05;margin:0 0 8px}
+.sub{color:var(--muted);font-size:.92rem;margin:0 0 22px}
+.home-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.how{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
+.how div{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px}
+.how b{display:block;margin-bottom:4px}
+.how span{color:var(--muted);font-size:.82rem}
+.form-frame{width:100%;height:78vh;border:0;background:white;border-radius:var(--radius)}
+.field{margin:0 0 13px}
+.field label{display:block;color:var(--muted);font-size:.78rem;font-weight:700;margin-bottom:5px}
+.field input,.field select{width:100%;border:1.5px solid var(--line);border-radius:8px;background:white;color:var(--ink);padding:11px 12px;outline:none}
+.field textarea{width:100%;border:1.5px solid var(--line);border-radius:8px;background:white;color:var(--ink);padding:11px 12px;outline:none;min-height:72px;resize:vertical}
+.field input:focus,.field select:focus{border-color:var(--green)}
+.btn{border:0;border-radius:8px;background:var(--green);color:white;font-weight:700;padding:11px 14px;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:7px}
+.btn:hover{background:var(--green-2)}
+.btn:disabled{background:#aeb8b0;color:#f3f5f3;cursor:not-allowed}
+.btn:disabled:hover{background:#aeb8b0}
+.btn.secondary{background:white;color:var(--green);border:1.5px solid var(--line)}
+.btn.secondary:hover{background:var(--green-soft)}
+.btn.warn{background:var(--amber)}
+.btn.danger{background:var(--red)}
+.btn.small{padding:7px 10px;font-size:.78rem}
+.btn.is-busy{position:relative;pointer-events:none;opacity:.82}
+.btn.is-busy::after{content:"";width:14px;height:14px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .75s linear infinite}
+.link-btn.is-busy,.tab.is-busy{opacity:.65;pointer-events:none}
+.full{width:100%}
+.link-btn{border:0;background:transparent;color:var(--blue);font-weight:700;cursor:pointer;padding:0}
+.staff-link{color:var(--muted);font-size:.78rem;font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.staff-link:hover{color:var(--blue)}
+.err{min-height:20px;color:var(--red);font-size:.82rem;text-align:center;margin-top:10px}
+.wrap{max-width:1080px;margin:0 auto;padding:18px 14px 36px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.title{font-family:"DM Serif Display",serif;font-size:1.55rem;margin:0}
+.toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;border-radius:999px;padding:3px 9px;font-size:.7rem;font-weight:800}
+.pill.ok{background:var(--green-soft);color:var(--green)}
+.pill.pending{background:var(--amber-soft);color:var(--amber)}
+.pill.bad{background:var(--red-soft);color:var(--red)}
+.pill.info{background:var(--blue-soft);color:var(--blue)}
+.name-tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:5px}
+.name-tags .pill{font-size:.66rem;padding:2px 7px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.metric{padding:14px;text-align:center}
+.metric b{display:block;font-size:1.05rem}.metric span{display:block;color:var(--muted);font-size:.72rem;font-weight:700}
+.panel{padding:16px;margin-bottom:10px}
+.person{display:flex;gap:12px;align-items:center}
+.avatar{width:44px;height:44px;border-radius:50%;background:var(--green);color:white;font-weight:800;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.person b{display:block}.person span{color:var(--muted);font-size:.78rem}
+.progress{height:8px;background:var(--soft);border-radius:99px;overflow:hidden;display:flex;margin:12px 0 6px}
+.bar-ok{height:100%;background:var(--green)}.bar-pend{height:100%;background:var(--amber)}
+.legend{display:flex;justify-content:space-between;color:var(--muted);font-size:.72rem}
+.row{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;border-bottom:1px solid var(--line);padding:11px 0}
+.row:last-child{border-bottom:0}
+.row .name{font-weight:700}.row .meta{color:var(--muted);font-size:.78rem}
+.actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+.transfer{background:var(--green-soft);border:1px solid #bcdccb;border-radius:8px;padding:12px;margin-bottom:12px;color:var(--green)}
+.transfer b{display:block;font-size:1.05rem;letter-spacing:.03em}
+.pay-note{background:var(--blue-soft);border:1px solid #c8dbf2;border-radius:8px;padding:12px;margin:10px 0;color:#174f8d}
+.pay-note b{display:block;margin-bottom:4px}
+.choice{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 12px}
+.choice label{display:flex;align-items:flex-start;gap:8px;border:1.5px solid var(--line);border-radius:8px;background:white;padding:10px;cursor:pointer}
+.choice input{margin-top:3px;accent-color:var(--green)}
+.choice span{display:block;color:var(--muted);font-size:.74rem}
+.checks{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+.check{display:flex;gap:10px;align-items:center;border:1.5px solid var(--line);border-radius:8px;background:white;padding:10px;cursor:pointer}
+.check input{accent-color:var(--green)}
+.check.selected{border-color:var(--green);background:var(--green-soft)}
+.drop{border:1.5px dashed var(--line);border-radius:8px;padding:16px;text-align:center;color:var(--muted);position:relative}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.message{display:none;border-radius:8px;padding:10px;margin-top:10px;font-size:.86rem}
+.message.ok{display:block;background:var(--green-soft);color:var(--green)}
+.message.bad{display:block;background:var(--red-soft);color:var(--red)}
+.message.loading{display:block;background:var(--blue-soft);color:#174f8d;padding:18px;text-align:center}
+.prayer-loader{display:flex;flex-direction:column;align-items:center;gap:10px}
+.prayer-icon{width:54px;height:54px;border-radius:50%;border:3px solid #c8dbf2;border-top-color:var(--blue);display:flex;align-items:center;justify-content:center;font-size:1.5rem;animation:spin .9s linear infinite;background:white}
+.prayer-title{font-family:"DM Serif Display",serif;font-size:1.2rem;color:var(--ink)}
+.prayer-text{font-size:.9rem;max-width:360px;color:#174f8d}
+.beads{display:flex;gap:5px;align-items:center;justify-content:center;margin-top:2px}
+.beads span{width:7px;height:7px;border-radius:50%;background:var(--blue);opacity:.35;animation:bead 1.1s ease-in-out infinite}
+.beads span:nth-child(2){animation-delay:.12s}.beads span:nth-child(3){animation-delay:.24s}.beads span:nth-child(4){animation-delay:.36s}.beads span:nth-child(5){animation-delay:.48s}
+@keyframes bead{50%{opacity:1;transform:translateY(-3px)}}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0 10px}
+.tab{border:1.5px solid var(--line);background:white;color:var(--muted);border-radius:999px;padding:7px 12px;font-weight:800;font-size:.78rem;cursor:pointer}
+.tab.active{background:var(--green);border-color:var(--green);color:white}
+.admin-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.search{width:100%;border:1.5px solid var(--line);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+.pay-card{border-left:4px solid var(--line);margin-bottom:9px;overflow:hidden}
+.pay-card.pending{border-left-color:var(--amber)}.pay-card.rejected{border-left-color:var(--red)}
+.pay-head{display:flex;align-items:center;gap:10px;padding:13px 14px;background:white;cursor:pointer}
+.pay-head:hover{background:#fafcfa}
+.pay-head .grow{flex:1;min-width:0}.pay-head b{display:block}.pay-head span{color:var(--muted);font-size:.76rem}
+.chips{display:flex;gap:5px;flex-wrap:wrap;padding:0 14px 10px}
+.chip{border-radius:999px;background:var(--soft);color:var(--muted);font-size:.68rem;font-weight:800;padding:3px 8px}
+.chip.ok{background:var(--green-soft);color:var(--green)}.chip.pending{background:var(--amber-soft);color:var(--amber)}.chip.bad{background:var(--red-soft);color:var(--red)}
+.details{border-top:1px solid var(--line)}
+.comp{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.comp:last-child{border-bottom:0}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;background:white;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+th{background:var(--green);color:white;text-align:left;font-size:.74rem;padding:9px}
+td{border-bottom:1px solid var(--line);padding:8px 9px;font-size:.8rem;vertical-align:middle}
+tr:last-child td{border-bottom:0}
+.dni-expiry{border-radius:8px;padding:7px 8px;border:1px solid transparent}
+.dni-expiry b{display:block}
+.dni-expiry.alert{background:var(--red-soft);border-color:#f1b9b9;color:var(--red)}
+.dni-expiry.alert b{color:var(--red)}
+.dni-expiry.ok{background:var(--green-soft);border-color:#bcdccb;color:var(--green)}
+.filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.filters select,.filters input{border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;background:white;min-width:150px}
+.empty{color:var(--muted);text-align:center;padding:28px 12px}
+.loading{display:flex;flex-direction:column;align-items:center;gap:8px;color:var(--muted);padding:34px}
+.spinner{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--green);border-radius:50%;animation:spin .75s linear infinite}
+.global-loader{position:fixed;inset:0;display:none;align-items:flex-start;justify-content:center;padding-top:18px;background:rgba(246,248,246,.48);z-index:9999;pointer-events:none}
+.global-loader.active{display:flex}
+.global-loader-card{display:flex;align-items:center;gap:10px;background:white;border:1px solid var(--line);border-radius:999px;box-shadow:var(--shadow);padding:10px 14px;color:var(--ink);font-weight:800}
+.global-loader-card .mini-spinner{width:18px;height:18px;border:3px solid var(--line);border-top-color:var(--green);border-radius:50%;animation:spin .75s linear infinite}
+.global-loader-card span{font-size:.86rem}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:760px){
+  .grid3,.admin-grid{grid-template-columns:1fr 1fr}
+  .choice{grid-template-columns:1fr}
+  .home-actions,.how{grid-template-columns:1fr}
+  .row,.comp{flex-direction:column}
+  .actions{justify-content:flex-start}
+  .login{padding:22px}
+}
+</style>
+</head>
+<body>
+<div id="global-loader" class="global-loader" aria-live="polite" aria-hidden="true">
+  <div class="global-loader-card">
+    <div class="mini-spinner"></div>
+    <span id="global-loader-text">Evangelizando...</span>
+  </div>
+</div>
+<main id="page-home" class="page center active">
+  <section class="home card">
+    <h1 class="brand">Peregrinacion CNC Corrientes 2026</h1>
+    <p class="sub">Inscripcion y gestion de pagos en un solo lugar. Si todavia no completaste el formulario, empeza por la inscripcion. Si ya estas inscripto, entra al portal con tu DNI y email.</p>
+    <div class="home-actions">
+      <button class="btn full" onclick="showPage('page-form')">Inscribirme</button>
+      <button class="btn secondary full" onclick="showPage('page-login')">Entrar al portal de pagos</button>
+    </div>
+    <div class="how">
+      <div><b>1. Inscripcion</b><span>Completa el formulario con tus datos reales, DNI y email de acceso.</span></div>
+      <div><b>2. Portal</b><span>Ingresa con DNI y email para ver tus cuotas y vencimientos.</span></div>
+      <div><b>3. Pagos</b><span>Subi el comprobante de transferencia o la foto del recibo si pagaste en efectivo.</span></div>
+    </div>
+    <div style="text-align:center;margin-top:18px">
+      <button class="link-btn staff-link" onclick="showPage('page-admin-login')">Acceso catequistas</button>
+    </div>
+  </section>
+</main>
+
+<main id="page-form" class="page">
+  <div class="wrap">
+    <div class="top">
+      <h2 class="title">Inscripcion</h2>
+      <div class="toolbar">
+        <button class="btn secondary small" onclick="showPage('page-home')">Volver</button>
+      </div>
+    </div>
+    <section class="card panel">
+      <iframe class="form-frame" src="https://docs.google.com/forms/d/e/1FAIpQLSctYu1qNNiZ1QbrdMh2Azgnwy__bNQK56-TL-A6xrv9tlpUgA/viewform?embedded=true">Cargando...</iframe>
+    </section>
+  </div>
+</main>
+
+<main id="page-login" class="page center">
+  <section class="login card">
+    <h1 class="brand">Peregrinacion CNC Corrientes</h1>
+    <p class="sub">Consulta tu estado de cuotas y carga comprobantes con tu DNI y el email usado en la inscripcion.</p>
+    <div class="field"><label>DNI</label><input id="login-dni" inputmode="numeric" autocomplete="off"></div>
+    <div class="field"><label>Email del portal de pagos</label><input id="login-email" type="email" autocomplete="email"></div>
+    <button class="btn full" onclick="buscarParticipante()">Ingresar</button>
+    <div id="login-err" class="err"></div>
+    <div style="text-align:center;margin-top:18px">
+      <button class="link-btn" onclick="showPage('page-home')">Volver al inicio</button>
+      <span style="color:var(--line);margin:0 8px">|</span>
+      <button class="link-btn staff-link" onclick="showPage('page-admin-login')">Acceso catequistas</button>
+    </div>
+  </section>
+</main>
+
+<main id="page-state" class="page">
+  <div class="wrap">
+    <div class="top">
+      <h2 class="title">Mi estado</h2>
+      <div class="toolbar">
+        <button class="btn secondary small" onclick="showProfile()">Mis datos</button>
+        <button class="btn secondary small" onclick="showErrorReport()">Reportar error</button>
+        <button class="btn secondary small" onclick="showPage('page-login')">Salir</button>
+      </div>
+    </div>
+    <div id="state-loading" class="loading"><div class="spinner"></div><span>Cargando...</span></div>
+    <div id="state-content" style="display:none">
+      <section class="card panel person">
+        <div id="state-avatar" class="avatar">--</div>
+        <div>
+          <b id="state-name"></b>
+          <span id="state-info"></span>
+        </div>
+      </section>
+      <section class="card panel">
+        <div style="font-weight:800">Alias Mercado Pago</div>
+        <div style="font-size:1.1rem;color:var(--green);font-weight:800;letter-spacing:.03em" id="state-alias"></div>
+        <p class="sub" style="margin:6px 0 0">Para acreditar cada cuota, subi el comprobante de transferencia o la foto del recibo si pagaste en efectivo. Los pagos en efectivo quedan pendientes hasta que el responsable entregue el dinero.</p>
+      </section>
+      <section id="state-alert" class="panel card" style="display:none;background:var(--amber-soft);color:var(--amber)"></section>
+      <section class="grid3">
+        <div class="metric card"><b id="state-paid">$0</b><span>Confirmado</span></div>
+        <div class="metric card"><b id="state-review">$0</b><span>En revision</span></div>
+        <div class="metric card"><b id="state-missing">$0</b><span>Pendiente</span></div>
+      </section>
+      <section class="card panel">
+        <div class="progress"><div id="state-bar-ok" class="bar-ok"></div><div id="state-bar-pend" class="bar-pend"></div></div>
+        <div class="legend"><span id="state-leg-ok"></span><span id="state-leg-pend"></span><span id="state-leg-missing"></span></div>
+      </section>
+      <section class="card panel">
+        <div style="font-weight:800;margin-bottom:4px">Cuotas</div>
+        <div id="state-fees"></div>
+      </section>
+    </div>
+  </div>
+</main>
+
+<main id="page-profile" class="page">
+  <div class="wrap" style="max-width:620px">
+    <div class="top">
+      <h2 class="title">Mis datos</h2>
+      <button class="btn secondary small" onclick="refreshState()">Volver</button>
+    </div>
+    <section class="card panel">
+      <p class="sub">Podes proponer cambios de contacto. Un catequista debe aprobarlos antes de que impacten en tu inscripcion.</p>
+      <div class="field"><label>Celular</label><input id="profile-celular"></div>
+      <div class="field"><label>Telefono de emergencia</label><input id="profile-emergencia"></div>
+      <div class="field"><label>Parroquia</label><input id="profile-parroquia"></div>
+      <div class="field"><label>Comunidad</label><input id="profile-comunidad"></div>
+      <div class="field"><label>Restricciones alimentarias</label><textarea id="profile-restricciones"></textarea></div>
+      <button class="btn full" onclick="submitProfileChange()">Enviar cambios para aprobacion</button>
+      <div id="profile-msg" class="message"></div>
+    </section>
+  </div>
+</main>
+
+<main id="page-error-report" class="page">
+  <div class="wrap" style="max-width:620px">
+    <div class="top">
+      <h2 class="title">Reportar error</h2>
+      <button class="btn secondary small" onclick="refreshState()">Volver</button>
+    </div>
+    <section class="card panel">
+      <p class="sub">Contanos si ves datos incorrectos, un pago que no aparece o cualquier problema del portal.</p>
+      <div class="field"><label>Descripcion del problema</label><textarea id="error-message"></textarea></div>
+      <button class="btn full" onclick="submitErrorReport()">Enviar reporte</button>
+      <div id="error-msg" class="message"></div>
+    </section>
+  </div>
+</main>
+
+<main id="page-payment" class="page">
+  <div class="wrap" style="max-width:560px">
+    <div class="top">
+      <h2 class="title">Registrar pago</h2>
+      <button class="btn secondary small" onclick="refreshState()">Volver</button>
+    </div>
+    <section class="card panel">
+      <div class="transfer">
+        <span>Datos para transferir</span>
+        <b id="transfer-alias"></b>
+        <div id="transfer-detail"></div>
+      </div>
+      <div class="pay-note">
+        <b id="payment-note-title">Como registrar tu pago</b>
+        <div id="payment-note-main">Transferi por Mercado Pago y subi el comprobante donde se vea tu nombre, el destino y el numero de comprobante.</div>
+        <div id="payment-note-extra" style="margin-top:5px">El comprobante quedara en revision hasta que lo validen los catequistas.</div>
+      </div>
+      <div id="payment-form">
+        <div class="field" style="display:none">
+          <label>Medio de pago</label>
+          <div class="choice">
+            <label><input type="radio" name="medio-pago" value="Transferencia Mercado Pago" checked onchange="updatePaymentMode()"><div><b>Transferencia</b><span>Comprobante de Mercado Pago</span></div></label>
+            <label><input type="radio" name="medio-pago" value="Efectivo" onchange="updatePaymentMode()"><div><b>Efectivo</b><span>Sin comprobante adjunto</span></div></label>
+          </div>
+        </div>
+        <div id="cash-responsible-wrap" class="field" style="display:none">
+          <label>Nombre y apellido del responsable</label>
+          <input id="cash-responsible" placeholder="Ej: Maria Gonzalez" oninput="updateSubmitPaymentState()">
+          <p class="sub" style="margin:5px 0 0">Subi la foto del recibo que te entregue tu responsable. El pago queda en verificacion y recien impactara cuando tu responsable entregue el dinero al catequista.</p>
+        </div>
+        <div id="payment-checks" class="checks"></div>
+        <div id="payment-total" class="transfer" style="display:none;background:var(--blue-soft);color:var(--blue)"></div>
+        <div id="file-upload-wrap" class="drop">
+          <input id="payment-file" type="file" accept="image/*,.pdf" onchange="onPaymentFile()">
+          <b>Adjuntar comprobante</b>
+          <div id="payment-file-name">Imagen o PDF, hasta 10 MB</div>
+        </div>
+        <button id="btn-submit-payment" class="btn full" style="margin-top:12px" onclick="registrarPago()" disabled>Enviar comprobante</button>
+      </div>
+      <div id="payment-msg" class="message"></div>
+    </section>
+  </div>
+</main>
+
+<main id="page-admin-login" class="page center">
+  <section class="login card">
+    <h1 class="brand">Acceso catequistas</h1>
+    <p class="sub">Espacio reservado para responsables de la peregrinacion.</p>
+    <div class="field"><label>Clave</label><input id="admin-pass" type="password"></div>
+    <button class="btn full" onclick="loginAdmin()">Ingresar</button>
+    <div id="admin-login-err" class="err"></div>
+    <div style="text-align:center;margin-top:18px">
+      <button class="link-btn" onclick="showPage('page-login')">Volver al portal</button>
+    </div>
+  </section>
+</main>
+
+<main id="page-admin" class="page">
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h2 class="title">Gestion</h2>
+        <span id="admin-role" class="pill info"></span>
+      </div>
+      <div class="toolbar">
+        <button class="btn secondary small" onclick="refreshAdmin()">Actualizar</button>
+        <button class="btn secondary small" onclick="exportCSV()">Exportar CSV</button>
+        <button class="btn secondary small" onclick="showPage('page-admin-login')">Salir</button>
+      </div>
+    </div>
+    <div id="admin-stats" class="admin-grid"></div>
+    <div class="tabs">
+      <button id="tab-payments" class="tab active" onclick="setAdminView('payments')">Pagos</button>
+      <button id="tab-people" class="tab" onclick="setAdminView('people')">Inscriptos</button>
+      <button id="tab-profile" class="tab" onclick="setAdminView('profile')">Cambios de datos</button>
+    </div>
+    <section id="admin-payments">
+      <div class="tabs">
+        <button id="filter-pending" class="tab active" onclick="setPaymentFilter('pendiente')">Por revisar</button>
+        <button id="filter-all" class="tab" onclick="setPaymentFilter('todos')">Todos</button>
+        <button id="filter-rejected" class="tab" onclick="setPaymentFilter('rechazados')">No validados</button>
+        <button id="filter-ok" class="tab" onclick="setPaymentFilter('aldia')">Al dia</button>
+      </div>
+      <input id="admin-search" class="search" placeholder="Buscar por nombre o DNI" oninput="adminSearch=this.value;renderPayments()">
+      <div id="payments-list"></div>
+    </section>
+    <section id="admin-people" style="display:none">
+      <div class="filters">
+        <select id="people-state" onchange="renderPeople()">
+          <option value="">Todos los estados</option>
+          <option value="sin_pagos">Sin pagos</option>
+          <option value="en_revision">En revision</option>
+          <option value="al_dia">Al dia</option>
+          <option value="debe_vencidas">Debe vencidas</option>
+          <option value="pago_completo">Pago completo</option>
+          <option value="comprobante_rechazado">No validado</option>
+          <option value="lista_espera">Lista de espera</option>
+          <option value="baja">Bajas</option>
+        </select>
+        <select id="people-parish" onchange="renderPeople()"><option value="">Todas las parroquias</option></select>
+        <select id="people-community" onchange="renderPeople()"><option value="">Todas las comunidades</option></select>
+        <select id="people-dni-order" onchange="renderPeople()">
+          <option value="">Orden original</option>
+          <option value="dni_vence_asc">DNI vence primero</option>
+          <option value="dni_vence_desc">DNI vence ultimo</option>
+        </select>
+        <input id="people-search" placeholder="Buscar..." oninput="renderPeople()">
+      </div>
+      <div class="table-wrap"><table><thead><tr><th>#</th><th>Nombre</th><th>DNI</th><th>Vto. DNI</th><th>Parroquia</th><th>Comunidad</th><th>Cupo</th><th>Estado</th><th>Confirmado</th><th>Acciones</th></tr></thead><tbody id="people-body"></tbody></table></div>
+    </section>
+    <section id="admin-profile" style="display:none">
+      <div id="profile-requests"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbxp9IG2bDtgNmJNhtUrR1yjdhDXoP9VjMIuzRzUnKgUNlxjWCXddJJIcEbh7m8SL-iDlA/exec';
+const ALIAS = 'alias.mercadopago';
+const CVU = 'TU_CVU';
+const TITULAR = 'TU_TITULAR';
+const CLD_CLOUD = 'dimunrwrl';
+const CLD_PRESET = 'peregrinacion_cnc_ctes_2026';
+const EVENTO = 'Peregrinacion de Jovenes - CNC Corrientes 2026';
+const PORTAL_URL = window.location.origin + window.location.pathname;
+
+const PLAN_PAGOS = [
+  { key:'cuota1', label:'1ra cuota', monto:35000, vencimiento:'30/06/2026' },
+  { key:'cuota2', label:'2da cuota', monto:35000, vencimiento:'31/07/2026' },
+  { key:'cuota3', label:'3ra cuota', monto:35000, vencimiento:'31/08/2026' },
+  { key:'cuota4', label:'4ta cuota', monto:35000, vencimiento:'30/09/2026' },
+];
+const TOTAL = PLAN_PAGOS.reduce((a,c)=>a+c.monto,0);
+const MAP_PLAN = Object.fromEntries(PLAN_PAGOS.map(c=>[c.key,c]));
+const STATE_LABELS = {
+  sin_pagos:'Sin pagos', en_revision:'En revision', al_dia:'Al dia',
+  debe_vencidas:'Debe vencidas', pago_completo:'Pago completo',
+  comprobante_rechazado:'No validado', lista_espera:'Lista espera', baja:'Dado de baja'
+};
+
+let estadoData = null;
+let loginEmail = '';
+let adminToken = '';
+let adminRole = '';
+let adminData = null;
+let peopleData = null;
+let paymentFilter = 'pendiente';
+let adminView = 'payments';
+let adminSearch = '';
+let paymentMode = 'transferencia';
+let busyCount = 0;
+
+function $(id){ return document.getElementById(id); }
+function showGlobalLoading(text){
+  busyCount++;
+  const el = $('global-loader');
+  const label = $('global-loader-text');
+  if(label) label.textContent = text || 'Evangelizando...';
+  if(el){ el.classList.add('active'); el.setAttribute('aria-hidden','false'); }
+}
+function hideGlobalLoading(){
+  busyCount = Math.max(0, busyCount - 1);
+  if(busyCount) return;
+  const el = $('global-loader');
+  if(el){ el.classList.remove('active'); el.setAttribute('aria-hidden','true'); }
+}
+function pulseButton(btn){
+  if(!btn || btn.disabled || btn.classList.contains('is-busy')) return;
+  btn.classList.add('is-busy');
+  setTimeout(() => btn.classList.remove('is-busy'), 900);
+}
+function money(n){ return '$' + Number(n || 0).toLocaleString('es-AR'); }
+function keys(str){ return (str || '').split(',').map(s=>s.trim()).filter(Boolean); }
+function cuotaLabel(str, sep){ return keys(str).map(k => MAP_PLAN[k] ? MAP_PLAN[k].label : k).join(sep || ' + '); }
+function hasVisibleComprobante(url){ return !!url && url !== '(adjunto pendiente)' && url !== '(efectivo sin comprobante)'; }
+function initials(name){ const p=(name||'').trim().split(/\s+/); return ((p[0]||'?')[0]+(p[1]||'?')[0]).toUpperCase(); }
+function isVencida(fecha){
+  const [day, month, year] = (fecha || '').split('/').map(Number);
+  if(!day || !month || !year) return false;
+  const limite = new Date(year, month - 1, day);
+  limite.setHours(23, 59, 59, 999);
+  return new Date() > limite;
+}
+function showPage(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); $(id).classList.add('active'); window.scrollTo(0,0); }
+function setGoPayVisible(visible){
+  const btn = $('btn-go-pay');
+  if(btn) btn.style.display = visible ? 'block' : 'none';
+}
+function buildUrl(action, params){
+  const url = new URL(API);
+  url.searchParams.set('action', action);
+  Object.entries(params || {}).forEach(([k,v]) => url.searchParams.set(k, v == null ? '' : v));
+  return url.toString();
+}
+async function api(action, params){
+  if(API.includes('TU_ID_DE_SCRIPT')){
+    throw new Error('API_SIN_CONFIGURAR');
+  }
+  showGlobalLoading('Evangelizando...');
+  try{
+    const res = await fetch(buildUrl(action, params));
+    return await res.json();
+  }finally{
+    hideGlobalLoading();
+  }
+}
+function badge(text, kind){ return '<span class="pill '+(kind||'info')+'">'+text+'</span>'; }
+
+async function buscarParticipante(){
+  const dni = $('login-dni').value.trim();
+  const email = $('login-email').value.trim();
+  if(!dni){ $('login-err').textContent='Ingresa tu DNI.'; return; }
+  if(!email){ $('login-err').textContent='Ingresa tu email.'; return; }
+  loginEmail = email;
+  $('login-err').textContent='';
+  showPage('page-state');
+  $('state-loading').style.display='flex';
+  $('state-content').style.display='none';
+  try{
+    const data = await api('getEstado', { dni, email });
+    if(!data.ok){ showPage('page-login'); $('login-err').textContent=data.error || 'No se pudo ingresar.'; return; }
+    estadoData = data;
+    renderState();
+  }catch(e){
+    console.error(e);
+    showPage('page-login');
+    $('login-err').textContent = e.message === 'API_SIN_CONFIGURAR'
+      ? 'Falta configurar la URL real de Apps Script en index.html.'
+      : 'Error de conexion. Revisa la configuracion del API.';
+  }
+}
+
+function renderState(){
+  const d = estadoData;
+  const r = d.resumen || {};
+  const totalPlan = TOTAL;
+  const faltante = Math.max(0, totalPlan - (r.totalPagado || 0) - (r.totalPendConf || 0));
+  const okPct = totalPlan ? Math.round((r.totalPagado || 0) / totalPlan * 100) : 0;
+  const pendPct = totalPlan ? Math.round((r.totalPendConf || 0) / totalPlan * 100) : 0;
+
+  $('state-avatar').textContent = initials(d.nombre);
+  $('state-name').textContent = d.nombre;
+  $('state-info').textContent = 'DNI ...' + String(d.dni).slice(-4) + ' - ' + (d.parroquia || '') + (d.comunidad ? ' - ' + d.comunidad : '');
+  $('state-alias').textContent = ALIAS;
+  $('state-paid').textContent = money(r.totalPagado);
+  $('state-review').textContent = money(r.totalPendConf);
+  $('state-missing').textContent = money(faltante);
+  $('state-bar-ok').style.width = okPct + '%';
+  $('state-bar-pend').style.width = pendPct + '%';
+  $('state-leg-ok').textContent = okPct + '% confirmado';
+  $('state-leg-pend').textContent = pendPct + '% en revision';
+  $('state-leg-missing').textContent = Math.max(0, 100 - okPct - pendPct) + '% pendiente';
+
+  const alert = $('state-alert');
+  alert.style.display = 'none';
+  if(d.estadoCupo === 'lista_espera'){
+    alert.style.display = 'block';
+    alert.textContent = 'Estas en lista de espera. Por ahora no hace falta que cargues pagos.';
+    setGoPayVisible(false);
+  } else if(d.estadoCupo === 'baja'){
+    alert.style.display = 'block';
+    alert.textContent = 'Tu inscripcion figura dada de baja.';
+    setGoPayVisible(false);
+  } else {
+    setGoPayVisible(true);
+    const pendingCount = (d.pagos || []).filter(p => p.estado === 'pendiente').length;
+    if(pendingCount){
+      alert.style.display = 'block';
+      alert.textContent = 'Tenes ' + pendingCount + ' comprobante(s) en revision.';
+    }
+  }
+
+  $('state-fees').innerHTML = PLAN_PAGOS.map(c => {
+    const pagos = (d.pagos || []).filter(p => keys(p.cuotas).includes(c.key));
+    const activo = pagos.find(p => p.estado !== 'rechazado');
+    const rechazado = !activo ? pagos.find(p => p.estado === 'rechazado') : null;
+    const p = activo || rechazado;
+    let state = 'Pendiente', kind = '';
+    if(activo && activo.estado === 'confirmado'){ state = 'Confirmado'; kind = 'ok'; }
+    else if(activo && activo.estado === 'pendiente'){ state = 'En revision'; kind = 'pending'; }
+    else if(rechazado){ state = 'No validado'; kind = 'bad'; }
+    else if(isVencida(c.vencimiento)){ state = 'Vencido'; kind = 'bad'; }
+    const link = p && hasVisibleComprobante(p.comprobanteUrl)
+      ? '<a class="link-btn" href="'+p.comprobanteUrl+'" target="_blank">Ver comprobante</a>' : '';
+    const idx = PLAN_PAGOS.findIndex(x => x.key === c.key);
+    const cargadas = [...new Set([...(r.confirmadas || []), ...(r.pendientes || [])])];
+    const previasOk = PLAN_PAGOS.slice(0, idx).every(prev => cargadas.includes(prev.key));
+    const puedeCargar = d.estadoCupo !== 'lista_espera' && d.estadoCupo !== 'baja' && previasOk && (!activo || activo.estado === 'rechazado');
+    const bloquear = !previasOk && (!activo || activo.estado === 'rechazado') ? '<span class="meta">Completa la cuota anterior primero.</span>' : '';
+    const cargar = puedeCargar
+      ? `<button class="btn small" onclick="showPayment('${c.key}','transferencia')">Cargar comprobante de transferencia</button><button class="btn secondary small" onclick="showPayment('${c.key}','efectivo')">Cargar pago en efectivo</button>`
+      : bloquear;
+    return '<div class="row"><div><div class="name">'+c.label+'</div><div class="meta">Vence '+c.vencimiento+' - '+money(c.monto)+'</div>'+link+'</div><div class="actions">'+badge(state,kind)+cargar+'</div></div>';
+  }).join('');
+
+  $('state-loading').style.display='none';
+  $('state-content').style.display='block';
+}
+
+function showProfile(){
+  if(!estadoData){ showPage('page-login'); return; }
+  $('profile-celular').value = estadoData.celular || '';
+  $('profile-emergencia').value = estadoData.emergencia || '';
+  $('profile-parroquia').value = estadoData.parroquia || '';
+  $('profile-comunidad').value = estadoData.comunidad || '';
+  $('profile-restricciones').value = estadoData.restricciones || '';
+  $('profile-msg').className = 'message';
+  $('profile-msg').textContent = '';
+  showPage('page-profile');
+}
+
+function showErrorReport(){
+  if(!estadoData){ showPage('page-login'); return; }
+  $('error-message').value = '';
+  $('error-msg').className = 'message';
+  $('error-msg').textContent = '';
+  showPage('page-error-report');
+}
+
+async function submitErrorReport(){
+  if(!estadoData) return;
+  try{
+    const data = await api('reportarError', {
+      dni: estadoData.dni,
+      email: loginEmail,
+      mensaje: $('error-message').value
+    });
+    showMsg('error-msg', data.mensaje || data.error || 'Reporte enviado.', !!data.ok);
+  }catch(e){
+    showMsg('error-msg', e.message || 'No se pudo enviar el reporte.', false);
+  }
+}
+
+async function submitProfileChange(){
+  if(!estadoData) return;
+  try{
+    const data = await api('solicitarCambioPerfil', {
+      dni: estadoData.dni,
+      email: loginEmail,
+      celular: $('profile-celular').value,
+      emergencia: $('profile-emergencia').value,
+      parroquia: $('profile-parroquia').value,
+      comunidad: $('profile-comunidad').value,
+      restricciones: $('profile-restricciones').value
+    });
+    showMsg('profile-msg', data.mensaje || data.error || 'Solicitud enviada.', !!data.ok);
+  }catch(e){
+    showMsg('profile-msg', e.message || 'No se pudo enviar la solicitud.', false);
+  }
+}
+
+function showPayment(preselectKey, mode){
+  paymentMode = mode === 'efectivo' ? 'efectivo' : 'transferencia';
+  showPage('page-payment');
+  $('transfer-alias').textContent = ALIAS;
+  $('transfer-detail').innerHTML = 'CVU: ' + CVU + '<br>Titular: ' + TITULAR;
+  $('payment-msg').className = 'message';
+  $('payment-msg').textContent = '';
+  $('payment-form').style.display = 'block';
+  $('payment-file').value = '';
+  $('payment-file-name').textContent = 'Imagen o PDF, hasta 10 MB';
+  $('cash-responsible').value = '';
+  const transferRadio = document.querySelector('input[name="medio-pago"][value="Transferencia Mercado Pago"]');
+  const cashRadio = document.querySelector('input[name="medio-pago"][value="Efectivo"]');
+  if(transferRadio) transferRadio.checked = paymentMode === 'transferencia';
+  if(cashRadio) cashRadio.checked = paymentMode === 'efectivo';
+  updatePaymentMode();
+  const r = estadoData.resumen || {};
+  const disponibles = PLAN_PAGOS.filter(c => !(r.confirmadas || []).includes(c.key) && !(r.pendientes || []).includes(c.key));
+  if(!disponibles.length){
+    $('payment-form').innerHTML = '<div class="empty">Todas las cuotas ya tienen comprobante registrado.</div>';
+    return;
+  }
+  const cargadas = [...new Set([...(r.confirmadas || []), ...(r.pendientes || [])])];
+  $('payment-checks').innerHTML = disponibles.map(c => {
+    const idx = PLAN_PAGOS.findIndex(x => x.key === c.key);
+    const faltanPrevias = PLAN_PAGOS.slice(0, idx).filter(prev => !cargadas.includes(prev.key) && prev.key !== c.key);
+    const disabled = faltanPrevias.length ? 'disabled' : '';
+    const hint = faltanPrevias.length ? '<br><span class="meta">Primero carga: '+faltanPrevias.map(x=>x.label).join(', ')+'</span>' : '';
+    return '<label class="check '+(preselectKey === c.key && !disabled ? 'selected' : '')+'"><input type="checkbox" value="'+c.key+'" '+(preselectKey === c.key && !disabled ? 'checked' : '')+' '+disabled+' onchange="toggleCheck(this);updatePaymentTotal()"><span><b>'+c.label+'</b><br><span class="meta">'+money(c.monto)+' - vence '+c.vencimiento+'</span>'+hint+'</span></label>';
+  }
+  ).join('');
+  updatePaymentTotal();
+}
+
+function toggleCheck(input){ input.closest('.check').classList.toggle('selected', input.checked); updateSubmitPaymentState(); }
+function selectedPaymentKeys(){ return Array.from(document.querySelectorAll('#payment-checks input:checked')).map(i=>i.value); }
+function updatePaymentTotal(){
+  const total = selectedPaymentKeys().reduce((a,k)=>a+(MAP_PLAN[k] ? MAP_PLAN[k].monto : 0),0);
+  $('payment-total').style.display = total ? 'block' : 'none';
+  $('payment-total').textContent = total ? 'Total seleccionado: ' + money(total) : '';
+  updateSubmitPaymentState();
+}
+function updatePaymentMode(){
+  const medio = (document.querySelector('input[name="medio-pago"]:checked') || {}).value || '';
+  const cash = medio.toLowerCase().includes('efectivo');
+  paymentMode = cash ? 'efectivo' : 'transferencia';
+  $('cash-responsible-wrap').style.display = cash ? 'block' : 'none';
+  $('file-upload-wrap').style.display = 'block';
+  $('btn-submit-payment').textContent = cash ? 'Registrar pago en efectivo' : 'Enviar comprobante';
+  if(cash){
+    $('payment-note-title').textContent = 'Pago en efectivo';
+    $('payment-note-main').textContent = 'Indica el nombre y apellido de tu responsable y subi una foto del recibo que te entregue.';
+    $('payment-note-extra').textContent = 'El pago queda en verificacion y recien impactara cuando tu responsable entregue el dinero al catequista.';
+    $('payment-file-name').textContent = 'Foto del recibo o PDF, hasta 10 MB';
+  }else{
+    $('payment-note-title').textContent = 'Comprobante de transferencia';
+    $('payment-note-main').textContent = 'Transferi por Mercado Pago y subi el comprobante donde se vea tu nombre, el destino y el numero de comprobante.';
+    $('payment-note-extra').textContent = 'El comprobante quedara en revision hasta que lo validen los catequistas.';
+    $('payment-file-name').textContent = 'Imagen o PDF, hasta 10 MB';
+  }
+  updateSubmitPaymentState();
+}
+function onPaymentFile(){
+  const f = $('payment-file').files[0];
+  $('payment-file-name').textContent = f ? f.name : 'Imagen o PDF, hasta 10 MB';
+  updateSubmitPaymentState();
+}
+function updateSubmitPaymentState(){
+  const btn = $('btn-submit-payment');
+  if(!btn) return;
+  const hasFee = selectedPaymentKeys().length > 0;
+  const hasFile = !!($('payment-file') && $('payment-file').files && $('payment-file').files[0]);
+  const medio = (document.querySelector('input[name="medio-pago"]:checked') || {}).value || '';
+  const cash = medio.toLowerCase().includes('efectivo');
+  const cashOk = !cash || (($('cash-responsible').value || '').trim().length > 3);
+  const fileOk = hasFile;
+  btn.disabled = !(hasFee && fileOk && cashOk);
+}
+async function subirACloudinary(file){
+  if(CLD_CLOUD.includes('TU_') || CLD_PRESET.includes('TU_')){
+    throw new Error('Falta configurar Cloudinary para guardar los comprobantes.');
+  }
+  showGlobalLoading('Subiendo comprobante...');
+  try{
+    const form = new FormData();
+    form.append('file', file);
+    form.append('upload_preset', CLD_PRESET);
+    form.append('folder', 'peregrinacion-cnc/' + estadoData.dni);
+    const res = await fetch('https://api.cloudinary.com/v1_1/' + CLD_CLOUD + '/auto/upload', { method:'POST', body:form });
+    const data = await res.json();
+    if(!res.ok || !data.secure_url) throw new Error((data.error && data.error.message) || 'No se pudo subir el comprobante.');
+    return data.secure_url;
+  }finally{
+    hideGlobalLoading();
+  }
+}
+function showMsg(id, text, ok){ const el=$(id); el.textContent=text; el.className='message '+(ok?'ok':'bad'); }
+function showPaymentLoading(){
+  const el = $('payment-msg');
+  el.className = 'message loading';
+  el.innerHTML = '<div class="prayer-loader"><div class="prayer-icon">✚</div><div class="prayer-title">Estamos cargando tu comprobante</div><div class="prayer-text">Mientras esperas, reza un Ave Maria. Cuando termine la subida te avisamos aca mismo.</div><div class="beads"><span></span><span></span><span></span><span></span><span></span></div></div>';
+}
+function showPaymentLoading(){
+  const el = $('payment-msg');
+  el.className = 'message loading';
+  const title = paymentMode === 'efectivo' ? 'Estamos registrando tu pago en efectivo' : 'Estamos cargando tu comprobante';
+  const text = paymentMode === 'efectivo' ? 'Mientras esperas, reza un Ave Maria. Enseguida dejamos el pago en verificacion.' : 'Mientras esperas, reza un Ave Maria. Cuando termine la subida te avisamos aca mismo.';
+  el.innerHTML = '<div class="prayer-loader"><div class="prayer-icon">+</div><div class="prayer-title">'+title+'</div><div class="prayer-text">'+text+'</div><div class="beads"><span></span><span></span><span></span><span></span><span></span></div></div>';
+}
+
+async function registrarPago(){
+  const cuotas = selectedPaymentKeys();
+  const file = $('payment-file').files[0];
+  const medioPago = (document.querySelector('input[name="medio-pago"]:checked') || {}).value || '';
+  const responsableEfectivo = ($('cash-responsible').value || '').trim();
+  const isCash = medioPago.toLowerCase().includes('efectivo');
+  if(!cuotas.length){ showMsg('payment-msg','Selecciona al menos una cuota.',false); return; }
+  if(!file){ showMsg('payment-msg', isCash ? 'Adjunta la foto del recibo del pago en efectivo.' : 'Adjunta el comprobante de Mercado Pago.', false); return; }
+  if(isCash && !responsableEfectivo){ showMsg('payment-msg','Indica nombre y apellido del responsable que recibio el efectivo.',false); return; }
+  if(file && file.size > 10 * 1024 * 1024){ showMsg('payment-msg','El archivo supera 10 MB.',false); return; }
+  $('payment-form').style.display='none';
+  showPaymentLoading();
+  try{
+    const comprobanteUrl = await subirACloudinary(file);
+    const data = await api('registrarPago', {
+      dni: estadoData.dni,
+      email: loginEmail,
+      cuotas: cuotas.join(','),
+      medioPago,
+      responsableEfectivo,
+      comprobanteUrl,
+      comprobanteNombre: file.name,
+      comprobanteTipo: file.type || ''
+    });
+    if(!data.ok){ $('payment-form').style.display='block'; showMsg('payment-msg', data.error || 'No se pudo registrar.', false); return; }
+    showMsg('payment-msg', data.mensaje || 'Comprobante registrado.', true);
+    setTimeout(refreshState, 1200);
+  }catch(e){
+    $('payment-form').style.display='block';
+    const msg = e.message === 'Failed to fetch'
+      ? 'No se pudo subir el archivo. Revisa la conexion y la configuracion de Cloudinary.'
+      : (e.message || 'Error al subir.');
+    showMsg('payment-msg', msg, false);
+  }
+}
+async function refreshState(){
+  if(!estadoData){ showPage('page-login'); return; }
+  const data = await api('getEstado', { dni: estadoData.dni, email: loginEmail });
+  if(data.ok){ estadoData = data; showPage('page-state'); renderState(); }
+  else showPage('page-login');
+}
+
+async function loginAdmin(){
+  const pass = $('admin-pass').value.trim();
+  if(!pass){ $('admin-login-err').textContent='Ingresa la clave.'; return; }
+  try{
+    const data = await api('loginAdmin', { adminPass:pass });
+    if(!data.ok){ $('admin-login-err').textContent=data.error || 'Clave incorrecta.'; return; }
+    adminToken = data.token;
+    adminRole = data.role || 'view';
+    $('admin-role').textContent = adminRole === 'edit' ? 'Modo edicion' : 'Solo vista';
+    showPage('page-admin');
+    await refreshAdmin();
+  }catch(e){
+    $('admin-login-err').textContent = e.message === 'API_SIN_CONFIGURAR'
+      ? 'Falta configurar la URL real de Apps Script en index.html.'
+      : 'Error de conexion.';
+  }
+}
+function canEdit(){ return adminRole === 'edit'; }
+async function refreshAdmin(){
+  $('payments-list').innerHTML = '<div class="loading"><div class="spinner"></div><span>Cargando...</span></div>';
+  adminData = await api('getAdmin', { adminToken });
+  if(!adminData.ok){ $('payments-list').innerHTML = '<div class="empty">'+(adminData.error || 'No autorizado')+'</div>'; return; }
+  peopleData = null;
+  renderAdminStats();
+  renderPayments();
+  if(adminView === 'people') await loadPeople();
+}
+function groupedPayments(){
+  const map = {};
+  (adminData.pagos || []).forEach(p => {
+    if(!map[p.dni]) map[p.dni] = { dni:p.dni, nombre:p.nombre, whatsapp:p.whatsapp || '', estadoCupo:p.estadoCupo || '', vencimientoDni:p.vencimientoDni || '', fechaNacimiento:p.fechaNacimiento || '', pagos:[] };
+    if(p.whatsapp && !map[p.dni].whatsapp) map[p.dni].whatsapp = p.whatsapp;
+    if(p.estadoCupo) map[p.dni].estadoCupo = p.estadoCupo;
+    if(p.vencimientoDni) map[p.dni].vencimientoDni = p.vencimientoDni;
+    if(p.fechaNacimiento) map[p.dni].fechaNacimiento = p.fechaNacimiento;
+    map[p.dni].pagos.push(p);
+  });
+  return Object.values(map);
+}
+function paymentKeys(pagos){ return [...new Set(pagos.flatMap(p=>keys(p.cuotas)))]; }
+function confirmedTotal(person){ return person.pagos.filter(p=>p.estado==='confirmado').reduce((a,p)=>a+Number(p.monto || 0),0); }
+function renderAdminStats(){
+  const people = groupedPayments();
+  const pending = (adminData.pagos || []).filter(p=>p.estado==='pendiente').length;
+  const recaudado = people.reduce((a,p)=>a+confirmedTotal(p),0);
+  $('admin-stats').innerHTML =
+    metric(adminData.totalActivos ?? adminData.totalInscriptos ?? 0, 'Inscriptos activos', 'var(--blue)') +
+    metric(pending, 'Por revisar', 'var(--amber)') +
+    metric(money(recaudado), 'Recaudado', 'var(--green)') +
+    metric(adminData.totalBajas || 0, 'Dados de baja', 'var(--red)') +
+    metric(money(adminData.dineroADevolver || 0), 'Dinero a devolver', 'var(--red)');
+}
+function metric(n,label,color){ return '<div class="metric card"><b style="color:'+color+'">'+n+'</b><span>'+label+'</span></div>'; }
+function setAdminView(view){
+  adminView = view;
+  $('tab-payments').classList.toggle('active', view === 'payments');
+  $('tab-people').classList.toggle('active', view === 'people');
+  $('tab-profile').classList.toggle('active', view === 'profile');
+  $('admin-payments').style.display = view === 'payments' ? 'block' : 'none';
+  $('admin-people').style.display = view === 'people' ? 'block' : 'none';
+  $('admin-profile').style.display = view === 'profile' ? 'block' : 'none';
+  if(view === 'people') loadPeople();
+  if(view === 'profile') renderProfileRequests();
+}
+function setPaymentFilter(f){
+  paymentFilter = f;
+  ['pending','all','rejected','ok'].forEach(x => $('filter-'+x).classList.remove('active'));
+  const id = f === 'pendiente' ? 'pending' : f === 'todos' ? 'all' : f === 'rechazados' ? 'rejected' : 'ok';
+  $('filter-'+id).classList.add('active');
+  renderPayments();
+}
+function renderPayments(){
+  if(!adminData || !adminData.ok) return;
+  let people = groupedPayments();
+  if(paymentFilter === 'pendiente') people = people.filter(p=>p.pagos.some(x=>x.estado==='pendiente'));
+  if(paymentFilter === 'rechazados') people = people.filter(p=>p.pagos.some(x=>x.estado==='rechazado'));
+  if(paymentFilter === 'aldia') people = people.filter(p=>PLAN_PAGOS.every(c=>paymentKeys(p.pagos.filter(x=>x.estado==='confirmado')).includes(c.key)));
+  if(adminSearch){
+    const q = adminSearch.toLowerCase();
+    people = people.filter(p=>p.nombre.toLowerCase().includes(q) || String(p.dni).includes(q));
+  }
+  people.sort((a,b) => Number(b.pagos.some(p=>p.estado==='pendiente')) - Number(a.pagos.some(p=>p.estado==='pendiente')));
+  $('payments-list').innerHTML = people.length ? people.map(renderPaymentCard).join('') : '<div class="empty">Sin resultados</div>';
+}
+function renderPaymentCard(person){
+  const conf = paymentKeys(person.pagos.filter(p=>p.estado==='confirmado'));
+  const pend = paymentKeys(person.pagos.filter(p=>p.estado==='pendiente'));
+  const rech = paymentKeys(person.pagos.filter(p=>p.estado==='rechazado'));
+  const pending = person.pagos.some(p=>p.estado==='pendiente');
+  const rejected = person.pagos.some(p=>p.estado==='rechazado');
+  const cls = pending ? 'pending' : rejected ? 'rejected' : '';
+  const chips = PLAN_PAGOS.map(c => {
+    const kind = conf.includes(c.key) ? 'ok' : pend.includes(c.key) ? 'pending' : rech.includes(c.key) ? 'bad' : '';
+    return '<span class="chip '+kind+'">'+c.label+'</span>';
+  }).join('');
+  const details = person.pagos.map(p=>renderComp(p, person)).join('');
+  const bajaInfo = person.estadoCupo === 'baja' ? '<span class="pill bad">Dado de baja - devolver '+money(confirmedTotal(person))+'</span>' : '';
+  return '<article class="pay-card card '+cls+'"><div class="pay-head" onclick="toggleDetails(\'det-'+person.dni+'\')"><div class="avatar">'+initials(person.nombre)+'</div><div class="grow"><b>'+person.nombre+'</b>'+personAlertTags(person)+'<span>DNI '+person.dni+' - '+person.pagos.length+' comprobante(s)</span>'+bajaInfo+'</div><div><b>'+money(confirmedTotal(person))+'</b><span>de '+money(TOTAL)+'</span></div></div><div class="chips">'+chips+'</div><div id="det-'+person.dni+'" class="details">'+details+'</div><div class="row" style="padding:10px 14px"><span class="meta">'+(person.whatsapp ? 'WA '+person.whatsapp : 'Sin WhatsApp')+'</span><div class="actions">'+(canEdit() && person.estadoCupo !== 'baja'?'<button class="btn secondary small" onclick="markLow(\''+person.dni+'\')">Dar de baja</button>':'')+'</div></div></article>';
+}
+function renderComp(p, person){
+  let actions = '';
+  const file = hasVisibleComprobante(p.comprobanteUrl) ? '<a class="btn secondary small" href="'+p.comprobanteUrl+'" target="_blank">Ver</a>' : '<span class="meta">Sin archivo</span>';
+  if(p.estado === 'pendiente'){
+    actions = canEdit() ? '<button class="btn small" onclick="setPaymentStatus(\''+p.id+'\',\'confirmado\')">Confirmar</button><button class="btn danger small" onclick="setPaymentStatus(\''+p.id+'\',\'rechazado\')">No validar</button>' : badge('En revision','pending');
+  } else if(p.estado === 'confirmado'){
+    actions = badge('Confirmado','ok') + whatsappButton('confirmacion', p, person, 'Avisar');
+  } else if(p.estado === 'rechazado'){
+    actions = badge('No validado','bad') + (canEdit()?'<button class="btn secondary small" onclick="setPaymentStatus(\''+p.id+'\',\'pendiente\')">Revisar</button>':'') + whatsappButton('rechazo', p, person, 'Avisar');
+  }
+  return '<div class="comp"><div><b>'+cuotaLabel(p.cuotas)+'</b><div class="meta">'+(p.fecha || '')+' - '+money(p.monto)+(p.medioPago ? ' - '+p.medioPago : '')+(p.responsableEfectivo ? ' - Resp: '+p.responsableEfectivo : '')+'</div></div><div class="actions">'+file+actions+'</div></div>';
+}
+function toggleDetails(id){ const el=$(id); if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
+async function setPaymentStatus(id, status){
+  if(!canEdit()){ alert('Esta accion requiere clave de edicion.'); return; }
+  let motivo = '';
+  if(status === 'rechazado') motivo = prompt('Motivo opcional del rechazo:') || '';
+  const data = await api('confirmarPago', { pagoId:id, nuevoEstado:status, motivo, adminToken });
+  if(!data.ok){ alert(data.error || 'No se pudo actualizar.'); return; }
+  await refreshAdmin();
+}
+function whatsappText(tipo, p, person){
+  const name = (person.nombre || '').split(' ')[0] || '';
+  if(tipo === 'confirmacion') return 'Hola ' + name + ', confirmamos tu pago de ' + cuotaLabel(p.cuotas, ' y ') + ' para ' + EVENTO + '. Podes ver el detalle en ' + PORTAL_URL;
+  if(tipo === 'rechazo') return 'Hola ' + name + ', no pudimos validar el comprobante de ' + cuotaLabel(p.cuotas, ' y ') + ' para ' + EVENTO + '. Necesitamos que lo revises o te comuniques con la organizacion.';
+  return 'Hola ' + name + ', te recordamos que podes consultar y cargar comprobantes en ' + PORTAL_URL;
+}
+function whatsappButton(tipo, p, person, label){
+  if(!canEdit() || !person.whatsapp) return '';
+  const href = 'https://wa.me/' + person.whatsapp + '?text=' + encodeURIComponent(whatsappText(tipo, p, person));
+  return '<a class="btn secondary small" href="'+href+'" target="_blank" onclick="markPaymentWA(\''+p.id+'\',\''+tipo+'\')">'+label+' WA</a>';
+}
+async function markPaymentWA(id,tipo){ try{ await api('marcarAvisoWAPago', { pagoId:id, tipo, adminToken }); }catch(e){} }
+async function markLow(dni){
+  if(!canEdit()) return;
+  if(!confirm('Vas a dar de baja a esta persona. Sus pagos quedan en historial, pero no podra cargar nuevos comprobantes. ¿Continuar?')) return;
+  const nota = prompt('Nota opcional para la baja:') || '';
+  try{
+    const data = await api('marcarBaja', { dni, nota, reemplazo:'', adminToken });
+    if(!data.ok){ alert(data.error || 'No se pudo dar de baja.'); return; }
+    alert((data.nombre || 'La persona') + ' fue dada de baja.');
+    adminData = null;
+    peopleData = null;
+    await refreshAdmin();
+    if(adminView === 'people') {
+      await loadPeople();
+      renderPeople();
+    }
+  }catch(e){
+    alert(e.message || 'No se pudo dar de baja.');
+  }
+}
+
+async function loadPeople(){
+  if(!peopleData){
+    peopleData = await api('getInscriptos', { adminToken });
+    if(!peopleData.ok){ $('people-body').innerHTML = '<tr><td colspan="9">'+(peopleData.error || 'Error')+'</td></tr>'; return; }
+    fillPeopleFilters();
+  }
+  renderPeople();
+}
+function fillPeopleFilters(){
+  const parishes = [...new Set(peopleData.inscriptos.map(i=>i.parroquia).filter(Boolean))].sort();
+  const communities = [...new Set(peopleData.inscriptos.map(i=>i.comunidad).filter(Boolean))].sort();
+  $('people-parish').innerHTML = '<option value="">Todas las parroquias</option>' + parishes.map(x=>'<option>'+x+'</option>').join('');
+  $('people-community').innerHTML = '<option value="">Todas las comunidades</option>' + communities.map(x=>'<option>'+x+'</option>').join('');
+}
+function renderPeople(){
+  if(!peopleData || !peopleData.ok) return;
+  let list = peopleData.inscriptos.slice();
+  const state = $('people-state').value;
+  const parish = $('people-parish').value;
+  const community = $('people-community').value;
+  const dniOrder = $('people-dni-order').value;
+  const q = $('people-search').value.toLowerCase();
+  if(state) list = list.filter(i=>i.estado === state || i.estadoCupo === state);
+  if(parish) list = list.filter(i=>i.parroquia === parish);
+  if(community) list = list.filter(i=>i.comunidad === community);
+  if(q) list = list.filter(i=>i.nombre.toLowerCase().includes(q) || String(i.dni).includes(q));
+  if(dniOrder){
+    list = list.slice().sort((a,b) => {
+      const da = dateFromAR(a.vencimientoDni);
+      const db = dateFromAR(b.vencimientoDni);
+      const va = da ? da.getTime() : Number.MAX_SAFE_INTEGER;
+      const vb = db ? db.getTime() : Number.MAX_SAFE_INTEGER;
+      return dniOrder === 'dni_vence_asc' ? va - vb : vb - va;
+    });
+  }
+  $('people-body').innerHTML = list.length ? list.map(i => {
+    const wa = i.whatsapp ? '<a class="btn secondary small" target="_blank" href="https://wa.me/'+i.whatsapp+'?text='+encodeURIComponent('Hola '+(i.nombre||'').split(' ')[0]+', te escribimos por '+EVENTO+'.')+'">WA</a>' : '';
+    const baja = canEdit() && i.estadoCupo !== 'baja' ? '<button class="btn danger small" onclick="markLow(\''+String(i.dni).replace(/\D/g,'')+'\')">Baja</button>' : '';
+    return '<tr><td>'+i.orden+'</td><td><b>'+i.nombre+'</b>'+personAlertTags(i)+'</td><td>'+i.dni+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+i.parroquia+'</td><td>'+i.comunidad+'</td><td>'+i.estadoCupo+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(i.resumen.totalPagado)+'</td><td><div class="actions">'+wa+baja+'</div></td></tr>';
+  }).join('') : '<tr><td colspan="10" class="empty">Sin resultados</td></tr>';
+}
+
+function dateFromAR(value){
+  const p = (value || '').split('/').map(Number);
+  if(p.length !== 3 || !p[0] || !p[1] || !p[2]) return null;
+  return new Date(p[2], p[1] - 1, p[0]);
+}
+
+function renderDniExpiry(value){
+  const date = dateFromAR(value);
+  if(!date) return '<span class="meta">-</span>';
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  const alarmLimit = new Date(2026, 10, 1);
+  const needsAlert = date < alarmLimit;
+  const label = date < today ? badge('Vencido','bad') : needsAlert ? badge('Alarma','bad') : badge('OK','ok');
+  return '<div class="dni-expiry '+(needsAlert ? 'alert' : 'ok')+'"><b>'+value+'</b><div style="margin-top:4px">'+label+'</div></div>';
+}
+
+function personAlertTags(person){
+  const tags = [];
+  if(isMinor(person.fechaNacimiento)) tags.push(badge('Menor de edad','info'));
+  if(isDniExpired(person.vencimientoDni)) tags.push(badge('DNI vencido','bad'));
+  return tags.length ? '<div class="name-tags">'+tags.join('')+'</div>' : '';
+}
+
+function isDniExpired(value){
+  const date = dateFromAR(value);
+  if(!date) return false;
+  const today = new Date();
+  today.setHours(0,0,0,0);
+  return date < today;
+}
+
+function isMinor(value){
+  const birth = dateFromAR(value);
+  if(!birth) return false;
+  const today = new Date();
+  let age = today.getFullYear() - birth.getFullYear();
+  const hadBirthday = today.getMonth() > birth.getMonth() || (today.getMonth() === birth.getMonth() && today.getDate() >= birth.getDate());
+  if(!hadBirthday) age--;
+  return age < 18;
+}
+
+function renderProfileRequests(){
+  if(!adminData || !adminData.ok) return;
+  const reqs = adminData.cambiosPerfil || [];
+  if(!reqs.length){ $('profile-requests').innerHTML = '<div class="empty">No hay cambios de datos pendientes.</div>'; return; }
+  $('profile-requests').innerHTML = reqs.map(r => {
+    const cambios = Object.entries(r.cambios || {}).map(([k,v]) => '<div><b>'+labelCambio(k)+':</b> '+escapeHtml(String(v))+'</div>').join('');
+    const actions = canEdit()
+      ? `<button class="btn small" onclick="resolveProfileChange('${r.id}','aprobado')">Aprobar</button><button class="btn danger small" onclick="resolveProfileChange('${r.id}','rechazado')">Rechazar</button>`
+      : '';
+    return '<article class="pay-card card pending"><div class="pay-head"><div class="grow"><b>'+r.nombre+'</b><span>DNI '+r.dni+' - '+(r.fecha || '')+'</span></div></div><div class="panel">'+cambios+'<div class="actions" style="margin-top:10px">'+actions+'</div></div></article>';
+  }).join('');
+}
+
+function labelCambio(k){
+  return ({celular:'Celular',emergencia:'Telefono emergencia',parroquia:'Parroquia',comunidad:'Comunidad',restricciones:'Restricciones'})[k] || k;
+}
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+async function resolveProfileChange(id, decision){
+  const motivo = decision === 'rechazado' ? (prompt('Motivo opcional del rechazo:') || '') : '';
+  const data = await api('resolverCambioPerfil', { cambioId:id, decision, motivo, adminToken });
+  if(!data.ok){ alert(data.error || 'No se pudo resolver.'); return; }
+  await refreshAdmin();
+  setAdminView('profile');
+}
+
+function currentExportRows(){
+  if(adminView === 'people' && peopleData && peopleData.ok){
+    return peopleData.inscriptos.map(i => ({
+      orden:i.orden,nombre:i.nombre,dni:i.dni,email:i.email,celular:i.celular,
+      parroquia:i.parroquia,comunidad:i.comunidad,cupo:i.estadoCupo,estado:i.estado,
+      confirmado:i.resumen.totalPagado,restricciones:i.restricciones
+    }));
+  }
+  return groupedPayments().flatMap(per => per.pagos.map(p => ({
+    dni:per.dni,nombre:per.nombre,cuotas:cuotaLabel(p.cuotas),monto:p.monto,
+    estado:p.estado,medioPago:p.medioPago || '',fecha:p.fecha,comprobante:p.comprobanteUrl
+  })));
+}
+function exportCSV(){
+  const rows = currentExportRows();
+  if(!rows.length){ alert('No hay datos para exportar.'); return; }
+  const headers = Object.keys(rows[0]);
+  const csv = '\uFEFF' + headers.join(',') + '\n' + rows.map(r => headers.map(h => '"' + String(r[h] == null ? '' : r[h]).replace(/"/g,'""') + '"').join(',')).join('\n');
+  const blob = new Blob([csv], { type:'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'export_peregrinacion_' + new Date().toLocaleDateString('es-AR').replace(/\//g,'-') + '.csv';
+  a.click();
+  setTimeout(()=>URL.revokeObjectURL(url), 500);
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  ['login-dni','login-email'].forEach(id => $(id).addEventListener('keydown', e => { if(e.key === 'Enter') buscarParticipante(); }));
+  $('admin-pass').addEventListener('keydown', e => { if(e.key === 'Enter') loginAdmin(); });
+});
+document.addEventListener('click', e => {
+  const btn = e.target.closest('button');
+  if(btn) pulseButton(btn);
+});
+</script>
+</body>
+</html>
