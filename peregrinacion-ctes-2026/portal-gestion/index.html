@@ -90,6 +90,9 @@ button,input,select{font:inherit}
 .transfer-detail strong{font-size:.86rem;text-align:right}
 .pay-note{background:var(--blue-soft);border:1px solid #c8dbf2;border-radius:8px;padding:12px;margin:10px 0;color:#174f8d}
 .pay-note b{display:block;margin-bottom:4px}
+.state-note{background:white;border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:8px;padding:12px;margin-bottom:10px}
+.state-note b{display:block;color:var(--ink);margin-bottom:4px}
+.state-note p{margin:0;color:var(--muted);font-size:.86rem}
 .choice{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 12px}
 .choice label{display:flex;align-items:flex-start;gap:8px;border:1.5px solid var(--line);border-radius:8px;background:white;padding:10px;cursor:pointer}
 .choice input{margin-top:3px;accent-color:var(--green)}
@@ -239,7 +242,10 @@ tr:last-child td{border-bottom:0}
         <p class="sub" style="margin:4px 0 10px">Verifica estos datos antes de transferir.</p>
         <div style="font-size:1.1rem;color:var(--green);font-weight:800;letter-spacing:.03em" id="state-alias"></div>
         <div id="state-transfer-detail" class="transfer-detail"></div>
-        <p class="sub" style="margin:6px 0 0">Para acreditar cada cuota, subi el comprobante de transferencia o la foto del recibo si pagaste en efectivo. Los pagos en efectivo quedan pendientes hasta que el responsable entregue el dinero.</p>
+      </section>
+      <section class="state-note">
+        <b>Como acreditar tus pagos</b>
+        <p>Para acreditar cada cuota, subi el comprobante de transferencia o la foto del recibo si pagaste en efectivo. Los pagos en efectivo quedan pendientes hasta que el responsable entregue el dinero.</p>
       </section>
       <section id="state-alert" class="panel card" style="display:none;background:var(--amber-soft);color:var(--amber)"></section>
       <section class="grid3">
