@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Peregrinacion CNC Corrientes 2026</title>
+<title>Peregrinacion a Caacupe - CNC 2026</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Serif+Display&display=swap" rel="stylesheet">
 <style>
@@ -27,6 +27,10 @@ button,input,select{font:inherit}
 .brand{font-family:"DM Serif Display",serif;font-size:2rem;line-height:1.05;margin:0 0 8px}
 .sub{color:var(--muted);font-size:.92rem;margin:0 0 22px}
 .home-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.whatsapp-join{display:flex;align-items:center;justify-content:space-between;gap:12px;background:#e8f5ef;border:1px solid #bcdccb;border-radius:8px;padding:12px;margin:12px 0 16px}
+.whatsapp-join b{display:block;color:var(--green);font-size:.92rem}
+.whatsapp-join span{display:block;color:var(--muted);font-size:.8rem}
+.wa-icon{width:30px;height:30px;border-radius:50%;background:#25d366;color:white;display:inline-flex;align-items:center;justify-content:center;font-weight:900;flex:0 0 auto}
 .how{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
 .how div{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px}
 .how b{display:block;margin-bottom:4px}
@@ -157,6 +161,7 @@ tr:last-child td{border-bottom:0}
   .grid3,.admin-grid{grid-template-columns:1fr 1fr}
   .choice{grid-template-columns:1fr}
   .home-actions,.how{grid-template-columns:1fr}
+  .whatsapp-join{align-items:flex-start}
   .row,.comp{flex-direction:column}
   .actions{justify-content:flex-start}
   .login{padding:22px}
@@ -172,12 +177,17 @@ tr:last-child td{border-bottom:0}
 </div>
 <main id="page-home" class="page center active">
   <section class="home card">
-    <h1 class="brand">Peregrinacion CNC Corrientes 2026</h1>
+    <h1 class="brand">Peregrinacion a Caacupe - CNC 2026</h1>
     <p class="sub">Inscripcion y gestion de pagos en un solo lugar. Si todavia no completaste el formulario, empeza por la inscripcion. Si ya estas inscripto, entra al portal con tu DNI y email.</p>
     <div class="home-actions">
       <button class="btn full" onclick="showPage('page-form')">Inscribirme</button>
       <button class="btn secondary full" onclick="showPage('page-login')">Entrar al portal de pagos</button>
     </div>
+    <a class="whatsapp-join" href="https://chat.whatsapp.com/KCFxCkFYs4KBVTduOprYVe?s=sw&p=a&ilr=1&amv=2" target="_blank" rel="noopener">
+      <span class="wa-icon">WA</span>
+      <span style="flex:1"><b>Sumate al grupo de WhatsApp</b><span>Recibi novedades generales de la peregrinacion.</span></span>
+      <span aria-hidden="true" style="font-weight:900;color:var(--green)">></span>
+    </a>
     <div class="how">
       <div><b>1. Inscripcion</b><span>Completa el formulario con tus datos reales, DNI y email de acceso.</span></div>
       <div><b>2. Portal</b><span>Ingresa con DNI y email para ver tus cuotas y vencimientos.</span></div>
@@ -205,7 +215,7 @@ tr:last-child td{border-bottom:0}
 
 <main id="page-login" class="page center">
   <section class="login card">
-    <h1 class="brand">Peregrinacion CNC Corrientes</h1>
+    <h1 class="brand">Peregrinacion a Caacupe - CNC 2026</h1>
     <p class="sub">Consulta tu estado de cuotas y carga comprobantes con tu DNI y el email usado en la inscripcion.</p>
     <div class="field"><label>DNI</label><input id="login-dni" inputmode="numeric" autocomplete="off"></div>
     <div class="field"><label>Email del portal de pagos</label><input id="login-email" type="email" autocomplete="email"></div>
@@ -423,7 +433,7 @@ const CVU = '0000003100050591362610';
 const TITULAR = 'Cecilia Maria Victoria Colautti';
 const CLD_CLOUD = 'dimunrwrl';
 const CLD_PRESET = 'peregrinacion_cnc_ctes_2026';
-const EVENTO = 'Peregrinacion de Jovenes - CNC Corrientes 2026';
+const EVENTO = 'Peregrinacion a Caacupe - CNC 2026';
 const PORTAL_URL = window.location.origin + window.location.pathname;
 
 const PLAN_PAGOS = [

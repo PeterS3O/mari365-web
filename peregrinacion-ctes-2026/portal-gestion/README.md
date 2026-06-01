@@ -1,4 +1,4 @@
-# Sistema Peregrinacion CNC Corrientes 2026
+# Sistema Peregrinacion a Caacupe - CNC 2026
 
 Archivos nuevos creados sin modificar la plantilla original.
 

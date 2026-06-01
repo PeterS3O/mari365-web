@@ -10,7 +10,7 @@ const CONFIG = {
   HOJA_REPORTES_ERROR: 'Reportes Error',
   EMAIL_ORGANIZADOR: 'TU_EMAIL@gmail.com',
   ALIAS_TRANSFERENCIA: 'alias.mercadopago',
-  NOMBRE_EVENTO: 'Peregrinacion de Jovenes - CNC Corrientes 2026',
+  NOMBRE_EVENTO: 'Peregrinacion a Caacupe - CNC 2026',
   CAPACIDAD: 100,
   ADMIN_PASSWORD: 'TU_CLAVE_ADMIN',
   ADMIN_VIEW_PASSWORD: 'TU_CLAVE_VISTA',
