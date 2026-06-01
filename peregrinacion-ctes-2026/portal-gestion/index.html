@@ -196,6 +196,11 @@ tr:last-child td{border-bottom:0}
   <section class="login card">
     <h1 class="brand">Peregrinacion CNC Corrientes</h1>
     <p class="sub">Consulta tu estado de cuotas y carga comprobantes con tu DNI y el email usado en la inscripcion.</p>
+    <div class="transfer">
+      <span>Datos para transferir</span>
+      <b id="login-transfer-alias"></b>
+      <div id="login-transfer-detail"></div>
+    </div>
     <div class="field"><label>DNI</label><input id="login-dni" inputmode="numeric" autocomplete="off"></div>
     <div class="field"><label>Email del portal de pagos</label><input id="login-email" type="email" autocomplete="email"></div>
     <button class="btn full" onclick="buscarParticipante()">Ingresar</button>
@@ -402,9 +407,9 @@ tr:last-child td{border-bottom:0}
 
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbxp9IG2bDtgNmJNhtUrR1yjdhDXoP9VjMIuzRzUnKgUNlxjWCXddJJIcEbh7m8SL-iDlA/exec';
-const ALIAS = 'alias.mercadopago';
-const CVU = 'TU_CVU';
-const TITULAR = 'TU_TITULAR';
+const ALIAS = 'peregrinacioncaacupe';
+const CVU = '0000003100050591362610';
+const TITULAR = 'Cecilia Maria Victoria Colautti';
 const CLD_CLOUD = 'dimunrwrl';
 const CLD_PRESET = 'peregrinacion_cnc_ctes_2026';
 const EVENTO = 'Peregrinacion de Jovenes - CNC Corrientes 2026';
@@ -460,6 +465,12 @@ function keys(str){ return (str || '').split(',').map(s=>s.trim()).filter(Boolea
 function cuotaLabel(str, sep){ return keys(str).map(k => MAP_PLAN[k] ? MAP_PLAN[k].label : k).join(sep || ' + '); }
 function hasVisibleComprobante(url){ return !!url && url !== '(adjunto pendiente)' && url !== '(efectivo sin comprobante)'; }
 function initials(name){ const p=(name||'').trim().split(/\s+/); return ((p[0]||'?')[0]+(p[1]||'?')[0]).toUpperCase(); }
+function renderTransferData(aliasId, detailId){
+  const alias = $(aliasId);
+  const detail = $(detailId);
+  if(alias) alias.textContent = 'Alias: ' + ALIAS;
+  if(detail) detail.innerHTML = 'CVU: ' + CVU + '<br>Titular: ' + TITULAR;
+}
 function isVencida(fecha){
   const [day, month, year] = (fecha || '').split('/').map(Number);
   if(!day || !month || !year) return false;
@@ -527,7 +538,7 @@ function renderState(){
   $('state-avatar').textContent = initials(d.nombre);
   $('state-name').textContent = d.nombre;
   $('state-info').textContent = 'DNI ...' + String(d.dni).slice(-4) + ' - ' + (d.parroquia || '') + (d.comunidad ? ' - ' + d.comunidad : '');
-  $('state-alias').textContent = ALIAS;
+  renderTransferData('state-alias', 'state-transfer-detail');
   $('state-paid').textContent = money(r.totalPagado);
   $('state-review').textContent = money(r.totalPendConf);
   $('state-missing').textContent = money(faltante);
@@ -638,8 +649,7 @@ async function submitProfileChange(){
 function showPayment(preselectKey, mode){
   paymentMode = mode === 'efectivo' ? 'efectivo' : 'transferencia';
   showPage('page-payment');
-  $('transfer-alias').textContent = ALIAS;
-  $('transfer-detail').innerHTML = 'CVU: ' + CVU + '<br>Titular: ' + TITULAR;
+  renderTransferData('transfer-alias', 'transfer-detail');
   $('payment-msg').className = 'message';
   $('payment-msg').textContent = '';
   $('payment-form').style.display = 'block';
@@ -1076,6 +1086,7 @@ function exportCSV(){
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+  renderTransferData('login-transfer-alias', 'login-transfer-detail');
   ['login-dni','login-email'].forEach(id => $(id).addEventListener('keydown', e => { if(e.key === 'Enter') buscarParticipante(); }));
   $('admin-pass').addEventListener('keydown', e => { if(e.key === 'Enter') loginAdmin(); });
 });
