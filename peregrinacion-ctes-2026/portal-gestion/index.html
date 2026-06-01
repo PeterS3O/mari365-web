@@ -54,6 +54,9 @@ button,input,select{font:inherit}
 .btn.warn{background:var(--amber)}
 .btn.danger{background:var(--red)}
 .btn.small{padding:7px 10px;font-size:.78rem}
+.btn.tiny{padding:4px 7px;font-size:.68rem;font-weight:800;border-radius:6px}
+.btn.blocked{background:#d6ddd8;color:#6d786f;cursor:pointer}
+.btn.blocked:hover{background:#d6ddd8}
 .btn.needs-attention{border-color:#f2c36f;background:var(--amber-soft);color:var(--amber)}
 .btn.is-busy{position:relative;pointer-events:none;opacity:.82}
 .btn.is-busy::after{content:"";width:14px;height:14px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .75s linear infinite}
@@ -153,7 +156,8 @@ tr:last-child td{border-bottom:0}
 .people-name{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-weight:800;line-height:1.15}
 .people-inline-dni{color:var(--muted);font-size:.72rem;font-weight:700}
 .people-meta{display:flex;gap:6px;flex-wrap:wrap;color:var(--muted);font-size:.72rem;line-height:1.15;margin-top:3px}
-.people-restrictions{max-width:180px;color:var(--ink);font-size:.76rem;line-height:1.2}
+.people-place{white-space:nowrap;font-size:.78rem}
+.people-restrictions{max-width:180px;color:var(--ink);font-size:.76rem;line-height:1.2;text-align:left;margin:0}
 .people-restrictions.empty{color:var(--muted)}
 .dni-expiry{border-radius:8px;padding:7px 8px;border:1px solid transparent}
 .dni-expiry b{display:block}
@@ -436,6 +440,10 @@ tr:last-child td{border-bottom:0}
           <option value="dni_vence_asc">DNI vence primero</option>
           <option value="dni_vence_desc">DNI vence ultimo</option>
         </select>
+        <select id="people-restrictions-filter" onchange="renderPeople()">
+          <option value="">Todas las restricciones</option>
+          <option value="con_restricciones">Solo con restricciones</option>
+        </select>
         <input id="people-search" placeholder="Buscar..." oninput="renderPeople()">
       </div>
       <div class="table-wrap"><table class="people-table"><thead><tr><th>#</th><th>Nombre</th><th>Vto. DNI</th><th>Parroquia / Comunidad</th><th>Restricciones</th><th>Estado</th><th>Confirmado</th><th>Acciones</th></tr></thead><tbody id="people-body"></tbody></table></div>
@@ -481,6 +489,7 @@ let adminView = 'people';
 let adminSearch = '';
 let paymentMode = 'transferencia';
 let busyCount = 0;
+let localCelular = '';
 
 function $(id){ return document.getElementById(id); }
 function showGlobalLoading(text){
@@ -545,7 +554,7 @@ function renderTransferData(aliasId, detailId){
     '<span>Titular</span><strong>' + TITULAR + '</strong>';
 }
 function hasCellphone(person){
-  return String((person && person.celular) || '').replace(/\D/g,'').length >= 8;
+  return String((person && (person.celular || localCelular)) || '').replace(/\D/g,'').length >= 8;
 }
 function isVencida(fecha){
   const [day, month, year] = (fecha || '').split('/').map(Number);
@@ -585,6 +594,7 @@ async function buscarParticipante(){
   if(!dni){ $('login-err').textContent='Ingresa tu DNI.'; return; }
   if(!email){ $('login-err').textContent='Ingresa tu email.'; return; }
   loginEmail = email;
+  localCelular = '';
   $('login-err').textContent='';
   showPage('page-state');
   $('state-loading').style.display='flex';
@@ -645,7 +655,7 @@ function renderState(){
     const pendingCount = (d.pagos || []).filter(p => p.estado === 'pendiente').length;
     if(missingCell){
       alert.style.display = 'block';
-      alert.textContent = 'Falta cargar tu numero de celular. Actualizalo en Mis datos para poder cargar comprobantes de transferencia.';
+      alert.textContent = 'Falta cargar tu numero de celular. Actualizalo en Mis datos para poder cargar comprobantes o pagos en efectivo.';
     } else if(pendingCount){
       alert.style.display = 'block';
       alert.textContent = 'Tenes ' + pendingCount + ' comprobante(s) en revision.';
@@ -669,11 +679,8 @@ function renderState(){
     const previasOk = PLAN_PAGOS.slice(0, idx).every(prev => cargadas.includes(prev.key));
     const puedeCargar = d.estadoCupo !== 'lista_espera' && d.estadoCupo !== 'baja' && previasOk && (!activo || activo.estado === 'rechazado');
     const bloquear = !previasOk && (!activo || activo.estado === 'rechazado') ? '<span class="meta">Completa la cuota anterior primero.</span>' : '';
-    const transferBtn = missingCell
-      ? '<button class="btn warn small" onclick="showProfile(\'celular_pago\')">Completar celular</button>'
-      : `<button class="btn small" onclick="showPayment('${c.key}','transferencia')">Cargar comprobante de transferencia</button>`;
     const cargar = puedeCargar
-      ? transferBtn + `<button class="btn secondary small" onclick="showPayment('${c.key}','efectivo')">Cargar pago en efectivo</button>`
+      ? `<button class="btn small ${missingCell ? 'blocked' : ''}" onclick="showPayment('${c.key}','transferencia')">Cargar comprobante de transferencia</button><button class="btn secondary small ${missingCell ? 'blocked' : ''}" onclick="showPayment('${c.key}','efectivo')">Cargar pago en efectivo</button>`
       : bloquear;
     return '<div class="row"><div><div class="name">'+c.label+'</div><div class="meta">Vence '+c.vencimiento+' - '+money(c.monto)+'</div>'+link+'</div><div class="actions">'+badge(state,kind)+cargar+'</div></div>';
   }).join('');
@@ -684,7 +691,7 @@ function renderState(){
 
 function showProfile(reason){
   if(!estadoData){ showPage('page-login'); return; }
-  $('profile-celular').value = estadoData.celular || '';
+  $('profile-celular').value = estadoData.celular || localCelular || '';
   $('profile-emergencia').value = estadoData.emergencia || '';
   $('profile-parroquia').value = estadoData.parroquia || '';
   $('profile-comunidad').value = estadoData.comunidad || '';
@@ -692,7 +699,7 @@ function showProfile(reason){
   $('profile-msg').className = 'message';
   $('profile-msg').textContent = '';
   if(reason === 'celular_pago'){
-    showMsg('profile-msg', 'Para cargar comprobantes de transferencia primero necesitamos que informes tu numero de celular. El cambio queda pendiente de aprobacion.', false);
+    showMsg('profile-msg', 'Para cargar pagos primero necesitamos que informes tu numero de celular. Al enviarlo vas a poder continuar, aunque el cambio quede pendiente de aprobacion.', false);
   }
   showPage('page-profile');
 }
@@ -721,16 +728,21 @@ async function submitErrorReport(){
 
 async function submitProfileChange(){
   if(!estadoData) return;
+  const celular = $('profile-celular').value.trim();
   try{
     const data = await api('solicitarCambioPerfil', {
       dni: estadoData.dni,
       email: loginEmail,
-      celular: $('profile-celular').value,
+      celular,
       emergencia: $('profile-emergencia').value,
       parroquia: $('profile-parroquia').value,
       comunidad: $('profile-comunidad').value,
       restricciones: $('profile-restricciones').value
     });
+    if(data.ok && celular){
+      estadoData.celular = celular;
+      localCelular = celular;
+    }
     showMsg('profile-msg', data.mensaje || data.error || 'Solicitud enviada.', !!data.ok);
   }catch(e){
     showMsg('profile-msg', e.message || 'No se pudo enviar la solicitud.', false);
@@ -739,7 +751,8 @@ async function submitProfileChange(){
 
 function showPayment(preselectKey, mode){
   paymentMode = mode === 'efectivo' ? 'efectivo' : 'transferencia';
-  if(paymentMode === 'transferencia' && !hasCellphone(estadoData)){
+  if(!hasCellphone(estadoData)){
+    alert('Primero completa la informacion de tu celular antes de poder cargar el pago.');
     showProfile('celular_pago');
     return;
   }
@@ -857,7 +870,7 @@ async function registrarPago(){
   const medioPago = (document.querySelector('input[name="medio-pago"]:checked') || {}).value || '';
   const responsableEfectivo = ($('cash-responsible').value || '').trim();
   const isCash = medioPago.toLowerCase().includes('efectivo');
-  if(!isCash && !hasCellphone(estadoData)){ showMsg('payment-msg','Antes de cargar una transferencia, actualiza tu numero de celular en Mis datos.',false); return; }
+  if(!hasCellphone(estadoData)){ showMsg('payment-msg','Antes de cargar un pago, actualiza tu numero de celular en Mis datos.',false); return; }
   if(!cuotas.length){ showMsg('payment-msg','Selecciona al menos una cuota.',false); return; }
   if(!file){ showMsg('payment-msg', isCash ? 'Adjunta la foto del recibo del pago en efectivo.' : 'Adjunta el comprobante de Mercado Pago.', false); return; }
   if(isCash && !responsableEfectivo){ showMsg('payment-msg','Indica nombre y apellido del responsable que recibio el efectivo.',false); return; }
@@ -890,7 +903,12 @@ async function registrarPago(){
 async function refreshState(){
   if(!estadoData){ showPage('page-login'); return; }
   const data = await api('getEstado', { dni: estadoData.dni, email: loginEmail });
-  if(data.ok){ estadoData = data; showPage('page-state'); renderState(); }
+  if(data.ok){
+    if(localCelular && !data.celular) data.celular = localCelular;
+    estadoData = data;
+    showPage('page-state');
+    renderState();
+  }
   else showPage('page-login');
 }
 
@@ -997,7 +1015,7 @@ function renderPaymentCard(person){
   }).join('');
   const details = person.pagos.map(p=>renderComp(p, person)).join('');
   const bajaInfo = person.estadoCupo === 'baja' ? '<span class="pill bad">Dado de baja - devolver '+money(confirmedTotal(person))+'</span>' : '';
-  return '<article class="pay-card card '+cls+'"><div class="pay-head" onclick="toggleDetails(\'det-'+person.dni+'\')"><div class="avatar">'+initials(person.nombre)+'</div><div class="grow"><b>'+person.nombre+'</b>'+personAlertTags(person)+'<span>DNI '+person.dni+' - '+person.pagos.length+' comprobante(s)</span>'+bajaInfo+'</div><div><b>'+money(confirmedTotal(person))+'</b><span>de '+money(TOTAL)+'</span></div></div><div class="chips">'+chips+'</div><div id="det-'+person.dni+'" class="details">'+details+'</div><div class="row" style="padding:10px 14px"><span class="meta">'+(person.whatsapp ? 'WA '+person.whatsapp : 'Sin WhatsApp')+'</span><div class="actions">'+(canEdit() && person.estadoCupo !== 'baja'?'<button class="btn secondary small" onclick="markLow(\''+person.dni+'\')">Dar de baja</button>':'')+'</div></div></article>';
+  return '<article class="pay-card card '+cls+'"><div class="pay-head" onclick="toggleDetails(\'det-'+person.dni+'\')"><div class="avatar">'+initials(person.nombre)+'</div><div class="grow"><b>'+person.nombre+'</b>'+personAlertTags(person)+'<span>DNI '+person.dni+' - '+person.pagos.length+' comprobante(s)</span>'+bajaInfo+'</div><div><b>'+money(confirmedTotal(person))+'</b><span>de '+money(TOTAL)+'</span></div></div><div class="chips">'+chips+'</div><div id="det-'+person.dni+'" class="details">'+details+'</div><div class="row" style="padding:10px 14px"><span class="meta">'+(person.whatsapp ? 'WA '+person.whatsapp : 'Sin WhatsApp')+'</span><div class="actions">'+(canEdit() && person.estadoCupo !== 'baja'?'<button class="btn secondary tiny" onclick="markLow(\''+person.dni+'\')">dar de baja</button>':'')+'</div></div></article>';
 }
 function renderComp(p, person){
   let actions = '';
@@ -1073,10 +1091,12 @@ function renderPeople(){
   const parish = $('people-parish').value;
   const community = $('people-community').value;
   const dniOrder = $('people-dni-order').value;
+  const restrictionsFilter = $('people-restrictions-filter').value;
   const q = $('people-search').value.toLowerCase();
   if(state) list = list.filter(i=>i.estado === state || i.estadoCupo === state);
   if(parish) list = list.filter(i=>i.parroquia === parish);
   if(community) list = list.filter(i=>i.comunidad === community);
+  if(restrictionsFilter === 'con_restricciones') list = list.filter(i=>(i.restricciones || '').trim());
   if(q) list = list.filter(i=>i.nombre.toLowerCase().includes(q) || String(i.dni).includes(q));
   if(dniOrder){
     list = list.slice().sort((a,b) => {
@@ -1089,12 +1109,12 @@ function renderPeople(){
   }
   $('people-body').innerHTML = list.length ? list.map(i => {
     const wa = i.whatsapp ? '<a class="btn secondary small" target="_blank" href="https://wa.me/'+i.whatsapp+'?text='+encodeURIComponent('Hola '+(i.nombre||'').split(' ')[0]+', te escribimos por '+EVENTO+'.')+'">WA</a>' : '';
-    const baja = canEdit() && i.estadoCupo !== 'baja' ? '<button class="btn danger small" onclick="markLow(\''+String(i.dni).replace(/\D/g,'')+'\')">Baja</button>' : '';
+    const baja = canEdit() && i.estadoCupo !== 'baja' ? '<button class="btn danger tiny" onclick="markLow(\''+String(i.dni).replace(/\D/g,'')+'\')">dar de baja</button>' : '';
     const restricciones = (i.restricciones || '').trim();
     const restrictionsCell = restricciones
       ? '<div class="people-restrictions">'+escapeHtml(restricciones)+'</div>'
       : '<div class="people-restrictions empty">Sin restricciones</div>';
-    const parishCommunity = '<div>'+escapeHtml(i.parroquia || '-')+'</div><div class="people-meta"><span>'+escapeHtml(i.comunidad || '-')+'</span></div>';
+    const parishCommunity = '<div class="people-place">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+'</div>';
     return '<tr><td>'+i.orden+'</td><td><span class="people-name">'+escapeHtml(i.nombre || '')+'<span class="people-inline-dni">DNI '+escapeHtml(String(i.dni || ''))+'</span></span>'+personAlertTags(i)+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+parishCommunity+'</td><td>'+restrictionsCell+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(i.resumen.totalPagado)+'</td><td><div class="actions">'+wa+baja+'</div></td></tr>';
   }).join('') : '<tr><td colspan="8" class="empty">Sin resultados</td></tr>';
 }
