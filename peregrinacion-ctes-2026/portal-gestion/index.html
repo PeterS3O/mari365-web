@@ -198,11 +198,6 @@ tr:last-child td{border-bottom:0}
   <section class="login card">
     <h1 class="brand">Peregrinacion CNC Corrientes</h1>
     <p class="sub">Consulta tu estado de cuotas y carga comprobantes con tu DNI y el email usado en la inscripcion.</p>
-    <div class="transfer">
-      <span class="transfer-title"><span class="mp-icon">MP</span>Datos para transferir</span>
-      <b id="login-transfer-alias"></b>
-      <div id="login-transfer-detail"></div>
-    </div>
     <div class="field"><label>DNI</label><input id="login-dni" inputmode="numeric" autocomplete="off"></div>
     <div class="field"><label>Email del portal de pagos</label><input id="login-email" type="email" autocomplete="email"></div>
     <button class="btn full" onclick="buscarParticipante()">Ingresar</button>
@@ -299,7 +294,7 @@ tr:last-child td{border-bottom:0}
       <button class="btn secondary small" onclick="refreshState()">Volver</button>
     </div>
     <section class="card panel">
-      <div class="transfer">
+      <div id="payment-transfer-data" class="transfer">
         <span class="transfer-title"><span class="mp-icon">MP</span>Datos para transferir</span>
         <b id="transfer-alias"></b>
         <div id="transfer-detail"></div>
@@ -412,7 +407,6 @@ tr:last-child td{border-bottom:0}
 const API = 'https://script.google.com/macros/s/AKfycbxp9IG2bDtgNmJNhtUrR1yjdhDXoP9VjMIuzRzUnKgUNlxjWCXddJJIcEbh7m8SL-iDlA/exec';
 const ALIAS = 'peregrinacioncaacupe';
 const CVU = '0000003100050591362610';
-const TITULAR = 'Cecilia Maria Victoria Colautti';
 const CLD_CLOUD = 'dimunrwrl';
 const CLD_PRESET = 'peregrinacion_cnc_ctes_2026';
 const EVENTO = 'Peregrinacion de Jovenes - CNC Corrientes 2026';
@@ -472,7 +466,7 @@ function renderTransferData(aliasId, detailId){
   const alias = $(aliasId);
   const detail = $(detailId);
   if(alias) alias.textContent = 'Alias: ' + ALIAS;
-  if(detail) detail.innerHTML = 'CVU: ' + CVU + '<br>Titular: ' + TITULAR;
+  if(detail) detail.textContent = 'CVU: ' + CVU;
 }
 function isVencida(fecha){
   const [day, month, year] = (fecha || '').split('/').map(Number);
@@ -694,6 +688,7 @@ function updatePaymentMode(){
   const medio = (document.querySelector('input[name="medio-pago"]:checked') || {}).value || '';
   const cash = medio.toLowerCase().includes('efectivo');
   paymentMode = cash ? 'efectivo' : 'transferencia';
+  $('payment-transfer-data').style.display = cash ? 'none' : 'block';
   $('cash-responsible-wrap').style.display = cash ? 'block' : 'none';
   $('file-upload-wrap').style.display = 'block';
   $('btn-submit-payment').textContent = cash ? 'Registrar pago en efectivo' : 'Enviar comprobante';
@@ -1089,7 +1084,6 @@ function exportCSV(){
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderTransferData('login-transfer-alias', 'login-transfer-detail');
   ['login-dni','login-email'].forEach(id => $(id).addEventListener('keydown', e => { if(e.key === 'Enter') buscarParticipante(); }));
   $('admin-pass').addEventListener('keydown', e => { if(e.key === 'Enter') loginAdmin(); });
 });
