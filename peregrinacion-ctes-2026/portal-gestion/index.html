@@ -84,10 +84,11 @@ button,input,select{font:inherit}
 .transfer-title{display:flex;align-items:center;gap:8px;font-weight:800}
 .mp-icon{width:28px;height:28px;border-radius:50%;background:#00a7e1;color:white;display:inline-flex;align-items:center;justify-content:center;font-size:.66rem;font-weight:900;letter-spacing:0;border:2px solid #8dd8f4;flex:0 0 auto}
 .transfer b{display:block;font-size:1.05rem;letter-spacing:.03em}
-.transfer-detail{display:grid;gap:6px;margin-top:8px;color:var(--ink)}
-.transfer-detail div{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid rgba(0,167,225,.18);padding-top:6px}
-.transfer-detail span{color:var(--muted);font-size:.74rem;font-weight:800;text-transform:uppercase}
-.transfer-detail strong{font-size:.86rem;text-align:right}
+.transfer-detail{display:grid;grid-template-columns:minmax(72px,.42fr) minmax(0,1fr);gap:0;margin-top:8px;color:var(--ink);border:1px solid rgba(0,167,225,.18);border-radius:8px;overflow:hidden;background:white}
+.transfer-detail span,.transfer-detail strong{padding:8px 10px;border-bottom:1px solid rgba(0,167,225,.14)}
+.transfer-detail span{color:var(--muted);font-size:.72rem;font-weight:800;text-transform:uppercase;background:#f6fbfd}
+.transfer-detail strong{font-size:.88rem;text-align:right;overflow-wrap:anywhere}
+.transfer-detail span:nth-last-child(-n+2),.transfer-detail strong:nth-last-child(-n+1){border-bottom:0}
 .pay-note{background:var(--blue-soft);border:1px solid #c8dbf2;border-radius:8px;padding:12px;margin:10px 0;color:#174f8d}
 .pay-note b{display:block;margin-bottom:4px}
 .state-note{background:white;border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:8px;padding:12px;margin-bottom:10px}
@@ -240,7 +241,7 @@ tr:last-child td{border-bottom:0}
       <section class="card panel mp-panel">
         <div class="transfer-title"><span class="mp-icon">MP</span>Datos Mercado Pago</div>
         <p class="sub" style="margin:4px 0 10px">Verifica estos datos antes de transferir.</p>
-        <div style="font-size:1.1rem;color:var(--green);font-weight:800;letter-spacing:.03em" id="state-alias"></div>
+        <div id="state-alias"></div>
         <div id="state-transfer-detail" class="transfer-detail"></div>
       </section>
       <section class="state-note">
@@ -478,10 +479,11 @@ function initials(name){ const p=(name||'').trim().split(/\s+/); return ((p[0]||
 function renderTransferData(aliasId, detailId){
   const alias = $(aliasId);
   const detail = $(detailId);
-  if(alias) alias.textContent = 'Alias: ' + ALIAS;
+  if(alias) alias.textContent = '';
   if(detail) detail.innerHTML =
-    '<div><span>CVU</span><strong>' + CVU + '</strong></div>' +
-    '<div><span>Titular</span><strong>' + TITULAR + '</strong></div>';
+    '<span>Alias</span><strong>' + ALIAS + '</strong>' +
+    '<span>CVU</span><strong>' + CVU + '</strong>' +
+    '<span>Titular</span><strong>' + TITULAR + '</strong>';
 }
 function isVencida(fecha){
   const [day, month, year] = (fecha || '').split('/').map(Number);
