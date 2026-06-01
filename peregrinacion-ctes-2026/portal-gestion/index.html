@@ -54,6 +54,7 @@ button,input,select{font:inherit}
 .btn.warn{background:var(--amber)}
 .btn.danger{background:var(--red)}
 .btn.small{padding:7px 10px;font-size:.78rem}
+.btn.needs-attention{border-color:#f2c36f;background:var(--amber-soft);color:var(--amber)}
 .btn.is-busy{position:relative;pointer-events:none;opacity:.82}
 .btn.is-busy::after{content:"";width:14px;height:14px;border:2px solid currentColor;border-top-color:transparent;border-radius:50%;animation:spin .75s linear infinite}
 .link-btn.is-busy,.tab.is-busy{opacity:.65;pointer-events:none}
@@ -95,8 +96,11 @@ button,input,select{font:inherit}
 .transfer-detail{display:grid;grid-template-columns:minmax(72px,.42fr) minmax(0,1fr);gap:0;margin-top:8px;color:var(--ink);border:1px solid rgba(0,167,225,.18);border-radius:8px;overflow:hidden;background:white}
 .transfer-detail span,.transfer-detail strong{padding:8px 10px;border-bottom:1px solid rgba(0,167,225,.14)}
 .transfer-detail span{color:var(--muted);font-size:.72rem;font-weight:800;text-transform:uppercase;background:#f6fbfd}
-.transfer-detail strong{font-size:.88rem;text-align:right;overflow-wrap:anywhere}
+.transfer-detail strong{font-size:.88rem;text-align:right;overflow-wrap:anywhere;display:flex;align-items:center;justify-content:flex-end;gap:8px}
 .transfer-detail span:nth-last-child(-n+2),.transfer-detail strong:nth-last-child(-n+1){border-bottom:0}
+.copy-btn{width:27px;height:27px;border:1px solid rgba(0,167,225,.24);border-radius:7px;background:#f4fbff;color:var(--blue);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;flex:0 0 auto}
+.copy-btn:hover{background:var(--blue-soft);border-color:#9dc7ec}
+.copy-btn svg{width:15px;height:15px;display:block}
 .pay-note{background:var(--blue-soft);border:1px solid #c8dbf2;border-radius:8px;padding:12px;margin:10px 0;color:#174f8d}
 .pay-note b{display:block;margin-bottom:4px}
 .state-note{background:white;border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:8px;padding:12px;margin-bottom:10px}
@@ -145,9 +149,16 @@ table{width:100%;border-collapse:collapse;background:white;border:1px solid var(
 th{background:var(--green);color:white;text-align:left;font-size:.74rem;padding:9px}
 td{border-bottom:1px solid var(--line);padding:8px 9px;font-size:.8rem;vertical-align:middle}
 tr:last-child td{border-bottom:0}
+.people-table th,.people-table td{padding:7px 8px}
+.people-name{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-weight:800;line-height:1.15}
+.people-inline-dni{color:var(--muted);font-size:.72rem;font-weight:700}
+.people-meta{display:flex;gap:6px;flex-wrap:wrap;color:var(--muted);font-size:.72rem;line-height:1.15;margin-top:3px}
+.people-restrictions{max-width:180px;color:var(--ink);font-size:.76rem;line-height:1.2}
+.people-restrictions.empty{color:var(--muted)}
 .dni-expiry{border-radius:8px;padding:7px 8px;border:1px solid transparent}
 .dni-expiry b{display:block}
 .dni-expiry.alert{background:var(--red-soft);border-color:#f1b9b9;color:var(--red)}
+.dni-expiry.warn{background:var(--amber-soft);border-color:#f2c36f;color:var(--amber)}
 .dni-expiry.alert b{color:var(--red)}
 .dni-expiry.ok{background:var(--green-soft);border-color:#bcdccb;color:var(--green)}
 .filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
@@ -243,7 +254,7 @@ tr:last-child td{border-bottom:0}
     <div class="top">
       <h2 class="title">Mi estado</h2>
       <div class="toolbar">
-        <button class="btn secondary small" onclick="showProfile()">Mis datos</button>
+        <button id="btn-profile" class="btn secondary small" onclick="showProfile()">Mis datos</button>
         <button class="btn secondary small" onclick="showErrorReport()">Reportar error</button>
         <button class="btn secondary small" onclick="showPage('page-login')">Salir</button>
       </div>
@@ -391,11 +402,11 @@ tr:last-child td{border-bottom:0}
     </div>
     <div id="admin-stats" class="admin-grid"></div>
     <div class="tabs">
-      <button id="tab-payments" class="tab active" onclick="setAdminView('payments')">Pagos</button>
-      <button id="tab-people" class="tab" onclick="setAdminView('people')">Inscriptos</button>
+      <button id="tab-payments" class="tab" onclick="setAdminView('payments')">Pagos</button>
+      <button id="tab-people" class="tab active" onclick="setAdminView('people')">Inscriptos</button>
       <button id="tab-profile" class="tab" onclick="setAdminView('profile')">Cambios de datos</button>
     </div>
-    <section id="admin-payments">
+    <section id="admin-payments" style="display:none">
       <div class="tabs">
         <button id="filter-pending" class="tab active" onclick="setPaymentFilter('pendiente')">Por revisar</button>
         <button id="filter-all" class="tab" onclick="setPaymentFilter('todos')">Todos</button>
@@ -405,7 +416,7 @@ tr:last-child td{border-bottom:0}
       <input id="admin-search" class="search" placeholder="Buscar por nombre o DNI" oninput="adminSearch=this.value;renderPayments()">
       <div id="payments-list"></div>
     </section>
-    <section id="admin-people" style="display:none">
+    <section id="admin-people">
       <div class="filters">
         <select id="people-state" onchange="renderPeople()">
           <option value="">Todos los estados</option>
@@ -427,7 +438,7 @@ tr:last-child td{border-bottom:0}
         </select>
         <input id="people-search" placeholder="Buscar..." oninput="renderPeople()">
       </div>
-      <div class="table-wrap"><table><thead><tr><th>#</th><th>Nombre</th><th>DNI</th><th>Vto. DNI</th><th>Parroquia</th><th>Comunidad</th><th>Cupo</th><th>Estado</th><th>Confirmado</th><th>Acciones</th></tr></thead><tbody id="people-body"></tbody></table></div>
+      <div class="table-wrap"><table class="people-table"><thead><tr><th>#</th><th>Nombre</th><th>Vto. DNI</th><th>Parroquia / Comunidad</th><th>Restricciones</th><th>Estado</th><th>Confirmado</th><th>Acciones</th></tr></thead><tbody id="people-body"></tbody></table></div>
     </section>
     <section id="admin-profile" style="display:none">
       <div id="profile-requests"></div>
@@ -466,7 +477,7 @@ let adminRole = '';
 let adminData = null;
 let peopleData = null;
 let paymentFilter = 'pendiente';
-let adminView = 'payments';
+let adminView = 'people';
 let adminSearch = '';
 let paymentMode = 'transferencia';
 let busyCount = 0;
@@ -495,14 +506,46 @@ function keys(str){ return (str || '').split(',').map(s=>s.trim()).filter(Boolea
 function cuotaLabel(str, sep){ return keys(str).map(k => MAP_PLAN[k] ? MAP_PLAN[k].label : k).join(sep || ' + '); }
 function hasVisibleComprobante(url){ return !!url && url !== '(adjunto pendiente)' && url !== '(efectivo sin comprobante)'; }
 function initials(name){ const p=(name||'').trim().split(/\s+/); return ((p[0]||'?')[0]+(p[1]||'?')[0]).toUpperCase(); }
+function copyIcon(){
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="11" height="11" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+}
+function copyField(value, label, btn){
+  const text = String(value || '');
+  const done = () => {
+    if(btn){
+      const old = btn.innerHTML;
+      btn.textContent = 'OK';
+      setTimeout(() => { btn.innerHTML = old; }, 900);
+    }
+  };
+  if(navigator.clipboard && window.isSecureContext){
+    navigator.clipboard.writeText(text).then(done).catch(() => fallbackCopy(text, done));
+  }else{
+    fallbackCopy(text, done);
+  }
+}
+function fallbackCopy(text, done){
+  const input = document.createElement('textarea');
+  input.value = text;
+  input.setAttribute('readonly','');
+  input.style.position = 'fixed';
+  input.style.opacity = '0';
+  document.body.appendChild(input);
+  input.select();
+  try{ document.execCommand('copy'); if(done) done(); }catch(e){}
+  document.body.removeChild(input);
+}
 function renderTransferData(aliasId, detailId){
   const alias = $(aliasId);
   const detail = $(detailId);
   if(alias) alias.textContent = '';
   if(detail) detail.innerHTML =
-    '<span>Alias</span><strong>' + ALIAS + '</strong>' +
-    '<span>CVU</span><strong>' + CVU + '</strong>' +
+    '<span>Alias</span><strong>' + ALIAS + '<button class="copy-btn" type="button" title="Copiar alias" aria-label="Copiar alias" onclick="copyField(\'' + ALIAS + '\',\'Alias\',this)">' + copyIcon() + '</button></strong>' +
+    '<span>CVU</span><strong>' + CVU + '<button class="copy-btn" type="button" title="Copiar CVU" aria-label="Copiar CVU" onclick="copyField(\'' + CVU + '\',\'CVU\',this)">' + copyIcon() + '</button></strong>' +
     '<span>Titular</span><strong>' + TITULAR + '</strong>';
+}
+function hasCellphone(person){
+  return String((person && person.celular) || '').replace(/\D/g,'').length >= 8;
 }
 function isVencida(fecha){
   const [day, month, year] = (fecha || '').split('/').map(Number);
@@ -571,6 +614,12 @@ function renderState(){
   $('state-avatar').textContent = initials(d.nombre);
   $('state-name').textContent = d.nombre;
   $('state-info').textContent = 'DNI ...' + String(d.dni).slice(-4) + ' - ' + (d.parroquia || '') + (d.comunidad ? ' - ' + d.comunidad : '');
+  const missingCell = !hasCellphone(d);
+  const profileBtn = $('btn-profile');
+  if(profileBtn){
+    profileBtn.classList.toggle('needs-attention', missingCell);
+    profileBtn.textContent = missingCell ? 'Mis datos: falta celular' : 'Mis datos';
+  }
   renderTransferData('state-alias', 'state-transfer-detail');
   $('state-paid').textContent = money(r.totalPagado);
   $('state-review').textContent = money(r.totalPendConf);
@@ -594,7 +643,10 @@ function renderState(){
   } else {
     setGoPayVisible(true);
     const pendingCount = (d.pagos || []).filter(p => p.estado === 'pendiente').length;
-    if(pendingCount){
+    if(missingCell){
+      alert.style.display = 'block';
+      alert.textContent = 'Falta cargar tu numero de celular. Actualizalo en Mis datos para poder cargar comprobantes de transferencia.';
+    } else if(pendingCount){
       alert.style.display = 'block';
       alert.textContent = 'Tenes ' + pendingCount + ' comprobante(s) en revision.';
     }
@@ -617,8 +669,11 @@ function renderState(){
     const previasOk = PLAN_PAGOS.slice(0, idx).every(prev => cargadas.includes(prev.key));
     const puedeCargar = d.estadoCupo !== 'lista_espera' && d.estadoCupo !== 'baja' && previasOk && (!activo || activo.estado === 'rechazado');
     const bloquear = !previasOk && (!activo || activo.estado === 'rechazado') ? '<span class="meta">Completa la cuota anterior primero.</span>' : '';
+    const transferBtn = missingCell
+      ? '<button class="btn warn small" onclick="showProfile(\'celular_pago\')">Completar celular</button>'
+      : `<button class="btn small" onclick="showPayment('${c.key}','transferencia')">Cargar comprobante de transferencia</button>`;
     const cargar = puedeCargar
-      ? `<button class="btn small" onclick="showPayment('${c.key}','transferencia')">Cargar comprobante de transferencia</button><button class="btn secondary small" onclick="showPayment('${c.key}','efectivo')">Cargar pago en efectivo</button>`
+      ? transferBtn + `<button class="btn secondary small" onclick="showPayment('${c.key}','efectivo')">Cargar pago en efectivo</button>`
       : bloquear;
     return '<div class="row"><div><div class="name">'+c.label+'</div><div class="meta">Vence '+c.vencimiento+' - '+money(c.monto)+'</div>'+link+'</div><div class="actions">'+badge(state,kind)+cargar+'</div></div>';
   }).join('');
@@ -627,7 +682,7 @@ function renderState(){
   $('state-content').style.display='block';
 }
 
-function showProfile(){
+function showProfile(reason){
   if(!estadoData){ showPage('page-login'); return; }
   $('profile-celular').value = estadoData.celular || '';
   $('profile-emergencia').value = estadoData.emergencia || '';
@@ -636,6 +691,9 @@ function showProfile(){
   $('profile-restricciones').value = estadoData.restricciones || '';
   $('profile-msg').className = 'message';
   $('profile-msg').textContent = '';
+  if(reason === 'celular_pago'){
+    showMsg('profile-msg', 'Para cargar comprobantes de transferencia primero necesitamos que informes tu numero de celular. El cambio queda pendiente de aprobacion.', false);
+  }
   showPage('page-profile');
 }
 
@@ -681,6 +739,10 @@ async function submitProfileChange(){
 
 function showPayment(preselectKey, mode){
   paymentMode = mode === 'efectivo' ? 'efectivo' : 'transferencia';
+  if(paymentMode === 'transferencia' && !hasCellphone(estadoData)){
+    showProfile('celular_pago');
+    return;
+  }
   showPage('page-payment');
   renderTransferData('transfer-alias', 'transfer-detail');
   $('payment-msg').className = 'message';
@@ -795,6 +857,7 @@ async function registrarPago(){
   const medioPago = (document.querySelector('input[name="medio-pago"]:checked') || {}).value || '';
   const responsableEfectivo = ($('cash-responsible').value || '').trim();
   const isCash = medioPago.toLowerCase().includes('efectivo');
+  if(!isCash && !hasCellphone(estadoData)){ showMsg('payment-msg','Antes de cargar una transferencia, actualiza tu numero de celular en Mis datos.',false); return; }
   if(!cuotas.length){ showMsg('payment-msg','Selecciona al menos una cuota.',false); return; }
   if(!file){ showMsg('payment-msg', isCash ? 'Adjunta la foto del recibo del pago en efectivo.' : 'Adjunta el comprobante de Mercado Pago.', false); return; }
   if(isCash && !responsableEfectivo){ showMsg('payment-msg','Indica nombre y apellido del responsable que recibio el efectivo.',false); return; }
@@ -851,12 +914,18 @@ async function loginAdmin(){
 function canEdit(){ return adminRole === 'edit'; }
 async function refreshAdmin(){
   $('payments-list').innerHTML = '<div class="loading"><div class="spinner"></div><span>Cargando...</span></div>';
+  $('people-body').innerHTML = '<tr><td colspan="8" class="empty">Cargando...</td></tr>';
   adminData = await api('getAdmin', { adminToken });
-  if(!adminData.ok){ $('payments-list').innerHTML = '<div class="empty">'+(adminData.error || 'No autorizado')+'</div>'; return; }
+  if(!adminData.ok){
+    $('payments-list').innerHTML = '<div class="empty">'+(adminData.error || 'No autorizado')+'</div>';
+    $('people-body').innerHTML = '<tr><td colspan="8" class="empty">'+(adminData.error || 'No autorizado')+'</td></tr>';
+    return;
+  }
   peopleData = null;
   renderAdminStats();
-  renderPayments();
+  if(adminView === 'payments') renderPayments();
   if(adminView === 'people') await loadPeople();
+  if(adminView === 'profile') renderProfileRequests();
 }
 function groupedPayments(){
   const map = {};
@@ -986,7 +1055,7 @@ async function markLow(dni){
 async function loadPeople(){
   if(!peopleData){
     peopleData = await api('getInscriptos', { adminToken });
-    if(!peopleData.ok){ $('people-body').innerHTML = '<tr><td colspan="9">'+(peopleData.error || 'Error')+'</td></tr>'; return; }
+    if(!peopleData.ok){ $('people-body').innerHTML = '<tr><td colspan="8">'+(peopleData.error || 'Error')+'</td></tr>'; return; }
     fillPeopleFilters();
   }
   renderPeople();
@@ -1021,8 +1090,13 @@ function renderPeople(){
   $('people-body').innerHTML = list.length ? list.map(i => {
     const wa = i.whatsapp ? '<a class="btn secondary small" target="_blank" href="https://wa.me/'+i.whatsapp+'?text='+encodeURIComponent('Hola '+(i.nombre||'').split(' ')[0]+', te escribimos por '+EVENTO+'.')+'">WA</a>' : '';
     const baja = canEdit() && i.estadoCupo !== 'baja' ? '<button class="btn danger small" onclick="markLow(\''+String(i.dni).replace(/\D/g,'')+'\')">Baja</button>' : '';
-    return '<tr><td>'+i.orden+'</td><td><b>'+i.nombre+'</b>'+personAlertTags(i)+'</td><td>'+i.dni+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+i.parroquia+'</td><td>'+i.comunidad+'</td><td>'+i.estadoCupo+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(i.resumen.totalPagado)+'</td><td><div class="actions">'+wa+baja+'</div></td></tr>';
-  }).join('') : '<tr><td colspan="10" class="empty">Sin resultados</td></tr>';
+    const restricciones = (i.restricciones || '').trim();
+    const restrictionsCell = restricciones
+      ? '<div class="people-restrictions">'+escapeHtml(restricciones)+'</div>'
+      : '<div class="people-restrictions empty">Sin restricciones</div>';
+    const parishCommunity = '<div>'+escapeHtml(i.parroquia || '-')+'</div><div class="people-meta"><span>'+escapeHtml(i.comunidad || '-')+'</span></div>';
+    return '<tr><td>'+i.orden+'</td><td><span class="people-name">'+escapeHtml(i.nombre || '')+'<span class="people-inline-dni">DNI '+escapeHtml(String(i.dni || ''))+'</span></span>'+personAlertTags(i)+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+parishCommunity+'</td><td>'+restrictionsCell+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(i.resumen.totalPagado)+'</td><td><div class="actions">'+wa+baja+'</div></td></tr>';
+  }).join('') : '<tr><td colspan="8" class="empty">Sin resultados</td></tr>';
 }
 
 function dateFromAR(value){
@@ -1036,16 +1110,16 @@ function renderDniExpiry(value){
   if(!date) return '<span class="meta">-</span>';
   const today = new Date();
   today.setHours(0,0,0,0);
-  const alarmLimit = new Date(2026, 10, 1);
-  const needsAlert = date < alarmLimit;
-  const label = date < today ? badge('Vencido','bad') : needsAlert ? badge('Alarma','bad') : badge('OK','ok');
-  return '<div class="dni-expiry '+(needsAlert ? 'alert' : 'ok')+'"><b>'+value+'</b><div style="margin-top:4px">'+label+'</div></div>';
+  if(date < today) return '<div class="dni-expiry alert"><b>'+value+'</b><div style="margin-top:4px">'+badge('Vencido','bad')+'</div></div>';
+  if(isDniExpiringSoon(value)) return '<div class="dni-expiry warn"><b>'+value+'</b><div style="margin-top:4px">'+badge('Proximo','pending')+'</div></div>';
+  return '<span>'+value+'</span>';
 }
 
 function personAlertTags(person){
   const tags = [];
   if(isMinor(person.fechaNacimiento)) tags.push(badge('Menor de edad','info'));
   if(isDniExpired(person.vencimientoDni)) tags.push(badge('DNI vencido','bad'));
+  else if(isDniExpiringSoon(person.vencimientoDni)) tags.push(badge('DNI proximo a vencer','pending'));
   return tags.length ? '<div class="name-tags">'+tags.join('')+'</div>' : '';
 }
 
@@ -1055,6 +1129,12 @@ function isDniExpired(value){
   const today = new Date();
   today.setHours(0,0,0,0);
   return date < today;
+}
+function isDniExpiringSoon(value){
+  const date = dateFromAR(value);
+  if(!date || isDniExpired(value)) return false;
+  const alarmLimit = new Date(2026, 10, 1);
+  return date < alarmLimit;
 }
 
 function isMinor(value){
@@ -1096,7 +1176,7 @@ function currentExportRows(){
   if(adminView === 'people' && peopleData && peopleData.ok){
     return peopleData.inscriptos.map(i => ({
       orden:i.orden,nombre:i.nombre,dni:i.dni,email:i.email,celular:i.celular,
-      parroquia:i.parroquia,comunidad:i.comunidad,cupo:i.estadoCupo,estado:i.estado,
+      parroquia:i.parroquia,comunidad:i.comunidad,estado:i.estado,
       confirmado:i.resumen.totalPagado,restricciones:i.restricciones
     }));
   }
