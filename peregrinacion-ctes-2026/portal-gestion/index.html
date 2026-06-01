@@ -80,9 +80,14 @@ button,input,select{font:inherit}
 .row .name{font-weight:700}.row .meta{color:var(--muted);font-size:.78rem}
 .actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
 .transfer{background:var(--green-soft);border:1px solid #bcdccb;border-radius:8px;padding:12px;margin-bottom:12px;color:var(--green)}
+.mp-panel{background:linear-gradient(180deg,#f4fbff 0%,#fff 100%);border-color:#bfe7f7}
 .transfer-title{display:flex;align-items:center;gap:8px;font-weight:800}
 .mp-icon{width:28px;height:28px;border-radius:50%;background:#00a7e1;color:white;display:inline-flex;align-items:center;justify-content:center;font-size:.66rem;font-weight:900;letter-spacing:0;border:2px solid #8dd8f4;flex:0 0 auto}
 .transfer b{display:block;font-size:1.05rem;letter-spacing:.03em}
+.transfer-detail{display:grid;gap:6px;margin-top:8px;color:var(--ink)}
+.transfer-detail div{display:flex;align-items:center;justify-content:space-between;gap:10px;border-top:1px solid rgba(0,167,225,.18);padding-top:6px}
+.transfer-detail span{color:var(--muted);font-size:.74rem;font-weight:800;text-transform:uppercase}
+.transfer-detail strong{font-size:.86rem;text-align:right}
 .pay-note{background:var(--blue-soft);border:1px solid #c8dbf2;border-radius:8px;padding:12px;margin:10px 0;color:#174f8d}
 .pay-note b{display:block;margin-bottom:4px}
 .choice{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:10px 0 12px}
@@ -229,10 +234,11 @@ tr:last-child td{border-bottom:0}
           <span id="state-info"></span>
         </div>
       </section>
-      <section class="card panel">
+      <section class="card panel mp-panel">
         <div class="transfer-title"><span class="mp-icon">MP</span>Datos Mercado Pago</div>
+        <p class="sub" style="margin:4px 0 10px">Verifica estos datos antes de transferir.</p>
         <div style="font-size:1.1rem;color:var(--green);font-weight:800;letter-spacing:.03em" id="state-alias"></div>
-        <div id="state-transfer-detail" class="meta" style="margin-top:4px"></div>
+        <div id="state-transfer-detail" class="transfer-detail"></div>
         <p class="sub" style="margin:6px 0 0">Para acreditar cada cuota, subi el comprobante de transferencia o la foto del recibo si pagaste en efectivo. Los pagos en efectivo quedan pendientes hasta que el responsable entregue el dinero.</p>
       </section>
       <section id="state-alert" class="panel card" style="display:none;background:var(--amber-soft);color:var(--amber)"></section>
@@ -297,7 +303,7 @@ tr:last-child td{border-bottom:0}
       <div id="payment-transfer-data" class="transfer">
         <span class="transfer-title"><span class="mp-icon">MP</span>Datos para transferir</span>
         <b id="transfer-alias"></b>
-        <div id="transfer-detail"></div>
+        <div id="transfer-detail" class="transfer-detail"></div>
       </div>
       <div class="pay-note">
         <b id="payment-note-title">Como registrar tu pago</b>
@@ -407,6 +413,7 @@ tr:last-child td{border-bottom:0}
 const API = 'https://script.google.com/macros/s/AKfycbxp9IG2bDtgNmJNhtUrR1yjdhDXoP9VjMIuzRzUnKgUNlxjWCXddJJIcEbh7m8SL-iDlA/exec';
 const ALIAS = 'peregrinacioncaacupe';
 const CVU = '0000003100050591362610';
+const TITULAR = 'Cecilia Maria Victoria Colautti';
 const CLD_CLOUD = 'dimunrwrl';
 const CLD_PRESET = 'peregrinacion_cnc_ctes_2026';
 const EVENTO = 'Peregrinacion de Jovenes - CNC Corrientes 2026';
@@ -466,7 +473,9 @@ function renderTransferData(aliasId, detailId){
   const alias = $(aliasId);
   const detail = $(detailId);
   if(alias) alias.textContent = 'Alias: ' + ALIAS;
-  if(detail) detail.textContent = 'CVU: ' + CVU;
+  if(detail) detail.innerHTML =
+    '<div><span>CVU</span><strong>' + CVU + '</strong></div>' +
+    '<div><span>Titular</span><strong>' + TITULAR + '</strong></div>';
 }
 function isVencida(fecha){
   const [day, month, year] = (fecha || '').split('/').map(Number);
