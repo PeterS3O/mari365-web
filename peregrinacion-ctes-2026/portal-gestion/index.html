@@ -471,10 +471,10 @@ const EVENTO = 'Peregrinacion a Caacupe - CNC 2026';
 const PORTAL_URL = window.location.origin + window.location.pathname;
 
 const PLAN_PAGOS = [
-  { key:'cuota1', label:'1ra cuota', monto:35000, vencimiento:'30/06/2026' },
-  { key:'cuota2', label:'2da cuota', monto:35000, vencimiento:'31/07/2026' },
-  { key:'cuota3', label:'3ra cuota', monto:35000, vencimiento:'31/08/2026' },
-  { key:'cuota4', label:'4ta cuota', monto:35000, vencimiento:'30/09/2026' },
+  { key:'cuota1', label:'1ra cuota', monto:35000, vencimiento:'15/06/2026' },
+  { key:'cuota2', label:'2da cuota', monto:35000, vencimiento:'15/07/2026' },
+  { key:'cuota3', label:'3ra cuota', monto:35000, vencimiento:'15/08/2026' },
+  { key:'cuota4', label:'4ta cuota', monto:35000, vencimiento:'15/09/2026' },
 ];
 const TOTAL = PLAN_PAGOS.reduce((a,c)=>a+c.monto,0);
 const MAP_PLAN = Object.fromEntries(PLAN_PAGOS.map(c=>[c.key,c]));
@@ -568,6 +568,10 @@ function isVencida(fecha){
   const limite = new Date(year, month - 1, day);
   limite.setHours(23, 59, 59, 999);
   return new Date() > limite;
+}
+function hasOverdueMissingPayment(person){
+  const loaded = paymentKeys((person.pagos || []).filter(p=>p.estado !== 'rechazado'));
+  return PLAN_PAGOS.some(c=>isVencida(c.vencimiento) && !loaded.includes(c.key));
 }
 function showPage(id){ document.querySelectorAll('.page').forEach(p=>p.classList.remove('active')); $(id).classList.add('active'); window.scrollTo(0,0); }
 function setGoPayVisible(visible){
@@ -1000,7 +1004,7 @@ function renderPayments(){
   let people = groupedPayments();
   if(paymentFilter === 'pendiente') people = people.filter(p=>p.pagos.some(x=>x.estado==='pendiente'));
   if(paymentFilter === 'rechazados') people = people.filter(p=>p.pagos.some(x=>x.estado==='rechazado'));
-  if(paymentFilter === 'aldia') people = people.filter(p=>PLAN_PAGOS.every(c=>paymentKeys(p.pagos.filter(x=>x.estado==='confirmado')).includes(c.key)));
+  if(paymentFilter === 'aldia') people = people.filter(p=>!hasOverdueMissingPayment(p));
   if(adminSearch){
     const q = adminSearch.toLowerCase();
     people = people.filter(p=>p.nombre.toLowerCase().includes(q) || String(p.dni).includes(q));

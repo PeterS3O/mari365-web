@@ -20,10 +20,10 @@ const CONFIG = {
 // Plan provisorio. Cuando definamos montos y vencimientos reales,
 // este bloque debe coincidir con PLAN_PAGOS en index.html.
 const CUOTAS = [
-  { key: 'cuota1', label: '1ra cuota', monto: 35000, vencimiento: '30/06/2026' },
-  { key: 'cuota2', label: '2da cuota', monto: 35000, vencimiento: '31/07/2026' },
-  { key: 'cuota3', label: '3ra cuota', monto: 35000, vencimiento: '31/08/2026' },
-  { key: 'cuota4', label: '4ta cuota', monto: 35000, vencimiento: '30/09/2026' },
+  { key: 'cuota1', label: '1ra cuota', monto: 35000, vencimiento: '15/06/2026' },
+  { key: 'cuota2', label: '2da cuota', monto: 35000, vencimiento: '15/07/2026' },
+  { key: 'cuota3', label: '3ra cuota', monto: 35000, vencimiento: '15/08/2026' },
+  { key: 'cuota4', label: '4ta cuota', monto: 35000, vencimiento: '15/09/2026' },
 ];
 const TOTAL = CUOTAS.reduce((a, c) => a + c.monto, 0);
 
