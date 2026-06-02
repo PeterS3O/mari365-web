@@ -989,6 +989,7 @@ function setAdminView(view){
   $('admin-payments').style.display = view === 'payments' ? 'block' : 'none';
   $('admin-people').style.display = view === 'people' ? 'block' : 'none';
   $('admin-profile').style.display = view === 'profile' ? 'block' : 'none';
+  if(view === 'payments') renderPayments();
   if(view === 'people') loadPeople();
   if(view === 'profile') renderProfileRequests();
 }
