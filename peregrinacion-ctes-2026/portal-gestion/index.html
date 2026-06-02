@@ -418,8 +418,8 @@ tr:last-child td{border-bottom:0}
     </div>
     <section id="admin-payments" style="display:none">
       <div class="tabs">
-        <button id="filter-pending" class="tab active" onclick="setPaymentFilter('pendiente')">Por revisar</button>
-        <button id="filter-all" class="tab" onclick="setPaymentFilter('todos')">Todos</button>
+        <button id="filter-pending" class="tab" onclick="setPaymentFilter('pendiente')">Por revisar</button>
+        <button id="filter-all" class="tab active" onclick="setPaymentFilter('todos')">Todos</button>
         <button id="filter-rejected" class="tab" onclick="setPaymentFilter('rechazados')">No validados</button>
         <button id="filter-ok" class="tab" onclick="setPaymentFilter('aldia')">Al dia</button>
       </div>
@@ -490,7 +490,7 @@ let adminToken = '';
 let adminRole = '';
 let adminData = null;
 let peopleData = null;
-let paymentFilter = 'pendiente';
+let paymentFilter = 'todos';
 let adminView = 'people';
 let adminSearch = '';
 let paymentMode = 'transferencia';
