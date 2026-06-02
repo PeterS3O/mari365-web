@@ -158,6 +158,7 @@ tr:last-child td{border-bottom:0}
 .people-name{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-weight:800;line-height:1.15}
 .people-inline-dni{color:var(--muted);font-size:.72rem;font-weight:700}
 .people-mobile-summary{display:none}
+.people-mobile-grid{display:none}
 .people-meta{display:flex;gap:6px;flex-wrap:wrap;color:var(--muted);font-size:.72rem;line-height:1.15;margin-top:3px}
 .people-place{white-space:nowrap;font-size:.78rem}
 .people-restrictions{max-width:180px;color:var(--ink);font-size:.76rem;line-height:1.2;text-align:left;margin:0}
@@ -189,11 +190,11 @@ tr:last-child td{border-bottom:0}
   .admin-grid{display:flex;gap:6px;overflow-x:auto;margin:0 -8px 8px;padding:0 8px 4px;scroll-snap-type:x proximity}
   .admin-grid .metric{min-width:106px;scroll-snap-align:start;padding:8px 9px;border-radius:8px;box-shadow:none}
   .metric b{font-size:.88rem}
-  .metric span{font-size:.62rem;line-height:1.15}
+  .metric span{font-size:.68rem;line-height:1.15}
   #page-admin .tabs{flex-wrap:nowrap;overflow-x:auto;margin:5px -8px 7px;padding:0 8px 2px}
-  #page-admin .tab{padding:5px 9px;font-size:.68rem;white-space:nowrap}
-  .filters{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:7px}
-  .filters select,.filters input{min-width:0;width:100%;padding:7px 8px;font-size:.74rem}
+  #page-admin .tab{padding:6px 10px;font-size:.76rem;white-space:nowrap}
+  .filters{display:flex;flex-wrap:nowrap;overflow-x:auto;gap:6px;margin:0 -8px 8px;padding:0 8px 4px}
+  .filters select,.filters input{min-width:176px;width:auto;padding:8px 9px;font-size:.82rem}
   .choice{grid-template-columns:1fr}
   .home-actions,.how{grid-template-columns:1fr}
   .whatsapp-join{align-items:flex-start;flex-wrap:wrap}
@@ -204,7 +205,7 @@ tr:last-child td{border-bottom:0}
   .people-table{border:0;background:transparent}
   .people-table thead{display:none}
   .people-table tbody{display:block}
-  .people-table tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;background:white;border:1px solid var(--line);border-left:3px solid var(--green);border-radius:8px;margin-bottom:6px;padding:8px}
+  .people-table tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:start;background:white;border:1px solid var(--line);border-left:3px solid var(--green);border-radius:8px;margin-bottom:6px;padding:8px}
   .people-table td{display:none;border:0;padding:0;font-size:.76rem}
   .people-table td:nth-child(2),.people-table td:nth-child(8){display:block}
   .people-table td:nth-child(8){align-self:start}
@@ -215,6 +216,11 @@ tr:last-child td{border-bottom:0}
   .people-mobile-summary{display:block;color:var(--muted);font-size:.68rem;line-height:1.25;margin-top:3px}
   .people-mobile-summary b{color:var(--ink);font-weight:800}
   .people-mobile-summary .warn{color:var(--amber);font-weight:800}
+  .people-mobile-grid{display:grid;grid-template-columns:1fr 1fr;gap:3px 8px;margin-top:6px;color:var(--muted);font-size:.68rem;line-height:1.2}
+  .people-mobile-grid span{min-width:0}
+  .people-mobile-grid b{color:var(--ink);font-weight:800}
+  .people-mobile-grid .full{grid-column:1/-1}
+  .people-mobile-grid .warn{color:var(--amber);font-weight:800}
   .name-tags{margin-top:3px;gap:3px}
   .name-tags .pill{font-size:.58rem;padding:1px 5px}
   .login{padding:22px}
@@ -1153,8 +1159,16 @@ function renderPeople(){
       ? '<div class="people-restrictions">'+escapeHtml(restricciones)+'</div>'
       : '<div class="people-restrictions empty">Sin restricciones</div>';
     const parishCommunity = '<div class="people-place">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+'</div>';
-    const mobileSummary = '<div class="people-mobile-summary">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+' · <b>'+(STATE_LABELS[i.estado] || i.estado)+'</b> · '+money(i.resumen.totalPagado)+(restricciones ? ' · <span class="warn">Restricciones</span>' : '')+'</div>';
-    return '<tr><td>'+i.orden+'</td><td><span class="people-name">'+escapeHtml(i.nombre || '')+'<span class="people-inline-dni">DNI '+escapeHtml(String(i.dni || ''))+'</span></span>'+mobileSummary+personAlertTags(i)+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+parishCommunity+'</td><td>'+restrictionsCell+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(i.resumen.totalPagado)+'</td><td><div class="actions">'+wa+baja+'</div></td></tr>';
+    const mobileSummary = '<div class="people-mobile-summary">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+' · <b>'+(STATE_LABELS[i.estado] || i.estado)+'</b> · '+money(i.resumen.totalPagado)+'</div>';
+    const mobileGrid = '<div class="people-mobile-grid">' +
+      '<span>Orden <b>#'+escapeHtml(String(i.orden || '-'))+'</b></span>' +
+      '<span>Vto. DNI <b>'+escapeHtml(i.vencimientoDni || '-')+'</b></span>' +
+      '<span class="full">Parroquia / comunidad <b>'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+'</b></span>' +
+      '<span>Estado <b>'+(STATE_LABELS[i.estado] || i.estado)+'</b></span>' +
+      '<span>Confirmado <b>'+money(i.resumen.totalPagado)+'</b></span>' +
+      '<span class="full">Restricciones <b class="'+(restricciones ? 'warn' : '')+'">'+escapeHtml(restricciones || 'Sin restricciones')+'</b></span>' +
+      '</div>';
+    return '<tr><td>'+i.orden+'</td><td><span class="people-name">'+escapeHtml(i.nombre || '')+'<span class="people-inline-dni">DNI '+escapeHtml(String(i.dni || ''))+'</span></span>'+mobileSummary+mobileGrid+personAlertTags(i)+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+parishCommunity+'</td><td>'+restrictionsCell+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(i.resumen.totalPagado)+'</td><td><div class="actions">'+wa+baja+'</div></td></tr>';
   }).join('') : '<tr><td colspan="8" class="empty">Sin resultados</td></tr>';
 }
 
