@@ -1032,7 +1032,7 @@ function renderComp(p, person){
   let actions = '';
   const file = hasVisibleComprobante(p.comprobanteUrl) ? '<a class="btn secondary small" href="'+p.comprobanteUrl+'" target="_blank">Ver</a>' : '<span class="meta">Sin archivo</span>';
   if(p.estado === 'pendiente'){
-    actions = canEdit() ? '<button class="btn small" onclick="setPaymentStatus(\''+p.id+'\',\'confirmado\')">Confirmar</button><button class="btn danger small" onclick="setPaymentStatus(\''+p.id+'\',\'rechazado\')">No validar</button>' : badge('En revision','pending');
+    actions = canEdit() ? '<button class="btn small" onclick="setPaymentStatus(\''+p.id+'\',\'confirmado\')">Confirmar</button><button class="btn danger small" onclick="setPaymentStatus(\''+p.id+'\',\'rechazado\')">No validar</button>' + whatsappButton('revision', p, person, 'Avisar') : badge('En revision','pending');
   } else if(p.estado === 'confirmado'){
     actions = badge('Confirmado','ok') + whatsappButton('confirmacion', p, person, 'Avisar');
   } else if(p.estado === 'rechazado'){
@@ -1053,6 +1053,7 @@ function whatsappText(tipo, p, person){
   const name = (person.nombre || '').split(' ')[0] || '';
   if(tipo === 'confirmacion') return 'Hola ' + name + ', confirmamos tu pago de ' + cuotaLabel(p.cuotas, ' y ') + ' para ' + EVENTO + '. Podes ver el detalle en ' + PORTAL_URL;
   if(tipo === 'rechazo') return 'Hola ' + name + ', no pudimos validar el comprobante de ' + cuotaLabel(p.cuotas, ' y ') + ' para ' + EVENTO + '. Necesitamos que lo revises o te comuniques con la organizacion.';
+  if(tipo === 'revision') return 'Hola ' + name + ', te escribimos por el comprobante de ' + cuotaLabel(p.cuotas, ' y ') + ' para ' + EVENTO + '. Necesitamos revisar un detalle antes de validarlo.';
   return 'Hola ' + name + ', te recordamos que podes consultar y cargar comprobantes en ' + PORTAL_URL;
 }
 function whatsappButton(tipo, p, person, label){
