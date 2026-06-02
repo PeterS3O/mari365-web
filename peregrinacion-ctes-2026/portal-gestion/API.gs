@@ -11,7 +11,6 @@ const CONFIG = {
   EMAIL_ORGANIZADOR: 'TU_EMAIL@gmail.com',
   ALIAS_TRANSFERENCIA: 'alias.mercadopago',
   NOMBRE_EVENTO: 'Peregrinacion a Caacupe - CNC 2026',
-  CAPACIDAD: 100,
   ADMIN_PASSWORD: 'TU_CLAVE_ADMIN',
   ADMIN_VIEW_PASSWORD: 'TU_CLAVE_VISTA',
   PORTAL_URL: 'https://peters3o.github.io/peregrinacion-corrientes-2026/',
@@ -291,8 +290,9 @@ function inicializarCupos() {
     if (!data[i][cols.ordenInscripcion]) {
       s.getRange(i + 1, cols.ordenInscripcion + 1).setValue(orden);
     }
-    if (!data[i][cols.estadoCupo]) {
-      s.getRange(i + 1, cols.estadoCupo + 1).setValue(orden <= CONFIG.CAPACIDAD ? 'con_cupo' : 'lista_espera');
+    const estadoActual = (data[i][cols.estadoCupo] || '').toString().trim();
+    if (!estadoActual || estadoActual === 'lista_espera' || estadoActual === 'cupo_liberado') {
+      s.getRange(i + 1, cols.estadoCupo + 1).setValue('con_cupo');
     }
   }
   return true;
@@ -398,7 +398,6 @@ function resumenPagos(pagos) {
 function estadoInscripto(d, cols, pagos) {
   const r = resumenPagos(pagos);
   const estadoCupo = (d[cols.estadoCupo] || 'con_cupo').toString().trim() || 'con_cupo';
-  if (estadoCupo === 'lista_espera') return 'lista_espera';
   if (estadoCupo === 'baja') return 'baja';
   if (r.confirmadas.length === CUOTAS.length) return 'pago_completo';
   if (r.rechazadas.length > 0 && r.pendientes.length === 0) return 'comprobante_rechazado';
@@ -562,7 +561,6 @@ function registrarPago(p) {
   const d = v.d;
   const cols = v.cols;
   const estadoCupo = (d[cols.estadoCupo] || 'con_cupo').toString().trim() || 'con_cupo';
-  if (estadoCupo === 'lista_espera') return { ok: false, error: 'Estas en lista de espera. Todavia no cargues pagos.' };
   if (estadoCupo === 'baja') return { ok: false, error: 'Tu inscripcion fue dada de baja.' };
 
   const cuotasKeys = (p.cuotas || '').split(',').map(c => c.trim()).filter(Boolean);
@@ -795,18 +793,6 @@ function liberarCupo(p) {
     if (normDni(data[i][info.cols.dni]) === normDni(p.dni)) {
       info.sheet.getRange(i + 1, info.cols.estadoCupo + 1).setValue('baja');
       break;
-    }
-  }
-  for (let i = 1; i < data.length; i++) {
-    if ((data[i][info.cols.estadoCupo] || '').toString().trim() === 'lista_espera') {
-      info.sheet.getRange(i + 1, info.cols.estadoCupo + 1).setValue('cupo_liberado');
-      const nombre = nombreCompleto(data[i], info.cols);
-      MailApp.sendEmail({
-        to: CONFIG.EMAIL_ORGANIZADOR,
-        subject: 'Nuevo cupo disponible: ' + nombre,
-        body: nombre + ' (DNI ' + data[i][info.cols.dni] + ') paso de lista de espera a cupo disponible.',
-      });
-      return { ok: true, nuevoCupo: nombre };
     }
   }
   return { ok: true, nuevoCupo: null };

@@ -436,7 +436,6 @@ tr:last-child td{border-bottom:0}
           <option value="debe_vencidas">Debe vencidas</option>
           <option value="pago_completo">Pago completo</option>
           <option value="comprobante_rechazado">No validado</option>
-          <option value="lista_espera">Lista de espera</option>
           <option value="baja">Bajas</option>
         </select>
         <select id="people-parish" onchange="renderPeople()"><option value="">Todas las parroquias</option></select>
@@ -481,7 +480,7 @@ const MAP_PLAN = Object.fromEntries(PLAN_PAGOS.map(c=>[c.key,c]));
 const STATE_LABELS = {
   sin_pagos:'Sin pagos', en_revision:'En revision', al_dia:'Al dia',
   debe_vencidas:'Debe vencidas', pago_completo:'Pago completo',
-  comprobante_rechazado:'No validado', lista_espera:'Lista espera', baja:'Dado de baja'
+  comprobante_rechazado:'No validado', baja:'Dado de baja'
 };
 
 let estadoData = null;
@@ -652,11 +651,7 @@ function renderState(){
 
   const alert = $('state-alert');
   alert.style.display = 'none';
-  if(d.estadoCupo === 'lista_espera'){
-    alert.style.display = 'block';
-    alert.textContent = 'Estas en lista de espera. Por ahora no hace falta que cargues pagos.';
-    setGoPayVisible(false);
-  } else if(d.estadoCupo === 'baja'){
+  if(d.estadoCupo === 'baja'){
     alert.style.display = 'block';
     alert.textContent = 'Tu inscripcion figura dada de baja.';
     setGoPayVisible(false);
@@ -687,7 +682,7 @@ function renderState(){
     const idx = PLAN_PAGOS.findIndex(x => x.key === c.key);
     const cargadas = [...new Set([...(r.confirmadas || []), ...(r.pendientes || [])])];
     const previasOk = PLAN_PAGOS.slice(0, idx).every(prev => cargadas.includes(prev.key));
-    const puedeCargar = d.estadoCupo !== 'lista_espera' && d.estadoCupo !== 'baja' && previasOk && (!activo || activo.estado === 'rechazado');
+    const puedeCargar = d.estadoCupo !== 'baja' && previasOk && (!activo || activo.estado === 'rechazado');
     const bloquear = !previasOk && (!activo || activo.estado === 'rechazado') ? '<span class="meta">Completa la cuota anterior primero.</span>' : '';
     const cargar = puedeCargar
       ? `<button class="btn small ${missingCell ? 'blocked' : ''}" onclick="showPayment('${c.key}','transferencia')">Cargar comprobante de transferencia</button><button class="btn secondary small ${missingCell ? 'blocked' : ''}" onclick="showPayment('${c.key}','efectivo')">Cargar pago en efectivo</button>`
