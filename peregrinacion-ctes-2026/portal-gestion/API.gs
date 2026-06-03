@@ -74,6 +74,7 @@ function handleRequest(e) {
     if (action === 'confirmarPago') return json(confirmarPago(p));
     if (action === 'resolverCambioPerfil') return json(resolverCambioPerfil(p));
     if (action === 'getInscriptos') return json(getInscriptos(p));
+    if (action === 'actualizarInscripto') return json(actualizarInscripto(p));
     if (action === 'marcarBaja') return json(marcarBaja(p));
     if (action === 'liberarCupo') return json(liberarCupo(p));
     if (action === 'marcarAvisoWA') return json(marcarAvisoWA(p));
@@ -454,6 +455,7 @@ function normalizarCambiosPerfil(p) {
     parroquia: 'Parroquia',
     comunidad: 'Comunidad',
     restricciones: 'Restricciones alimentarias',
+    vencimientoDni: 'Vencimiento DNI',
   };
   Object.keys(allowed).forEach(key => {
     if (p[key] !== undefined) {
@@ -547,6 +549,7 @@ function aplicarCambiosPerfil(dni, cambios) {
     parroquia: ins.cols.parroquia,
     comunidad: ins.cols.comunidad,
     restricciones: ins.cols.restricciones,
+    vencimientoDni: ins.cols.vencimientoDni,
   };
   Object.keys(map).forEach(key => {
     if (cambios[key] !== undefined && map[key] >= 0) {
@@ -749,6 +752,8 @@ function getInscriptos(p) {
       return {
         orden: d[info.cols.ordenInscripcion] || (idx + 1),
         nombre: nombreCompleto(d, info.cols),
+        nombreSimple: d[info.cols.nombre] || '',
+        apellido: d[info.cols.apellido] || '',
         dni,
         email: d[info.cols.emailPortal] || '',
         celular: d[info.cols.celular] || '',
@@ -771,6 +776,31 @@ function getInscriptos(p) {
       };
     });
   return { ok: true, inscriptos };
+}
+
+function actualizarInscripto(p) {
+  if (!validarAdminEdicion(p)) return { ok: false, error: 'No autorizado.' };
+  const ins = buscarInscripto(p.dni);
+  if (!ins) return { ok: false, error: 'Inscripto no encontrado.' };
+  const s = getSheet(CONFIG.HOJA_INSCRIPTOS);
+  const map = {
+    nombre: ins.cols.nombre,
+    apellido: ins.cols.apellido,
+    email: ins.cols.emailPortal,
+    celular: ins.cols.celular,
+    emergencia: ins.cols.emergencia,
+    parroquia: ins.cols.parroquia,
+    comunidad: ins.cols.comunidad,
+    restricciones: ins.cols.restricciones,
+    vencimientoDni: ins.cols.vencimientoDni,
+    fechaNacimiento: ins.cols.fechaNacimiento,
+  };
+  Object.keys(map).forEach(key => {
+    if (p[key] !== undefined && map[key] >= 0) {
+      s.getRange(ins.row, map[key] + 1).setValue((p[key] || '').toString().trim());
+    }
+  });
+  return { ok: true };
 }
 
 function marcarBaja(p) {

@@ -57,6 +57,8 @@ button,input,select{font:inherit}
 .btn.danger{background:var(--red)}
 .btn.small{padding:7px 10px;font-size:.78rem}
 .btn.tiny{padding:4px 7px;font-size:.68rem;font-weight:800;border-radius:6px}
+.btn.icon-danger{width:24px;height:24px;padding:0;border-radius:50%;background:var(--red-soft);color:var(--red);border:1px solid #f1b9b9;font-size:.9rem}
+.btn.icon-danger:hover{background:#f8d7d7}
 .btn.blocked{background:#d6ddd8;color:#6d786f;cursor:pointer}
 .btn.blocked:hover{background:#d6ddd8}
 .btn.needs-attention{border-color:#f2c36f;background:var(--amber-soft);color:var(--amber)}
@@ -200,6 +202,20 @@ tr:last-child td{border-bottom:0}
   .whatsapp-action{width:100%;border-radius:8px}
   .row,.comp{flex-direction:column}
   .actions{justify-content:flex-start}
+  .pay-card{margin-bottom:7px;border-radius:8px;box-shadow:none}
+  .pay-head{padding:9px 10px;gap:7px}
+  .pay-head .avatar{width:30px;height:30px;font-size:.72rem}
+  .pay-head b{font-size:.9rem;line-height:1.15}
+  .pay-head span{font-size:.68rem;line-height:1.2}
+  .pay-head>div:last-child{text-align:right;min-width:62px}
+  .chips{padding:0 10px 7px;gap:4px}
+  .chip{font-size:.58rem;padding:2px 6px}
+  .details .comp{padding:8px 10px;gap:6px}
+  .details .comp b{font-size:.82rem}
+  .details .comp .meta{font-size:.68rem}
+  .details .comp .actions{flex-direction:row;justify-content:flex-start;gap:4px}
+  .details .btn.small{padding:4px 6px;font-size:.66rem;border-radius:6px}
+  .pay-card>.row{padding:7px 10px!important;gap:5px}
   .table-wrap{overflow:visible}
   .people-table{border:0;background:transparent}
   .people-table thead{display:none}
@@ -349,6 +365,7 @@ tr:last-child td{border-bottom:0}
       <div class="field"><label>Telefono de emergencia</label><input id="profile-emergencia"></div>
       <div class="field"><label>Parroquia</label><input id="profile-parroquia"></div>
       <div class="field"><label>Comunidad</label><input id="profile-comunidad"></div>
+      <div class="field"><label>Fecha de vencimiento del DNI</label><input id="profile-vencimiento-dni" placeholder="Ej: 15/09/2030"></div>
       <div class="field"><label>Restricciones alimentarias</label><textarea id="profile-restricciones"></textarea></div>
       <button class="btn full" onclick="submitProfileChange()">Enviar cambios para aprobacion</button>
       <div id="profile-msg" class="message"></div>
@@ -472,9 +489,9 @@ tr:last-child td{border-bottom:0}
         <select id="people-parish" onchange="renderPeople()"><option value="">Todas las parroquias</option></select>
         <select id="people-community" onchange="renderPeople()"><option value="">Todas las comunidades</option></select>
         <select id="people-dni-order" onchange="renderPeople()">
-          <option value="">Orden original</option>
-          <option value="dni_vence_asc">DNI vence primero</option>
-          <option value="dni_vence_desc">DNI vence ultimo</option>
+          <option value="">Vto. DNI</option>
+          <option value="dni_vence_asc">Vto. DNI primero</option>
+          <option value="dni_vence_desc">Vto. DNI ultimo</option>
         </select>
         <select id="people-restrictions-filter" onchange="renderPeople()">
           <option value="">Todas las restricciones</option>
@@ -486,6 +503,37 @@ tr:last-child td{border-bottom:0}
     </section>
     <section id="admin-profile" style="display:none">
       <div id="profile-requests"></div>
+    </section>
+  </div>
+</main>
+
+<main id="page-admin-edit" class="page">
+  <div class="wrap" style="max-width:720px">
+    <div class="top">
+      <h2 class="title">Editar inscripto</h2>
+      <button class="btn secondary small" onclick="showPage('page-admin')">Volver</button>
+    </div>
+    <section class="card panel">
+      <input id="admin-edit-dni" type="hidden">
+      <div class="grid3">
+        <div class="field"><label>Nombre</label><input id="admin-edit-nombre"></div>
+        <div class="field"><label>Apellido</label><input id="admin-edit-apellido"></div>
+        <div class="field"><label>DNI</label><input id="admin-edit-dni-view" disabled></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Email portal</label><input id="admin-edit-email" type="email"></div>
+        <div class="field"><label>Celular</label><input id="admin-edit-celular" inputmode="numeric"></div>
+        <div class="field"><label>Telefono emergencia</label><input id="admin-edit-emergencia"></div>
+      </div>
+      <div class="grid3">
+        <div class="field"><label>Fecha nacimiento</label><input id="admin-edit-fecha-nacimiento" placeholder="dd/mm/aaaa"></div>
+        <div class="field"><label>Vencimiento DNI</label><input id="admin-edit-vencimiento-dni" placeholder="dd/mm/aaaa"></div>
+        <div class="field"><label>Parroquia</label><input id="admin-edit-parroquia"></div>
+      </div>
+      <div class="field"><label>Comunidad</label><input id="admin-edit-comunidad"></div>
+      <div class="field"><label>Restricciones alimentarias</label><textarea id="admin-edit-restricciones"></textarea></div>
+      <button class="btn full" onclick="submitAdminEdit()">Guardar cambios</button>
+      <div id="admin-edit-msg" class="message"></div>
     </section>
   </div>
 </main>
@@ -731,6 +779,7 @@ function showProfile(reason){
   $('profile-emergencia').value = estadoData.emergencia || '';
   $('profile-parroquia').value = estadoData.parroquia || '';
   $('profile-comunidad').value = estadoData.comunidad || '';
+  $('profile-vencimiento-dni').value = estadoData.vencimientoDni || '';
   $('profile-restricciones').value = estadoData.restricciones || '';
   $('profile-msg').className = 'message';
   $('profile-msg').textContent = '';
@@ -773,6 +822,7 @@ async function submitProfileChange(){
       emergencia: $('profile-emergencia').value,
       parroquia: $('profile-parroquia').value,
       comunidad: $('profile-comunidad').value,
+      vencimientoDni: $('profile-vencimiento-dni').value,
       restricciones: $('profile-restricciones').value
     });
     if(data.ok && celular){
@@ -1052,7 +1102,7 @@ function renderPaymentCard(person){
   }).join('');
   const details = person.pagos.map(p=>renderComp(p, person)).join('');
   const bajaInfo = person.estadoCupo === 'baja' ? '<span class="pill bad">Dado de baja - devolver '+money(confirmedTotal(person))+'</span>' : '';
-  return '<article class="pay-card card '+cls+'"><div class="pay-head" onclick="toggleDetails(\'det-'+person.dni+'\')"><div class="avatar">'+initials(person.nombre)+'</div><div class="grow"><b>'+person.nombre+'</b>'+personAlertTags(person)+'<span>DNI '+person.dni+' - '+person.pagos.length+' comprobante(s)</span>'+bajaInfo+'</div><div><b>'+money(confirmedTotal(person))+'</b><span>de '+money(TOTAL)+'</span></div></div><div class="chips">'+chips+'</div><div id="det-'+person.dni+'" class="details">'+details+'</div><div class="row" style="padding:10px 14px"><span class="meta">'+(person.whatsapp ? 'WA '+person.whatsapp : 'Sin WhatsApp')+'</span><div class="actions">'+(canEdit() && person.estadoCupo !== 'baja'?'<button class="btn secondary tiny" onclick="markLow(\''+person.dni+'\')">dar de baja</button>':'')+'</div></div></article>';
+  return '<article class="pay-card card '+cls+'"><div class="pay-head" onclick="toggleDetails(\'det-'+person.dni+'\')"><div class="avatar">'+initials(person.nombre)+'</div><div class="grow"><b>'+person.nombre+'</b>'+personAlertTags(person)+'<span>DNI '+person.dni+' - '+person.pagos.length+' comprobante(s)</span>'+bajaInfo+'</div><div><b>'+money(confirmedTotal(person))+'</b><span>de '+money(TOTAL)+'</span></div></div><div class="chips">'+chips+'</div><div id="det-'+person.dni+'" class="details">'+details+'</div><div class="row" style="padding:10px 14px"><span class="meta">'+(person.whatsapp ? 'WA '+person.whatsapp : 'Sin WhatsApp')+'</span><div class="actions">'+(canEdit() && person.estadoCupo !== 'baja'?'<button class="btn icon-danger" title="Dar de baja" onclick="markLow(\''+person.dni+'\')">×</button>':'')+'</div></div></article>';
 }
 function renderComp(p, person){
   let actions = '';
@@ -1147,15 +1197,66 @@ function renderPeople(){
   }
   $('people-body').innerHTML = list.length ? list.map(i => {
     const wa = i.whatsapp ? '<a class="btn secondary small" target="_blank" href="https://wa.me/'+i.whatsapp+'?text='+encodeURIComponent('Hola '+(i.nombre||'').split(' ')[0]+', te escribimos por '+EVENTO+'.')+'">WA</a>' : '';
-    const baja = canEdit() && i.estadoCupo !== 'baja' ? '<button class="btn danger tiny" onclick="markLow(\''+String(i.dni).replace(/\D/g,'')+'\')">dar de baja</button>' : '';
+    const edit = canEdit() ? '<button class="btn secondary tiny" onclick="showAdminEdit(\''+String(i.dni).replace(/\D/g,'')+'\')">Editar</button>' : '';
+    const baja = canEdit() && i.estadoCupo !== 'baja' ? '<button class="btn icon-danger" title="Dar de baja" onclick="markLow(\''+String(i.dni).replace(/\D/g,'')+'\')">×</button>' : '';
     const restricciones = (i.restricciones || '').trim();
     const restrictionsCell = restricciones
       ? '<div class="people-restrictions">'+escapeHtml(restricciones)+'</div>'
       : '<div class="people-restrictions empty">Sin restricciones</div>';
     const parishCommunity = '<div class="people-place">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+'</div>';
-    const mobileSummary = '<div class="people-mobile-summary">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+' · <b>'+(STATE_LABELS[i.estado] || i.estado)+'</b> · '+money(i.resumen.totalPagado)+(restricciones ? ' · <span class="warn">Restricciones</span>' : '')+'</div>';
-    return '<tr><td>'+i.orden+'</td><td><span class="people-name">'+escapeHtml(i.nombre || '')+'<span class="people-inline-dni">DNI '+escapeHtml(String(i.dni || ''))+'</span></span>'+mobileSummary+personAlertTags(i)+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+parishCommunity+'</td><td>'+restrictionsCell+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(i.resumen.totalPagado)+'</td><td><div class="actions">'+wa+baja+'</div></td></tr>';
+    const mobileSummary = '<div class="people-mobile-summary">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+' · <b>'+(STATE_LABELS[i.estado] || i.estado)+'</b> · '+money(i.resumen.totalPagado)+(restricciones ? ' · <span class="warn">'+escapeHtml(restricciones)+'</span>' : '')+'</div>';
+    return '<tr><td>'+i.orden+'</td><td><span class="people-name">'+escapeHtml(i.nombre || '')+'<span class="people-inline-dni">DNI '+escapeHtml(String(i.dni || ''))+'</span></span>'+mobileSummary+personAlertTags(i)+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+parishCommunity+'</td><td>'+restrictionsCell+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(i.resumen.totalPagado)+'</td><td><div class="actions">'+wa+edit+baja+'</div></td></tr>';
   }).join('') : '<tr><td colspan="8" class="empty">Sin resultados</td></tr>';
+}
+
+function showAdminEdit(dni){
+  if(!canEdit()) return;
+  const p = (peopleData && peopleData.inscriptos || []).find(i=>String(i.dni).replace(/\D/g,'') === String(dni).replace(/\D/g,''));
+  if(!p){ alert('No encontre el inscripto.'); return; }
+  $('admin-edit-dni').value = String(p.dni || '').replace(/\D/g,'');
+  $('admin-edit-dni-view').value = p.dni || '';
+  $('admin-edit-nombre').value = p.nombreSimple || (p.nombre || '').split(' ')[0] || '';
+  $('admin-edit-apellido').value = p.apellido || (p.nombre || '').split(' ').slice(1).join(' ');
+  $('admin-edit-email').value = p.email || '';
+  $('admin-edit-celular').value = p.celular || '';
+  $('admin-edit-emergencia').value = p.emergencia || '';
+  $('admin-edit-fecha-nacimiento').value = p.fechaNacimiento || '';
+  $('admin-edit-vencimiento-dni').value = p.vencimientoDni || '';
+  $('admin-edit-parroquia').value = p.parroquia || '';
+  $('admin-edit-comunidad').value = p.comunidad || '';
+  $('admin-edit-restricciones').value = p.restricciones || '';
+  $('admin-edit-msg').className = 'message';
+  $('admin-edit-msg').textContent = '';
+  showPage('page-admin-edit');
+}
+
+async function submitAdminEdit(){
+  if(!canEdit()) return;
+  try{
+    const data = await api('actualizarInscripto', {
+      adminToken,
+      dni: $('admin-edit-dni').value,
+      nombre: $('admin-edit-nombre').value,
+      apellido: $('admin-edit-apellido').value,
+      email: $('admin-edit-email').value,
+      celular: $('admin-edit-celular').value,
+      emergencia: $('admin-edit-emergencia').value,
+      fechaNacimiento: $('admin-edit-fecha-nacimiento').value,
+      vencimientoDni: $('admin-edit-vencimiento-dni').value,
+      parroquia: $('admin-edit-parroquia').value,
+      comunidad: $('admin-edit-comunidad').value,
+      restricciones: $('admin-edit-restricciones').value
+    });
+    if(!data.ok){ showMsg('admin-edit-msg', data.error || 'No se pudo guardar.', false); return; }
+    showMsg('admin-edit-msg', 'Cambios guardados.', true);
+    peopleData = null;
+    adminData = null;
+    await refreshAdmin();
+    setAdminView('people');
+    showPage('page-admin');
+  }catch(e){
+    showMsg('admin-edit-msg', e.message || 'No se pudo guardar.', false);
+  }
 }
 
 function dateFromAR(value){
@@ -1220,7 +1321,7 @@ function renderProfileRequests(){
 }
 
 function labelCambio(k){
-  return ({celular:'Celular',emergencia:'Telefono emergencia',parroquia:'Parroquia',comunidad:'Comunidad',restricciones:'Restricciones'})[k] || k;
+  return ({celular:'Celular',emergencia:'Telefono emergencia',parroquia:'Parroquia',comunidad:'Comunidad',restricciones:'Restricciones',vencimientoDni:'Vencimiento DNI'})[k] || k;
 }
 function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 async function resolveProfileChange(id, decision){
