@@ -1102,7 +1102,7 @@ function renderPaymentCard(person){
   }).join('');
   const details = person.pagos.map(p=>renderComp(p, person)).join('');
   const bajaInfo = person.estadoCupo === 'baja' ? '<span class="pill bad">Dado de baja - devolver '+money(confirmedTotal(person))+'</span>' : '';
-  return '<article class="pay-card card '+cls+'"><div class="pay-head" onclick="toggleDetails(\'det-'+person.dni+'\')"><div class="avatar">'+initials(person.nombre)+'</div><div class="grow"><b>'+person.nombre+'</b>'+personAlertTags(person)+'<span>DNI '+person.dni+' - '+person.pagos.length+' comprobante(s)</span>'+bajaInfo+'</div><div><b>'+money(confirmedTotal(person))+'</b><span>de '+money(TOTAL)+'</span></div></div><div class="chips">'+chips+'</div><div id="det-'+person.dni+'" class="details">'+details+'</div><div class="row" style="padding:10px 14px"><span class="meta">'+(person.whatsapp ? 'WA '+person.whatsapp : 'Sin WhatsApp')+'</span><div class="actions">'+(canEdit() && person.estadoCupo !== 'baja'?'<button class="btn icon-danger" title="Dar de baja" onclick="markLow(\''+person.dni+'\')">×</button>':'')+'</div></div></article>';
+  return '<article class="pay-card card '+cls+'"><div class="pay-head" onclick="toggleDetails(\'det-'+person.dni+'\')"><div class="avatar">'+initials(person.nombre)+'</div><div class="grow"><b>'+person.nombre+'</b>'+personAlertTags(person)+'<span>DNI '+person.dni+' - '+person.pagos.length+' comprobante(s)</span>'+bajaInfo+'</div><div><b>'+money(confirmedTotal(person))+'</b><span>de '+money(TOTAL)+'</span></div></div><div class="chips">'+chips+'</div><div id="det-'+person.dni+'" class="details">'+details+'</div></article>';
 }
 function renderComp(p, person){
   let actions = '';
