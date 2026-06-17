@@ -725,6 +725,162 @@ details[open] .mes-body { display: block; }
   display: block;
 }
 
+.calendario-intro {
+  max-width: 860px;
+  margin: 2.6rem auto 2rem;
+  padding: 1.3rem 1.5rem;
+  background: linear-gradient(135deg, var(--azul-suave) 0%, #ffffff 100%);
+  border: 1px solid rgba(44,111,172,0.14);
+  border-left: 5px solid var(--dorado);
+  border-radius: var(--borde-radio);
+  box-shadow: var(--sombra);
+}
+
+.calendario-intro p {
+  color: var(--gris-texto);
+  font-size: 0.98rem;
+  line-height: 1.8;
+}
+
+.seo-section {
+  margin-top: 3rem;
+  padding-top: 2.4rem;
+  border-top: 1px solid rgba(44,111,172,0.14);
+}
+
+.seo-section h2 {
+  color: var(--azul);
+  font-size: 1.65rem;
+  margin-bottom: 1.2rem;
+}
+
+.seo-section > p {
+  color: var(--gris-texto);
+  font-size: 0.98rem;
+  line-height: 1.9;
+  margin-bottom: 1rem;
+  max-width: 900px;
+}
+
+.fiestas-destacadas-grid,
+.mes-editorial-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.fiestas-destacadas-grid article,
+.mes-editorial-grid article {
+  background: var(--blanco);
+  border: 1px solid rgba(44,111,172,0.1);
+  border-radius: var(--borde-radio);
+  box-shadow: var(--sombra);
+  padding: 1.1rem 1.2rem;
+}
+
+.fiestas-destacadas-grid span {
+  display: inline-block;
+  color: var(--dorado);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.4rem;
+}
+
+.fiestas-destacadas-grid h3,
+.mes-editorial-grid h3 {
+  color: var(--negro-suave);
+  font-size: 1.05rem;
+  margin-bottom: 0.45rem;
+}
+
+.fiestas-destacadas-grid h3 a,
+.tabla-calendario a {
+  color: var(--azul);
+}
+
+.fiestas-destacadas-grid h3 a:hover,
+.tabla-calendario a:hover {
+  color: var(--dorado);
+}
+
+.fiestas-destacadas-grid p,
+.mes-editorial-grid p {
+  color: var(--gris-texto);
+  font-size: 0.9rem;
+  line-height: 1.7;
+}
+
+.tabla-calendario-wrap {
+  overflow-x: auto;
+  border-radius: var(--borde-radio);
+  box-shadow: var(--sombra);
+  border: 1px solid rgba(44,111,172,0.1);
+}
+
+.tabla-calendario {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--blanco);
+  min-width: 720px;
+}
+
+.tabla-calendario th {
+  background: var(--azul);
+  color: var(--blanco);
+  text-align: left;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0.9rem 1rem;
+}
+
+.tabla-calendario td {
+  border-bottom: 1px solid var(--azul-suave);
+  color: var(--gris-texto);
+  font-size: 0.88rem;
+  padding: 0.8rem 1rem;
+  vertical-align: top;
+}
+
+.tabla-calendario tr:last-child td { border-bottom: none; }
+.tabla-calendario td:first-child { font-weight: 700; color: var(--negro-suave); white-space: nowrap; }
+
+.faq-calendario details {
+  background: var(--blanco);
+  border: 1px solid rgba(44,111,172,0.12);
+  border-radius: var(--borde-radio);
+  box-shadow: var(--sombra);
+  margin-bottom: 0.8rem;
+  overflow: hidden;
+}
+
+.faq-calendario summary {
+  cursor: pointer;
+  color: var(--negro-suave);
+  font-weight: 700;
+  padding: 1rem 1.2rem;
+  list-style: none;
+}
+
+.faq-calendario summary::-webkit-details-marker { display: none; }
+.faq-calendario summary::after {
+  content: '+';
+  float: right;
+  color: var(--azul);
+  font-size: 1.2rem;
+  line-height: 1;
+}
+.faq-calendario details[open] summary::after { content: '–'; }
+
+.faq-calendario p {
+  color: var(--gris-texto);
+  font-size: 0.92rem;
+  line-height: 1.8;
+  padding: 0 1.2rem 1rem;
+}
+
 /* --- Oraciones --- */
 .oracion-card {
   background: var(--blanco);
@@ -958,6 +1114,13 @@ details[open] .mes-body { display: block; }
   .cards-lista { grid-template-columns: 1fr; }
   .pais-lista { grid-template-columns: 1fr; }
   .mes-grid { grid-template-columns: 1fr; }
+  .calendario-intro { padding: 1rem; margin-bottom: 1.5rem; }
+  .seo-section { margin-top: 2.2rem; padding-top: 1.8rem; }
+  .seo-section h2 { font-size: 1.35rem; }
+  .fiestas-destacadas-grid,
+  .mes-editorial-grid { grid-template-columns: 1fr; }
+  .tabla-calendario th,
+  .tabla-calendario td { padding: 0.75rem 0.8rem; }
 
   /* Landing pages en móvil */
   .advocacion-content { padding: 1.5rem 1rem; }
