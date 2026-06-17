@@ -763,14 +763,16 @@ details[open] .mes-body { display: block; }
 }
 
 .fiestas-destacadas-grid,
-.mes-editorial-grid {
+.mes-editorial-grid,
+.fechas-moviles-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
   gap: 1rem;
 }
 
 .fiestas-destacadas-grid article,
-.mes-editorial-grid article {
+.mes-editorial-grid article,
+.fechas-moviles-grid article {
   background: var(--blanco);
   border: 1px solid rgba(44,111,172,0.1);
   border-radius: var(--borde-radio);
@@ -778,7 +780,8 @@ details[open] .mes-body { display: block; }
   padding: 1.1rem 1.2rem;
 }
 
-.fiestas-destacadas-grid span {
+.fiestas-destacadas-grid span,
+.fechas-moviles-grid span {
   display: inline-block;
   color: var(--dorado);
   font-size: 0.76rem;
@@ -789,24 +792,28 @@ details[open] .mes-body { display: block; }
 }
 
 .fiestas-destacadas-grid h3,
-.mes-editorial-grid h3 {
+.mes-editorial-grid h3,
+.fechas-moviles-grid h3 {
   color: var(--negro-suave);
   font-size: 1.05rem;
   margin-bottom: 0.45rem;
 }
 
 .fiestas-destacadas-grid h3 a,
+.fechas-moviles-grid h3 a,
 .tabla-calendario a {
   color: var(--azul);
 }
 
 .fiestas-destacadas-grid h3 a:hover,
+.fechas-moviles-grid h3 a:hover,
 .tabla-calendario a:hover {
   color: var(--dorado);
 }
 
 .fiestas-destacadas-grid p,
-.mes-editorial-grid p {
+.mes-editorial-grid p,
+.fechas-moviles-grid p {
   color: var(--gris-texto);
   font-size: 0.9rem;
   line-height: 1.7;
@@ -1118,7 +1125,8 @@ details[open] .mes-body { display: block; }
   .seo-section { margin-top: 2.2rem; padding-top: 1.8rem; }
   .seo-section h2 { font-size: 1.35rem; }
   .fiestas-destacadas-grid,
-  .mes-editorial-grid { grid-template-columns: 1fr; }
+  .mes-editorial-grid,
+  .fechas-moviles-grid { grid-template-columns: 1fr; }
   .tabla-calendario th,
   .tabla-calendario td { padding: 0.75rem 0.8rem; }
 
