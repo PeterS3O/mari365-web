@@ -631,6 +631,107 @@ footer .footer-links a:hover { color: var(--dorado-claro); }
 }
 
 /* --- Calendario --- */
+.calendario-hoy {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+  align-items: center;
+  margin: 0 auto 1.8rem;
+  padding: 1.15rem 1.25rem;
+  max-width: 980px;
+  background:
+    linear-gradient(135deg, rgba(255,255,255,0.96), rgba(238,246,253,0.96)),
+    var(--blanco);
+  border: 1px solid rgba(44,111,172,0.16);
+  border-left: 5px solid var(--dorado);
+  border-radius: var(--borde-radio);
+  box-shadow: var(--sombra);
+}
+
+.calendario-hoy-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--azul);
+  color: var(--dorado-claro);
+  font-family: 'Playfair Display', serif;
+  font-size: 1.45rem;
+  font-weight: 700;
+  box-shadow: 0 8px 18px rgba(10,46,82,0.16);
+}
+
+.calendario-hoy-content h2 {
+  margin: 0.15rem 0 0.3rem;
+  color: var(--azul);
+  font-size: 1.35rem;
+}
+
+.calendario-hoy-content p {
+  margin: 0;
+  color: var(--gris-texto);
+  line-height: 1.65;
+}
+
+.calendario-hoy-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem 0.7rem;
+  align-items: center;
+  color: var(--gris-texto);
+  font-size: 0.82rem;
+}
+
+.calendario-hoy-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(201,162,39,0.16);
+  color: var(--azul);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  font-size: 0.68rem;
+}
+
+.calendario-hoy-lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.8rem;
+}
+
+.calendario-hoy-chip {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 0.12rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 10px;
+  background: var(--blanco);
+  border: 1px solid rgba(44,111,172,0.14);
+  color: var(--negro-suave);
+  box-shadow: 0 6px 14px rgba(10,46,82,0.06);
+}
+
+a.calendario-hoy-chip:hover {
+  border-color: rgba(201,162,39,0.45);
+  transform: translateY(-1px);
+}
+
+.calendario-hoy-chip strong {
+  color: var(--azul);
+  font-size: 0.93rem;
+}
+
+.calendario-hoy-chip span {
+  color: var(--gris-texto);
+  font-size: 0.76rem;
+}
+
 .mes-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -1143,6 +1244,23 @@ details[open] .mes-body { display: block; }
   .cards-grid { grid-template-columns: 1fr; }
   .cards-lista { grid-template-columns: 1fr; }
   .pais-lista { grid-template-columns: 1fr; }
+  .calendario-hoy {
+    grid-template-columns: auto 1fr;
+    gap: 0.7rem;
+    padding: 0.85rem;
+    margin-bottom: 1.3rem;
+  }
+  .calendario-hoy-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 1rem;
+    margin-top: 0.1rem;
+    align-self: start;
+  }
+  .calendario-hoy-content h2 { font-size: 1.15rem; }
+  .calendario-hoy-content p { font-size: 0.9rem; line-height: 1.55; }
+  .calendario-hoy-lista { display: grid; grid-template-columns: 1fr; }
+  .calendario-hoy-chip { padding: 0.5rem 0.65rem; }
   .mes-grid { grid-template-columns: 1fr; }
   .calendario-intro { padding: 1rem; margin-bottom: 1.5rem; }
   .seo-section { margin-top: 2.2rem; padding-top: 1.8rem; }

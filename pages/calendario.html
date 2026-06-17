@@ -172,6 +172,21 @@
 
   <main class="page-content">
 
+    <section class="calendario-hoy" aria-labelledby="calendario-hoy-titulo" aria-live="polite">
+      <div class="calendario-hoy-icon" aria-hidden="true">M</div>
+      <div class="calendario-hoy-content">
+        <div class="calendario-hoy-meta">
+          <span class="calendario-hoy-badge" id="calendario-hoy-badge">Calendario de hoy</span>
+          <span id="calendario-hoy-fecha">Consultando la fecha actual...</span>
+        </div>
+        <h2 id="calendario-hoy-titulo">Celebración mariana de hoy</h2>
+        <p id="calendario-hoy-descripcion">
+          Consultá si hoy hay una fiesta mariana o cuánto falta para la próxima celebración.
+        </p>
+        <div class="calendario-hoy-lista" id="calendario-hoy-lista"></div>
+      </div>
+    </section>
+
     <div class="mes-grid">
 
       <!-- ENERO -->
@@ -885,5 +900,115 @@
   </footer>
 
   <script src="../js/main.js"></script>
+  <script>
+    (function () {
+      const celebracionesMarianas = [
+        { mes: 1, dia: 1, nombre: 'Solemnidad de María, Madre de Dios', tipo: 'Solemnidad', url: '../advocaciones/madre-de-dios.html' },
+        { mes: 1, dia: 8, nombre: 'Nuestra Señora del Pronto Socorro', tipo: 'Advocación · Louisiana' },
+        { mes: 1, dia: 21, nombre: 'Nuestra Señora de la Altagracia', tipo: 'Patrona de República Dominicana' },
+        { mes: 1, dia: 28, nombre: 'Nuestra Señora de la Paz', tipo: 'Advocación · paz y reconciliación' },
+        { mes: 2, dia: 2, nombre: 'Presentación del Señor y Nuestra Señora de la Candelaria', tipo: 'Fiesta' },
+        { mes: 2, dia: 3, nombre: 'Nuestra Señora de Suyapa', tipo: 'Patrona de Honduras' },
+        { mes: 2, dia: 11, nombre: 'Nuestra Señora de Lourdes', tipo: 'Memoria', url: '../advocaciones/lourdes.html' },
+        { mes: 3, dia: 25, nombre: 'Anunciación del Señor', tipo: 'Solemnidad' },
+        { mes: 3, dia: 25, nombre: 'Nuestra Señora de la Anunciación', tipo: 'Título mariano' },
+        { mes: 4, dia: 26, nombre: 'Nuestra Señora del Buen Consejo', tipo: 'Memoria' },
+        { mes: 4, dia: 27, nombre: 'Nuestra Señora de Montserrat', tipo: 'Advocación' },
+        { mes: 5, dia: 8, nombre: 'Nuestra Señora de Luján', tipo: 'Patrona de Argentina', url: '../advocaciones/lujan.html' },
+        { mes: 5, dia: 13, nombre: 'Nuestra Señora de Fátima', tipo: 'Memoria', url: '../advocaciones/fatima.html' },
+        { mes: 5, dia: 24, nombre: 'María Auxiliadora', tipo: 'Advocación · tradición salesiana' },
+        { mes: 5, dia: 31, nombre: 'Visitación de la Virgen María', tipo: 'Fiesta' },
+        { mes: 6, dia: 27, nombre: 'Nuestra Señora del Perpetuo Socorro', tipo: 'Memoria' },
+        { mes: 7, dia: 2, nombre: 'Nuestra Señora de Czestochowa', tipo: 'Advocación · Virgen Negra', url: '../advocaciones/czestochowa.html' },
+        { mes: 7, dia: 16, nombre: 'Nuestra Señora del Carmen', tipo: 'Memoria', url: '../advocaciones/carmen.html' },
+        { mes: 7, dia: 16, nombre: 'Nuestra Señora de Itatí', tipo: 'Patrona de Corrientes', url: '../advocaciones/itati.html' },
+        { mes: 7, dia: 26, nombre: 'Santa Ana, madre de la Virgen María', tipo: 'Memoria' },
+        { mes: 8, dia: 2, nombre: 'Nuestra Señora de los Ángeles', tipo: 'Patrona de Costa Rica' },
+        { mes: 8, dia: 5, nombre: 'Dedicación de Santa María la Mayor', tipo: 'Memoria · Roma' },
+        { mes: 8, dia: 5, nombre: 'Nuestra Señora de las Nieves', tipo: 'Advocación' },
+        { mes: 8, dia: 15, nombre: 'Asunción de la Santísima Virgen María', tipo: 'Solemnidad', url: '../advocaciones/asuncion.html' },
+        { mes: 8, dia: 22, nombre: 'María, Reina del Universo', tipo: 'Memoria' },
+        { mes: 8, dia: 26, nombre: 'Nuestra Señora de Czestochowa', tipo: 'Fiesta principal · Polonia', url: '../advocaciones/czestochowa.html' },
+        { mes: 9, dia: 8, nombre: 'Natividad de la Virgen María', tipo: 'Fiesta' },
+        { mes: 9, dia: 8, nombre: 'Nuestra Señora de la Caridad del Cobre', tipo: 'Patrona de Cuba' },
+        { mes: 9, dia: 8, nombre: 'Nuestra Señora de Covadonga', tipo: 'Advocación · Asturias' },
+        { mes: 9, dia: 8, nombre: 'Nuestra Señora de Meritxell', tipo: 'Patrona de Andorra' },
+        { mes: 9, dia: 11, nombre: 'Nuestra Señora de Coromoto', tipo: 'Patrona de Venezuela' },
+        { mes: 9, dia: 12, nombre: 'Santísimo Nombre de María', tipo: 'Memoria' },
+        { mes: 9, dia: 15, nombre: 'Nuestra Señora de los Dolores', tipo: 'Memoria', url: '../advocaciones/dolores.html' },
+        { mes: 9, dia: 24, nombre: 'Nuestra Señora de la Merced', tipo: 'Advocación · Orden de la Merced' },
+        { mes: 9, dia: 24, nombre: 'Nuestra Señora de Walsingham', tipo: 'Advocación · Inglaterra' },
+        { mes: 10, dia: 7, nombre: 'Nuestra Señora del Rosario', tipo: 'Memoria', url: '../advocaciones/rosario.html' },
+        { mes: 10, dia: 12, nombre: 'Nuestra Señora Aparecida', tipo: 'Patrona de Brasil', url: '../advocaciones/aparecida.html' },
+        { mes: 10, dia: 12, nombre: 'Nuestra Señora del Pilar', tipo: 'Advocación · España', url: '../advocaciones/pilar.html' },
+        { mes: 10, dia: 20, nombre: 'Mater Admirabilis', tipo: 'Advocación · tradición del Sagrado Corazón' },
+        { mes: 11, dia: 21, nombre: 'Presentación de la Virgen María', tipo: 'Memoria' },
+        { mes: 11, dia: 27, nombre: 'Nuestra Señora de la Medalla Milagrosa', tipo: 'Memoria', url: '../advocaciones/medalla-milagrosa.html' },
+        { mes: 12, dia: 8, nombre: 'Inmaculada Concepción de la Virgen', tipo: 'Solemnidad', url: '../advocaciones/inmaculada-concepcion.html' },
+        { mes: 12, dia: 8, nombre: 'Nuestra Señora de Caacupé', tipo: 'Patrona de Paraguay' },
+        { mes: 12, dia: 8, nombre: 'Nuestra Señora de Cotoca', tipo: 'Advocación · Bolivia' },
+        { mes: 12, dia: 8, nombre: 'Nuestra Señora de Juquila', tipo: 'Advocación · México' },
+        { mes: 12, dia: 10, nombre: 'Nuestra Señora de Loreto', tipo: 'Memoria · patrona de la aviación' },
+        { mes: 12, dia: 12, nombre: 'Nuestra Señora de Guadalupe', tipo: 'Fiesta', url: '../advocaciones/guadalupe.html' },
+        { mes: 12, dia: 18, nombre: 'Nuestra Señora de la Esperanza', tipo: 'Advocación · Adviento' },
+      ];
+
+      const badge = document.getElementById('calendario-hoy-badge');
+      const fecha = document.getElementById('calendario-hoy-fecha');
+      const titulo = document.getElementById('calendario-hoy-titulo');
+      const descripcion = document.getElementById('calendario-hoy-descripcion');
+      const lista = document.getElementById('calendario-hoy-lista');
+      if (!badge || !fecha || !titulo || !descripcion || !lista) return;
+
+      const hoy = new Date();
+      const hoyInicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate());
+      const mesActual = hoy.getMonth() + 1;
+      const diaActual = hoy.getDate();
+      const formatoFecha = new Intl.DateTimeFormat('es-AR', { day: 'numeric', month: 'long' });
+      const celebracionesHoy = celebracionesMarianas.filter(item => item.mes === mesActual && item.dia === diaActual);
+
+      function fechaDeCelebracion(item, year) {
+        return new Date(year, item.mes - 1, item.dia);
+      }
+
+      function crearChip(item) {
+        const elemento = document.createElement(item.url ? 'a' : 'div');
+        elemento.className = 'calendario-hoy-chip';
+        if (item.url) elemento.href = item.url;
+        elemento.innerHTML = '<strong>' + item.nombre + '</strong><span>' + item.tipo + '</span>';
+        return elemento;
+      }
+
+      function renderCelebraciones(items) {
+        lista.innerHTML = '';
+        items.forEach(item => lista.appendChild(crearChip(item)));
+      }
+
+      fecha.textContent = formatoFecha.format(hoyInicio);
+
+      if (celebracionesHoy.length) {
+        badge.textContent = 'Hoy';
+        titulo.textContent = celebracionesHoy.length === 1 ? 'Hoy se celebra' : 'Celebraciones marianas de hoy';
+        descripcion.textContent = 'Estas son las fiestas o advocaciones marianas registradas para la fecha actual en el Calendario Mariano.';
+        renderCelebraciones(celebracionesHoy);
+        return;
+      }
+
+      const proxima = celebracionesMarianas
+        .map(item => {
+          let fechaObjetivo = fechaDeCelebracion(item, hoy.getFullYear());
+          if (fechaObjetivo < hoyInicio) fechaObjetivo = fechaDeCelebracion(item, hoy.getFullYear() + 1);
+          return { item, fecha: fechaObjetivo, dias: Math.round((fechaObjetivo - hoyInicio) / 86400000) };
+        })
+        .sort((a, b) => a.dias - b.dias || a.item.mes - b.item.mes || a.item.dia - b.item.dia)[0];
+
+      const proximasMismaFecha = celebracionesMarianas.filter(item => item.mes === proxima.item.mes && item.dia === proxima.item.dia);
+      badge.textContent = 'Próxima celebración';
+      fecha.textContent = formatoFecha.format(proxima.fecha);
+      titulo.textContent = proxima.dias === 1 ? 'Falta 1 día' : 'Faltan ' + proxima.dias + ' días';
+      descripcion.textContent = 'Hoy no hay una celebración mariana fija registrada. La próxima es:';
+      renderCelebraciones(proximasMismaFecha);
+    }());
+  </script>
 </body>
 </html>
