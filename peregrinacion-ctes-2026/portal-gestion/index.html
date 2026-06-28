@@ -157,6 +157,9 @@ th{background:var(--green);color:white;text-align:left;font-size:.74rem;padding:
 td{border-bottom:1px solid var(--line);padding:8px 9px;font-size:.8rem;vertical-align:middle}
 tr:last-child td{border-bottom:0}
 .people-table th,.people-table td{padding:7px 8px}
+.people-order{font-weight:800;color:var(--green)}
+.people-order small{display:block;color:var(--muted);font-size:.66rem;font-weight:700;margin-top:2px;white-space:nowrap}
+.historic-order{display:inline-flex;align-items:center;border-radius:999px;background:var(--red-soft);color:var(--red);padding:2px 6px;font-size:.68rem;font-weight:800}
 .people-name{display:flex;align-items:center;gap:7px;flex-wrap:wrap;font-weight:800;line-height:1.15}
 .people-inline-dni{color:var(--muted);font-size:.72rem;font-weight:700}
 .people-mobile-summary{display:none}
@@ -528,7 +531,7 @@ tr:last-child td{border-bottom:0}
     <section id="admin-people">
       <div class="filters">
         <select id="people-state" onchange="renderPeople()">
-          <option value="">Todos los estados</option>
+          <option value="">Activos</option>
           <option value="sin_pagos">Sin pagos</option>
           <option value="en_revision">En revision</option>
           <option value="al_dia">Al dia</option>
@@ -1241,14 +1244,19 @@ function fillPeopleFilters(){
 }
 function renderPeople(){
   if(!peopleData || !peopleData.ok) return;
-  let list = peopleData.inscriptos.slice();
+  const allRows = peopleData.inscriptos || [];
+  const activeBase = getActiveAccountingList(allRows);
+  const activeNumbers = activeNumberMap(activeBase);
   const state = $('people-state').value;
+  let list = state === 'baja'
+    ? allRows.filter(i=>String(i.estadoCupo || '') === 'baja')
+    : activeBase.slice();
   const parish = $('people-parish').value;
   const community = $('people-community').value;
   const dniOrder = $('people-dni-order').value;
   const restrictionsFilter = $('people-restrictions-filter').value;
   const q = $('people-search').value.toLowerCase();
-  if(state) list = list.filter(i=>i.estado === state || i.estadoCupo === state);
+  if(state && state !== 'baja') list = list.filter(i=>i.estado === state || i.estadoCupo === state);
   if(parish) list = list.filter(i=>i.parroquia === parish);
   if(community) list = list.filter(i=>i.comunidad === community);
   if(restrictionsFilter === 'con_restricciones') list = list.filter(i=>(i.restricciones || '').trim());
@@ -1263,6 +1271,10 @@ function renderPeople(){
     });
   }
   $('people-body').innerHTML = list.length ? list.map(i => {
+    const clean = cleanDni(i.dni);
+    const displayNumber = state === 'baja'
+      ? '<span class="historic-order">Baja</span><small>Hist. '+escapeHtml(String(i.orden || '-'))+'</small>'
+      : (activeNumbers[clean] || '-');
     const wa = i.whatsapp ? '<a class="btn secondary small" target="_blank" href="https://wa.me/'+i.whatsapp+'?text='+encodeURIComponent('Hola '+(i.nombre||'').split(' ')[0]+', te escribimos por '+EVENTO+'.')+'">WA</a>' : '';
     const edit = canEdit() ? '<button class="btn secondary tiny" onclick="showAdminEdit(\''+String(i.dni).replace(/\D/g,'')+'\')">Editar</button>' : '';
     const baja = canEdit() && i.estadoCupo !== 'baja' ? '<button class="btn icon-danger" title="Dar de baja" onclick="markLow(\''+String(i.dni).replace(/\D/g,'')+'\')">×</button>' : '';
@@ -1272,7 +1284,7 @@ function renderPeople(){
       : '<div class="people-restrictions empty">Sin restricciones</div>';
     const parishCommunity = '<div class="people-place">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+'</div>';
     const mobileSummary = '<div class="people-mobile-summary">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+' · <b>'+(STATE_LABELS[i.estado] || i.estado)+'</b> · '+money(i.resumen.totalPagado)+(restricciones ? ' · <span class="warn">'+escapeHtml(restricciones)+'</span>' : '')+'</div>';
-    return '<tr><td>'+i.orden+'</td><td><span class="people-name">'+escapeHtml(i.nombre || '')+'<span class="people-inline-dni">DNI '+escapeHtml(String(i.dni || ''))+'</span></span>'+mobileSummary+personAlertTags(i)+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+parishCommunity+'</td><td>'+restrictionsCell+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(i.resumen.totalPagado)+'</td><td><div class="actions">'+wa+edit+baja+'</div></td></tr>';
+    return '<tr><td class="people-order">'+displayNumber+'</td><td><span class="people-name">'+escapeHtml(i.nombre || '')+'<span class="people-inline-dni">DNI '+escapeHtml(String(i.dni || ''))+'</span></span>'+mobileSummary+personAlertTags(i)+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+parishCommunity+'</td><td>'+restrictionsCell+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(i.resumen.totalPagado)+'</td><td><div class="actions">'+wa+edit+baja+'</div></td></tr>';
   }).join('') : '<tr><td colspan="8" class="empty">Sin resultados</td></tr>';
 }
 
@@ -1334,6 +1346,21 @@ function uniqueLatestByDni(list){
     if(dni) map[dni] = item;
   });
   return Object.values(map);
+}
+
+function getActiveAccountingList(list){
+  return uniqueLatestByDni(list)
+    .filter(i=>String(i.estadoCupo || '') !== 'baja')
+    .sort((a,b)=>Number(a.orden || 0) - Number(b.orden || 0));
+}
+
+function activeNumberMap(list){
+  const map = {};
+  list.forEach((item, idx) => {
+    const dni = cleanDni(item && item.dni);
+    if(dni) map[dni] = idx + 1;
+  });
+  return map;
 }
 
 function analyticsKpi(value, label){
