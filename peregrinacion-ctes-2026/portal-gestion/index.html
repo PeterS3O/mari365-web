@@ -651,6 +651,7 @@ function pulseButton(btn){
 function money(n){ return '$' + Number(n || 0).toLocaleString('es-AR'); }
 function keys(str){ return (str || '').split(',').map(s=>s.trim()).filter(Boolean); }
 function cuotaLabel(str, sep){ return keys(str).map(k => MAP_PLAN[k] ? MAP_PLAN[k].label : k).join(sep || ' + '); }
+function cleanDni(value){ return String(value || '').replace(/\D/g,''); }
 function hasVisibleComprobante(url){ return !!url && url !== '(adjunto pendiente)' && url !== '(efectivo sin comprobante)'; }
 function initials(name){ const p=(name||'').trim().split(/\s+/); return ((p[0]||'?')[0]+(p[1]||'?')[0]).toUpperCase(); }
 function copyIcon(){
@@ -1282,7 +1283,7 @@ async function loadAnalytics(){
 }
 
 function renderAnalytics(){
-  const all = (peopleData && peopleData.inscriptos || []).filter(i=>String(i.estadoCupo || '') !== 'baja');
+  const all = uniqueLatestByDni(peopleData && peopleData.inscriptos || []).filter(i=>String(i.estadoCupo || '') !== 'baja');
   const total = all.length || 1;
   const withPayments = all.filter(i=>(i.pagos || []).length > 0).length;
   const upToDate = all.filter(i=>i.estado === 'al_dia' || i.estado === 'pago_completo').length;
@@ -1324,6 +1325,15 @@ function renderAnalytics(){
     analyticsSection('Inscriptos por comunidad', renderCommunitiesAlpha(all)) +
     analyticsSection('Comunidades por parroquia', renderParishCommunities(all)) +
     analyticsSection('Deuda vencida por cantidad de cuotas', '<div class="pie-grid">'+debtBuckets.map(x=>binaryPie(x.label, x.value, all.length, x.label, 'Otros inscriptos', x.value ? 'warn' : 'ok')).join('')+'</div>');
+}
+
+function uniqueLatestByDni(list){
+  const map = {};
+  (list || []).forEach(item => {
+    const dni = cleanDni(item && item.dni);
+    if(dni) map[dni] = item;
+  });
+  return Object.values(map);
 }
 
 function analyticsKpi(value, label){
