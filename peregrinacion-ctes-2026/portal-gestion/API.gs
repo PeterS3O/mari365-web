@@ -328,6 +328,22 @@ function buscarInscripto(dni) {
   return null;
 }
 
+function buscarInscriptoPorDniOrden(dni, orden) {
+  const ord = (orden || '').toString().trim();
+  if (!ord) return buscarInscripto(dni);
+  inicializarCupos();
+  const info = columnasInscriptos();
+  const data = info.sheet.getDataRange().getValues();
+  const dn = normDni(dni);
+  for (let i = 1; i < data.length; i++) {
+    const rowOrden = (data[i][info.cols.ordenInscripcion] || '').toString().trim();
+    if (normDni(data[i][info.cols.dni]) === dn && rowOrden === ord) {
+      return { row: i + 1, d: data[i], cols: info.cols };
+    }
+  }
+  return buscarInscripto(dni);
+}
+
 function nombreCompleto(d, cols) {
   return ((d[cols.nombre] || '') + ' ' + (d[cols.apellido] || '')).toString().trim();
 }
@@ -780,7 +796,7 @@ function getInscriptos(p) {
 
 function actualizarInscripto(p) {
   if (!validarAdminEdicion(p)) return { ok: false, error: 'No autorizado.' };
-  const ins = buscarInscripto(p.dni);
+  const ins = buscarInscriptoPorDniOrden(p.dni, p.ordenInscripcion);
   if (!ins) return { ok: false, error: 'Inscripto no encontrado.' };
   const s = getSheet(CONFIG.HOJA_INSCRIPTOS);
   const map = {
@@ -805,7 +821,7 @@ function actualizarInscripto(p) {
 
 function marcarBaja(p) {
   if (!validarAdminEdicion(p)) return { ok: false, error: 'No autorizado.' };
-  const ins = buscarInscripto(p.dni);
+  const ins = buscarInscriptoPorDniOrden(p.dni, p.ordenInscripcion);
   if (!ins) return { ok: false, error: 'Inscripto no encontrado.' };
   const s = getSheet(CONFIG.HOJA_INSCRIPTOS);
   s.getRange(ins.row, ins.cols.estadoCupo + 1).setValue('baja');

@@ -572,6 +572,7 @@ tr:last-child td{border-bottom:0}
     </div>
     <section class="card panel">
       <input id="admin-edit-dni" type="hidden">
+      <input id="admin-edit-orden" type="hidden">
       <div class="grid3">
         <div class="field"><label>Nombre</label><input id="admin-edit-nombre"></div>
         <div class="field"><label>Apellido</label><input id="admin-edit-apellido"></div>
@@ -1200,12 +1201,12 @@ function whatsappButton(tipo, p, person, label){
   return '<a class="btn secondary small" href="'+href+'" target="_blank" onclick="markPaymentWA(\''+p.id+'\',\''+tipo+'\')">'+label+' WA</a>';
 }
 async function markPaymentWA(id,tipo){ try{ await api('marcarAvisoWAPago', { pagoId:id, tipo, adminToken }); }catch(e){} }
-async function markLow(dni){
+async function markLow(dni, orden){
   if(!canEdit()) return;
   if(!confirm('Vas a dar de baja a esta persona. Sus pagos quedan en historial, pero no podra cargar nuevos comprobantes. ¿Continuar?')) return;
   const nota = prompt('Nota opcional para la baja:') || '';
   try{
-    const data = await api('marcarBaja', { dni, nota, reemplazo:'', adminToken });
+    const data = await api('marcarBaja', { dni, ordenInscripcion:orden || '', nota, reemplazo:'', adminToken });
     if(!data.ok){ alert(data.error || 'No se pudo dar de baja.'); return; }
     alert((data.nombre || 'La persona') + ' fue dada de baja.');
     adminData = null;
@@ -1276,8 +1277,9 @@ function renderPeople(){
       ? '<span class="historic-order">Baja</span><small>Hist. '+escapeHtml(String(i.orden || '-'))+'</small>'
       : (activeNumbers[clean] || '-');
     const wa = i.whatsapp ? '<a class="btn secondary small" target="_blank" href="https://wa.me/'+i.whatsapp+'?text='+encodeURIComponent('Hola '+(i.nombre||'').split(' ')[0]+', te escribimos por '+EVENTO+'.')+'">WA</a>' : '';
-    const edit = canEdit() ? '<button class="btn secondary tiny" onclick="showAdminEdit(\''+String(i.dni).replace(/\D/g,'')+'\')">Editar</button>' : '';
-    const baja = canEdit() && i.estadoCupo !== 'baja' ? '<button class="btn icon-danger" title="Dar de baja" onclick="markLow(\''+String(i.dni).replace(/\D/g,'')+'\')">×</button>' : '';
+    const orden = String(i.orden || '');
+    const edit = canEdit() ? '<button class="btn secondary tiny" onclick="showAdminEdit(\''+String(i.dni).replace(/\D/g,'')+'\',\''+escapeJsArg(orden)+'\')">Editar</button>' : '';
+    const baja = canEdit() && i.estadoCupo !== 'baja' ? '<button class="btn icon-danger" title="Dar de baja" onclick="markLow(\''+String(i.dni).replace(/\D/g,'')+'\',\''+escapeJsArg(orden)+'\')">×</button>' : '';
     const restricciones = (i.restricciones || '').trim();
     const restrictionsCell = restricciones
       ? '<div class="people-restrictions">'+escapeHtml(restricciones)+'</div>'
@@ -1441,11 +1443,14 @@ function isInstallmentDue(c){
   return new Date() > date;
 }
 
-function showAdminEdit(dni){
+function showAdminEdit(dni, orden){
   if(!canEdit()) return;
-  const p = (peopleData && peopleData.inscriptos || []).find(i=>String(i.dni).replace(/\D/g,'') === String(dni).replace(/\D/g,''));
+  const clean = String(dni).replace(/\D/g,'');
+  const rows = (peopleData && peopleData.inscriptos || []).filter(i=>cleanDni(i.dni) === clean);
+  const p = orden ? rows.find(i=>String(i.orden || '') === String(orden)) : rows[0];
   if(!p){ alert('No encontre el inscripto.'); return; }
   $('admin-edit-dni').value = String(p.dni || '').replace(/\D/g,'');
+  $('admin-edit-orden').value = String(p.orden || '');
   $('admin-edit-dni-view').value = p.dni || '';
   $('admin-edit-nombre').value = p.nombreSimple || (p.nombre || '').split(' ')[0] || '';
   $('admin-edit-apellido').value = p.apellido || (p.nombre || '').split(' ').slice(1).join(' ');
@@ -1468,6 +1473,7 @@ async function submitAdminEdit(){
     const data = await api('actualizarInscripto', {
       adminToken,
       dni: $('admin-edit-dni').value,
+      ordenInscripcion: $('admin-edit-orden').value,
       nombre: $('admin-edit-nombre').value,
       apellido: $('admin-edit-apellido').value,
       email: $('admin-edit-email').value,
@@ -1556,6 +1562,7 @@ function labelCambio(k){
   return ({celular:'Celular',emergencia:'Telefono emergencia',parroquia:'Parroquia',comunidad:'Comunidad',restricciones:'Restricciones',vencimientoDni:'Vencimiento DNI'})[k] || k;
 }
 function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeJsArg(s){ return String(s || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,' '); }
 async function resolveProfileChange(id, decision){
   const motivo = decision === 'rechazado' ? (prompt('Motivo opcional del rechazo:') || '') : '';
   const data = await api('resolverCambioPerfil', { cambioId:id, decision, motivo, adminToken });
