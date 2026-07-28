@@ -14,6 +14,27 @@
   <link rel="canonical" href="https://maria365.online/pages/santuarios.html" />
   <link rel="icon" type="image/svg+xml" href="../favicon.svg" />
   <link rel="stylesheet" href="../css/styles.css" />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "@id": "https://maria365.online/pages/santuarios.html#breadcrumb",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Inicio",
+        "item": "https://maria365.online/"
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": "Santuarios Marianos",
+        "item": "https://maria365.online/pages/santuarios.html"
+      }
+    ]
+  }
+  </script>
 </head>
 <body>
 
@@ -51,10 +72,19 @@
     <p>Los grandes centros de peregrinación mariana, su historia y datos de visita</p>
   </section>
 
-  <div class="breadcrumb">
-    <a href="../index.html">Inicio</a>
-    <span>›</span> Santuarios Marianos
-  </div>
+  <nav class="breadcrumb" aria-label="Miga de pan" itemscope itemtype="https://schema.org/BreadcrumbList">
+  <ol>
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+      <a itemprop="item" href="../index.html"><span itemprop="name">Inicio</span></a>
+      <meta itemprop="position" content="1" />
+    </li>
+    <li itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem" aria-current="page">
+      <span itemprop="name">Santuarios Marianos</span>
+      <meta itemprop="item" content="https://maria365.online/pages/santuarios.html" />
+      <meta itemprop="position" content="2" />
+    </li>
+  </ol>
+</nav>
 
   <main class="page-content">
 

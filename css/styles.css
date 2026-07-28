@@ -1194,9 +1194,36 @@ details[open] .mes-body { display: block; }
   color: var(--gris-texto);
 }
 
+.breadcrumb ol {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.breadcrumb li {
+  display: inline-flex;
+  align-items: center;
+}
+
+.breadcrumb li + li::before {
+  content: "›";
+  margin: 0 0.45rem 0 0.1rem;
+  color: var(--gris-texto);
+}
+
+.breadcrumb [aria-current="page"] {
+  color: var(--gris-texto);
+}
+
 .breadcrumb a { color: var(--azul); }
 .breadcrumb a:hover { text-decoration: underline; }
 .breadcrumb span { margin: 0 0.4rem; }
+
+.breadcrumb li span { margin: 0; }
 
 /* --- Responsive --- */
 @media (max-width: 768px) {
