@@ -1249,6 +1249,12 @@ details[open] .mes-body { display: block; }
 .patronazgo-item .pat-advocacion { font-weight: 600; color: var(--negro-suave); font-size: 0.95rem; }
 .patronazgo-item .pat-patrona-de { color: var(--azul); font-size: 0.85rem; margin-top: 0.2rem; }
 
+.patronazgo-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
 /* --- Breadcrumb --- */
 .breadcrumb {
   max-width: 1100px;
