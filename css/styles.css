@@ -866,19 +866,19 @@ details[open] .mes-body { display: block; }
   font-style: italic;
 }
 
-.seo-section {
+.editorial-section {
   margin-top: 3rem;
   padding-top: 2.4rem;
   border-top: 1px solid rgba(44,111,172,0.14);
 }
 
-.seo-section h2 {
+.editorial-section h2 {
   color: var(--azul);
   font-size: 1.65rem;
   margin-bottom: 1.2rem;
 }
 
-.seo-section > p {
+.editorial-section > p {
   color: var(--gris-texto);
   font-size: 0.98rem;
   line-height: 1.9;
@@ -1354,8 +1354,8 @@ details[open] .mes-body { display: block; }
   .calendario-hoy-chip { padding: 0.5rem 0.65rem; }
   .mes-grid { grid-template-columns: 1fr; }
   .calendario-intro { padding: 1rem; margin-bottom: 1.5rem; }
-  .seo-section { margin-top: 2.2rem; padding-top: 1.8rem; }
-  .seo-section h2 { font-size: 1.35rem; }
+  .editorial-section { margin-top: 2.2rem; padding-top: 1.8rem; }
+  .editorial-section h2 { font-size: 1.35rem; }
   .fiestas-destacadas-grid,
   .mes-editorial-grid,
   .fechas-moviles-grid { grid-template-columns: 1fr; }
@@ -1394,7 +1394,7 @@ details[open] .mes-body { display: block; }
 /* Sección de contenido largo */
 .advocacion-content { max-width: 800px; margin: 0 auto; padding: 2.5rem 2rem 2rem; }
 
-/* Alinea el breadcrumb con el ancho del contenido en landing pages */
+/* Alinea el breadcrumb con el ancho del contenido en paginas editoriales */
 .breadcrumb:has(+ main.advocacion-content) { max-width: 800px; }
 
 .content-section { margin-bottom: 3rem; }
