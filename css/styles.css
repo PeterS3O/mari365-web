@@ -1118,6 +1118,70 @@ details[open] .mes-body { display: block; }
 /* --- Tabla de regiones --- */
 .region-section { margin-bottom: 2.5rem; }
 
+.region-hub-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem;
+  margin-top: 1.2rem;
+}
+
+.region-country-grid {
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+}
+
+.region-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 190px;
+  background: var(--blanco);
+  border-radius: 10px;
+  box-shadow: var(--sombra);
+  padding: 1.25rem 1.35rem;
+  border: 1px solid rgba(44,111,172,0.08);
+  transition: var(--transicion);
+}
+
+.region-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--azul-claro);
+}
+
+.region-card-featured {
+  min-height: 220px;
+  border-top: 4px solid var(--azul);
+}
+
+.region-card-kicker {
+  display: inline-block;
+  color: var(--dorado);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.55rem;
+}
+
+.region-card h3 {
+  color: var(--negro-suave);
+  font-size: 1.05rem;
+  line-height: 1.35;
+  margin-bottom: 0.55rem;
+}
+
+.region-card p {
+  color: var(--gris-texto);
+  font-size: 0.88rem;
+  line-height: 1.65;
+  margin-bottom: 1rem;
+}
+
+.region-card-meta {
+  color: var(--azul);
+  font-size: 0.78rem;
+  font-weight: 700;
+  margin-top: auto;
+}
+
 .region-title {
   font-size: 1.4rem;
   color: var(--azul);

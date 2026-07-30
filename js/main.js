@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', function () {
       });
     }, { threshold: 0.1 });
 
-    document.querySelectorAll('.card, .card-info, .mes-card, .dogma-card, .tema-card, .pais-item, .qs-stat, .pub-card').forEach(function (el) {
+    document.querySelectorAll('.card, .card-info, .mes-card, .dogma-card, .tema-card, .pais-item, .region-card, .qs-stat, .pub-card').forEach(function (el) {
       el.style.opacity = '0';
       el.style.transform = 'translateY(20px)';
       el.style.transition = 'opacity 0.5s ease, transform 0.5s ease, box-shadow 0.3s ease';
