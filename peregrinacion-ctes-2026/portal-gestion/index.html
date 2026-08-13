@@ -867,7 +867,9 @@ function renderState(){
 function renderMinorPermitPanel(d){
   const panel = $('minor-permit-panel');
   if(!panel) return;
-  if(!d.esMenor && !isMinor(d.fechaNacimiento)){
+  const confirmedMinor = d.esMenor || isMinor(d.fechaNacimiento);
+  const confirmedAdult = d.esMenor === false && !!d.fechaNacimiento && !isMinor(d.fechaNacimiento);
+  if(confirmedAdult){
     panel.style.display = 'none';
     panel.innerHTML = '';
     return;
@@ -875,8 +877,12 @@ function renderMinorPermitPanel(d){
   const hasPermit = !!d.permisoViajeUrl;
   panel.style.display = 'block';
   panel.innerHTML =
-    '<div class="permit-status"><div><b>Permiso de viaje para menor de edad</b><p class="sub" style="margin:4px 0 0">Para salir de Argentina hacia Paraguay, los menores deben contar con autorizacion de viaje. Carga una foto o PDF cuando lo tengas y lleva el permiso original el dia del viaje.</p></div>' +
-    '<div>' + badge(hasPermit ? 'Cargado' : 'Falta cargar', hasPermit ? 'ok' : 'bad') + '</div></div>' +
+    '<div class="permit-status"><div><b>Permiso de viaje para menor de edad</b><p class="sub" style="margin:4px 0 0">'+
+    (confirmedMinor
+      ? 'Para salir de Argentina hacia Paraguay, los menores deben contar con autorizacion de viaje. Carga una foto o PDF cuando lo tengas y lleva el permiso original el dia del viaje.'
+      : 'Si sos menor de edad, carga aca una foto o PDF de la autorizacion de viaje y lleva el permiso original el dia del viaje.')+
+    '</p></div>' +
+    '<div>' + badge(hasPermit ? 'Cargado' : (confirmedMinor ? 'Falta cargar' : 'Solo menores'), hasPermit ? 'ok' : (confirmedMinor ? 'bad' : 'pending')) + '</div></div>' +
     (hasPermit ? '<p style="margin:10px 0 0"><a class="link-btn" href="'+d.permisoViajeUrl+'" target="_blank">Ver permiso cargado</a>'+(d.fechaPermisoViaje ? '<span class="meta"> · Cargado el '+d.fechaPermisoViaje+'</span>' : '')+'</p>' : '') +
     '<div class="permit-upload"><label class="file-upload"><input id="permit-file" type="file" accept="image/*,.pdf" onchange="onPermitFile()"><span id="permit-file-name">'+(hasPermit ? 'Reemplazar archivo, imagen o PDF hasta 10 MB' : 'Imagen o PDF del permiso, hasta 10 MB')+'</span></label><button id="btn-submit-permit" class="btn small" onclick="registrarPermisoViaje()" disabled>'+(hasPermit ? 'Reemplazar permiso' : 'Cargar permiso')+'</button><div id="permit-msg" class="message"></div></div>';
 }
@@ -1079,8 +1085,22 @@ async function registrarPermisoViaje(){
   if(file.size > 10 * 1024 * 1024){ showMsg('permit-msg','El archivo supera 10 MB.',false); return; }
   const btn = $('btn-submit-permit');
   if(btn) btn.disabled = true;
-  showMsg('permit-msg', 'Subiendo permiso...', true);
+  showMsg('permit-msg', 'Verificando portal...', true);
   try{
+    const check = await api('registrarPermisoViaje', {
+      dni: estadoData.dni,
+      email: loginEmail,
+      permisoUrl: '',
+      permisoNombre: '',
+      permisoTipo: ''
+    });
+    if(!check.ok && /accion desconocida/i.test(check.error || '')){
+      throw new Error('El API publicado todavia no tiene habilitada la carga de permiso de viaje. Hay que revisar la URL o la version desplegada de Apps Script.');
+    }
+    if(!check.ok && /solo los menores/i.test(check.error || '')){
+      throw new Error(check.error);
+    }
+    showMsg('permit-msg', 'Subiendo permiso...', true);
     const permisoUrl = await subirACloudinary(file, {
       folder: 'peregrinacion-cnc/' + estadoData.dni + '/permisos-viaje',
       loadingText: 'Subiendo permiso de viaje...'
@@ -1624,7 +1644,7 @@ async function submitAdminEdit(){
 }
 
 function dateFromAR(value){
-  const p = (value || '').split('/').map(Number);
+  const p = (value || '').split(/[\/-]/).map(Number);
   if(p.length !== 3 || !p[0] || !p[1] || !p[2]) return null;
   return new Date(p[2], p[1] - 1, p[0]);
 }
@@ -1642,7 +1662,7 @@ function renderDniExpiry(value){
 function personAlertTags(person){
   const tags = [];
   if(isMinor(person.fechaNacimiento)) tags.push(badge('Menor de edad','info'));
-  if(person.esMenor && !person.permisoViajeUrl) tags.push(badge('Falta permiso viaje','bad'));
+  if((person.esMenor || isMinor(person.fechaNacimiento)) && !person.permisoViajeUrl) tags.push(badge('Falta permiso viaje','bad'));
   if(isDniExpired(person.vencimientoDni)) tags.push(badge('DNI vencido','bad'));
   else if(isDniExpiringSoon(person.vencimientoDni)) tags.push(badge('DNI proximo a vencer','pending'));
   return tags.length ? '<div class="name-tags">'+tags.join('')+'</div>' : '';
