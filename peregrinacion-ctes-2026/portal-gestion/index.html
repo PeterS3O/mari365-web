@@ -1194,8 +1194,13 @@ async function loginAdmin(){
     adminToken = data.token;
     adminRole = data.role || 'view';
     $('admin-role').textContent = adminRole === 'edit' ? 'Modo edicion' : 'Solo vista';
+    adminView = 'people';
+    paymentFilter = 'todos';
+    adminSearch = '';
+    resetPeopleFilters();
     showPage('page-admin');
     await refreshAdmin();
+    setAdminView('people');
   }catch(e){
     $('admin-login-err').textContent = e.message === 'API_SIN_CONFIGURAR'
       ? 'Falta configurar la URL real de Apps Script en index.html.'
@@ -1371,6 +1376,12 @@ function fillPeopleFilters(){
   $('people-parish').innerHTML = '<option value="">Todas las parroquias</option>' + parishes.map(x=>'<option>'+x+'</option>').join('');
   $('people-community').innerHTML = '<option value="">Todas las comunidades</option>' + communities.map(x=>'<option>'+x+'</option>').join('');
 }
+function resetPeopleFilters(){
+  ['people-state','people-parish','people-community','people-dni-order','people-restrictions-filter','people-permit-filter','people-search'].forEach(id => {
+    const el = $(id);
+    if(el) el.value = '';
+  });
+}
 function renderPeople(){
   if(!peopleData || !peopleData.ok) return;
   const allRows = peopleData.inscriptos || [];
@@ -1390,8 +1401,8 @@ function renderPeople(){
   if(parish) list = list.filter(i=>i.parroquia === parish);
   if(community) list = list.filter(i=>i.comunidad === community);
   if(restrictionsFilter === 'con_restricciones') list = list.filter(i=>(i.restricciones || '').trim());
-  if(permitFilter === 'menores_sin_permiso') list = list.filter(i=>i.esMenor && !i.permisoViajeUrl);
-  if(permitFilter === 'menores_con_permiso') list = list.filter(i=>i.esMenor && !!i.permisoViajeUrl);
+  if(permitFilter === 'menores_sin_permiso') list = list.filter(i=>isMinorPerson(i) && !i.permisoViajeUrl);
+  if(permitFilter === 'menores_con_permiso') list = list.filter(i=>isMinorPerson(i) && !!i.permisoViajeUrl);
   if(q) list = list.filter(i=>i.nombre.toLowerCase().includes(q) || String(i.dni).includes(q));
   if(dniOrder){
     list = list.slice().sort((a,b) => {
@@ -1417,14 +1428,14 @@ function renderPeople(){
       : '<div class="people-restrictions empty">Sin restricciones</div>';
     const permitCell = renderPermitCell(i);
     const parishCommunity = '<div class="people-place">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+'</div>';
-    const permitSummary = i.esMenor ? (i.permisoViajeUrl ? 'Permiso cargado' : 'Falta permiso') : 'Permiso no aplica';
+    const permitSummary = isMinorPerson(i) ? (i.permisoViajeUrl ? 'Permiso cargado' : 'Falta permiso') : 'Permiso no aplica';
     const mobileSummary = '<div class="people-mobile-summary">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+' · <b>'+(STATE_LABELS[i.estado] || i.estado)+'</b> · '+money(i.resumen.totalPagado)+' · '+permitSummary+(restricciones ? ' · <span class="warn">'+escapeHtml(restricciones)+'</span>' : '')+'</div>';
     return '<tr><td class="people-order">'+displayNumber+'</td><td><span class="people-name">'+escapeHtml(i.nombre || '')+'<span class="people-inline-dni">DNI '+escapeHtml(String(i.dni || ''))+'</span></span>'+mobileSummary+personAlertTags(i)+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+parishCommunity+'</td><td>'+restrictionsCell+'</td><td>'+permitCell+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(i.resumen.totalPagado)+'</td><td><div class="actions">'+wa+edit+baja+'</div></td></tr>';
   }).join('') : '<tr><td colspan="9" class="empty">Sin resultados</td></tr>';
 }
 
 function renderPermitCell(person){
-  if(!person.esMenor && !isMinor(person.fechaNacimiento)){
+  if(!isMinorPerson(person)){
     return '<div class="permit-cell"><span class="meta">No aplica</span></div>';
   }
   if(person.permisoViajeUrl){
@@ -1445,11 +1456,11 @@ function renderAnalytics(){
   const withPayments = all.filter(i=>(i.pagos || []).length > 0).length;
   const upToDate = all.filter(i=>i.estado === 'al_dia' || i.estado === 'pago_completo').length;
   const overdue = all.filter(i=>installmentsDueMissing(i).length > 0).length;
-  const minors = all.filter(i=>isMinor(i.fechaNacimiento)).length;
+  const minors = all.filter(i=>isMinorPerson(i)).length;
   const dniRisk = all.filter(i=>isDniExpired(i.vencimientoDni) || isDniExpiringSoon(i.vencimientoDni)).length;
   const missingCell = all.filter(i=>!hasCellphone(i)).length;
   const restrictions = all.filter(i=>(i.restricciones || '').trim()).length;
-  const minorsMissingPermit = all.filter(i=>i.esMenor && !i.permisoViajeUrl).length;
+  const minorsMissingPermit = all.filter(i=>isMinorPerson(i) && !i.permisoViajeUrl).length;
   const debtBuckets = [1,2,3,4].map(n => ({
     label: n + ' cuota' + (n === 1 ? '' : 's') + ' vencida' + (n === 1 ? '' : 's'),
     value: all.filter(i=>installmentsDueMissing(i).length === n).length
@@ -1661,8 +1672,8 @@ function renderDniExpiry(value){
 
 function personAlertTags(person){
   const tags = [];
-  if(isMinor(person.fechaNacimiento)) tags.push(badge('Menor de edad','info'));
-  if((person.esMenor || isMinor(person.fechaNacimiento)) && !person.permisoViajeUrl) tags.push(badge('Falta permiso viaje','bad'));
+  if(isMinorPerson(person)) tags.push(badge('Menor de edad','info'));
+  if(isMinorPerson(person) && !person.permisoViajeUrl) tags.push(badge('Falta permiso viaje','bad'));
   if(isDniExpired(person.vencimientoDni)) tags.push(badge('DNI vencido','bad'));
   else if(isDniExpiringSoon(person.vencimientoDni)) tags.push(badge('DNI proximo a vencer','pending'));
   return tags.length ? '<div class="name-tags">'+tags.join('')+'</div>' : '';
@@ -1692,6 +1703,10 @@ function isMinor(value){
   return age < 18;
 }
 
+function isMinorPerson(person){
+  return !!(person && (person.esMenor || isMinor(person.fechaNacimiento)));
+}
+
 function renderProfileRequests(){
   if(!adminData || !adminData.ok) return;
   const reqs = adminData.cambiosPerfil || [];
@@ -1708,7 +1723,7 @@ function renderProfileRequests(){
 function labelCambio(k){
   return ({celular:'Celular',emergencia:'Telefono emergencia',parroquia:'Parroquia',comunidad:'Comunidad',restricciones:'Restricciones',vencimientoDni:'Vencimiento DNI'})[k] || k;
 }
-function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function escapeHtml(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function escapeJsArg(s){ return String(s || '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\n/g,' '); }
 async function resolveProfileChange(id, decision){
   const motivo = decision === 'rechazado' ? (prompt('Motivo opcional del rechazo:') || '') : '';
