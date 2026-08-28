@@ -186,6 +186,8 @@ tr:last-child td{border-bottom:0}
 .dni-expiry.ok{background:var(--green-soft);border-color:#bcdccb;color:var(--green)}
 .filters{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
 .filters select,.filters input{border:1.5px solid var(--line);border-radius:8px;padding:8px 10px;background:white;min-width:150px}
+.debt-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
+.debt-summary .metric{padding:10px}
 .analytics-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:10px}
 .analytics-card{padding:13px}
 .analytics-card h3{margin:0 0 10px;font-size:.92rem}
@@ -235,7 +237,7 @@ tr:last-child td{border-bottom:0}
   .title{font-size:1.35rem}
   .toolbar{gap:5px}
   .toolbar .btn{padding:6px 8px;font-size:.72rem}
-  .grid3,.admin-grid{grid-template-columns:1fr 1fr}
+  .grid3,.admin-grid,.debt-summary{grid-template-columns:1fr 1fr}
   .admin-grid{display:flex;gap:6px;overflow-x:auto;margin:0 -8px 8px;padding:0 8px 4px;scroll-snap-type:x proximity}
   .admin-grid .metric{min-width:106px;scroll-snap-align:start;padding:8px 9px;border-radius:8px;box-shadow:none}
   .metric b{font-size:.88rem}
@@ -286,8 +288,8 @@ tr:last-child td{border-bottom:0}
   .people-table tbody{display:block}
   .people-table tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;background:white;border:1px solid var(--line);border-left:3px solid var(--green);border-radius:8px;margin-bottom:6px;padding:8px}
   .people-table td{display:none;border:0;padding:0;font-size:.76rem}
-  .people-table td:nth-child(2),.people-table td:nth-child(9){display:block}
-  .people-table td:nth-child(9){align-self:start}
+  .people-table td:nth-child(2),.people-table td:nth-child(10){display:block}
+  .people-table td:nth-child(10){align-self:start}
   .people-table .actions{justify-content:flex-end;gap:4px}
   .people-table .btn.small,.people-table .btn.tiny{padding:4px 6px;font-size:.66rem;border-radius:6px}
   .people-name{display:block;line-height:1.12}
@@ -552,6 +554,13 @@ tr:last-child td{border-bottom:0}
           <option value="comprobante_rechazado">No validado</option>
           <option value="baja">Bajas</option>
         </select>
+        <select id="people-debt" onchange="renderPeople()">
+          <option value="">Todas las cuotas</option>
+          <option value="no_pagos">No pagaron nada</option>
+          <option value="deben_3">Deben 3 cuotas</option>
+          <option value="deben_2">Deben 2 cuotas</option>
+          <option value="deben_1">Deben 1 cuota</option>
+        </select>
         <select id="people-parish" onchange="renderPeople()"><option value="">Todas las parroquias</option></select>
         <select id="people-community" onchange="renderPeople()"><option value="">Todas las comunidades</option></select>
         <select id="people-dni-order" onchange="renderPeople()">
@@ -570,7 +579,8 @@ tr:last-child td{border-bottom:0}
         </select>
         <input id="people-search" placeholder="Buscar..." oninput="renderPeople()">
       </div>
-      <div class="table-wrap"><table class="people-table"><thead><tr><th>#</th><th>Nombre</th><th>Vto. DNI</th><th>Parroquia / Comunidad</th><th>Restricciones</th><th>Permiso viaje</th><th>Estado</th><th>Confirmado</th><th>Acciones</th></tr></thead><tbody id="people-body"></tbody></table></div>
+      <div id="people-debt-summary" class="debt-summary"></div>
+      <div class="table-wrap"><table class="people-table"><thead><tr><th>#</th><th>Nombre</th><th>Vto. DNI</th><th>Parroquia / Comunidad</th><th>Restricciones</th><th>Permiso viaje</th><th>Estado</th><th>Confirmado</th><th>Debe</th><th>Acciones</th></tr></thead><tbody id="people-body"></tbody></table></div>
     </section>
     <section id="admin-profile" style="display:none">
       <div id="profile-requests"></div>
@@ -1210,11 +1220,11 @@ async function loginAdmin(){
 function canEdit(){ return adminRole === 'edit'; }
 async function refreshAdmin(){
   $('payments-list').innerHTML = '<div class="loading"><div class="spinner"></div><span>Cargando...</span></div>';
-  $('people-body').innerHTML = '<tr><td colspan="9" class="empty">Cargando...</td></tr>';
+  $('people-body').innerHTML = '<tr><td colspan="10" class="empty">Cargando...</td></tr>';
   adminData = await api('getAdmin', { adminToken });
   if(!adminData.ok){
     $('payments-list').innerHTML = '<div class="empty">'+(adminData.error || 'No autorizado')+'</div>';
-    $('people-body').innerHTML = '<tr><td colspan="9" class="empty">'+(adminData.error || 'No autorizado')+'</td></tr>';
+    $('people-body').innerHTML = '<tr><td colspan="10" class="empty">'+(adminData.error || 'No autorizado')+'</td></tr>';
     return;
   }
   peopleData = null;
@@ -1362,7 +1372,7 @@ async function ensurePeopleData(){
   if(!peopleData){
     peopleData = await api('getInscriptos', { adminToken });
     if(!peopleData.ok){
-      $('people-body').innerHTML = '<tr><td colspan="9">'+(peopleData.error || 'Error')+'</td></tr>';
+      $('people-body').innerHTML = '<tr><td colspan="10">'+(peopleData.error || 'Error')+'</td></tr>';
       $('analytics-content').innerHTML = '<div class="empty">'+(peopleData.error || 'No se pudieron cargar los datos')+'</div>';
       return false;
     }
@@ -1377,10 +1387,41 @@ function fillPeopleFilters(){
   $('people-community').innerHTML = '<option value="">Todas las comunidades</option>' + communities.map(x=>'<option>'+x+'</option>').join('');
 }
 function resetPeopleFilters(){
-  ['people-state','people-parish','people-community','people-dni-order','people-restrictions-filter','people-permit-filter','people-search'].forEach(id => {
+  ['people-state','people-debt','people-parish','people-community','people-dni-order','people-restrictions-filter','people-permit-filter','people-search'].forEach(id => {
     const el = $(id);
     if(el) el.value = '';
   });
+}
+function paidInstallments(person){
+  const cuotaMonto = PLAN_PAGOS[0] ? PLAN_PAGOS[0].monto : 0;
+  if(!cuotaMonto) return 0;
+  const totalPagado = Number((person.resumen || {}).totalPagado || 0);
+  return Math.max(0, Math.min(PLAN_PAGOS.length, Math.floor(totalPagado / cuotaMonto)));
+}
+function owedInstallments(person){
+  return Math.max(0, PLAN_PAGOS.length - paidInstallments(person));
+}
+function debtFilterKey(person){
+  const paid = paidInstallments(person);
+  const owed = owedInstallments(person);
+  if(paid === 0) return 'no_pagos';
+  if(owed >= 1 && owed <= 3) return 'deben_' + owed;
+  return owed === 0 ? 'completo' : 'deben_' + owed;
+}
+function debtText(person){
+  const paid = paidInstallments(person);
+  const owed = owedInstallments(person);
+  if(paid === 0) return 'No pago nada';
+  if(owed === 0) return 'Completo';
+  return owed + ' cuota' + (owed === 1 ? '' : 's');
+}
+function renderDebtSummary(list){
+  const count = key => list.filter(i=>debtFilterKey(i) === key).length;
+  $('people-debt-summary').innerHTML =
+    metric(count('no_pagos'), 'No pagaron nada', 'var(--red)') +
+    metric(count('deben_3'), 'Deben 3 cuotas', 'var(--amber)') +
+    metric(count('deben_2'), 'Deben 2 cuotas', 'var(--amber)') +
+    metric(count('deben_1'), 'Deben 1 cuota', 'var(--blue)');
 }
 function renderPeople(){
   if(!peopleData || !peopleData.ok) return;
@@ -1388,6 +1429,7 @@ function renderPeople(){
   const activeBase = getActiveAccountingList(allRows);
   const activeNumbers = activeNumberMap(activeBase);
   const state = $('people-state').value;
+  const debt = $('people-debt').value;
   let list = state === 'baja'
     ? allRows.filter(i=>String(i.estadoCupo || '') === 'baja')
     : activeBase.slice();
@@ -1404,6 +1446,8 @@ function renderPeople(){
   if(permitFilter === 'menores_sin_permiso') list = list.filter(i=>isMinorPerson(i) && !i.permisoViajeUrl);
   if(permitFilter === 'menores_con_permiso') list = list.filter(i=>isMinorPerson(i) && !!i.permisoViajeUrl);
   if(q) list = list.filter(i=>i.nombre.toLowerCase().includes(q) || String(i.dni).includes(q));
+  renderDebtSummary(list.filter(i=>String(i.estadoCupo || '') !== 'baja'));
+  if(debt) list = list.filter(i=>String(i.estadoCupo || '') !== 'baja' && debtFilterKey(i) === debt);
   if(dniOrder){
     list = list.slice().sort((a,b) => {
       const da = dateFromAR(a.vencimientoDni);
@@ -1429,9 +1473,10 @@ function renderPeople(){
     const permitCell = renderPermitCell(i);
     const parishCommunity = '<div class="people-place">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+'</div>';
     const permitSummary = isMinorPerson(i) ? (i.permisoViajeUrl ? 'Permiso cargado' : 'Falta permiso') : 'Permiso no aplica';
-    const mobileSummary = '<div class="people-mobile-summary">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+' · <b>'+(STATE_LABELS[i.estado] || i.estado)+'</b> · '+money(i.resumen.totalPagado)+' · '+permitSummary+(restricciones ? ' · <span class="warn">'+escapeHtml(restricciones)+'</span>' : '')+'</div>';
-    return '<tr><td class="people-order">'+displayNumber+'</td><td><span class="people-name">'+escapeHtml(i.nombre || '')+'<span class="people-inline-dni">DNI '+escapeHtml(String(i.dni || ''))+'</span></span>'+mobileSummary+personAlertTags(i)+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+parishCommunity+'</td><td>'+restrictionsCell+'</td><td>'+permitCell+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(i.resumen.totalPagado)+'</td><td><div class="actions">'+wa+edit+baja+'</div></td></tr>';
-  }).join('') : '<tr><td colspan="9" class="empty">Sin resultados</td></tr>';
+    const totalPagado = (i.resumen || {}).totalPagado;
+    const mobileSummary = '<div class="people-mobile-summary">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+' · <b>'+(STATE_LABELS[i.estado] || i.estado)+'</b> · '+money(totalPagado)+' · Debe: '+debtText(i)+' · '+permitSummary+(restricciones ? ' · <span class="warn">'+escapeHtml(restricciones)+'</span>' : '')+'</div>';
+    return '<tr><td class="people-order">'+displayNumber+'</td><td><span class="people-name">'+escapeHtml(i.nombre || '')+'<span class="people-inline-dni">DNI '+escapeHtml(String(i.dni || ''))+'</span></span>'+mobileSummary+personAlertTags(i)+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+parishCommunity+'</td><td>'+restrictionsCell+'</td><td>'+permitCell+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(totalPagado)+'</td><td>'+debtText(i)+'</td><td><div class="actions">'+wa+edit+baja+'</div></td></tr>';
+  }).join('') : '<tr><td colspan="10" class="empty">Sin resultados</td></tr>';
 }
 
 function renderPermitCell(person){
@@ -1738,7 +1783,7 @@ function currentExportRows(){
     return peopleData.inscriptos.map(i => ({
       orden:i.orden,nombre:i.nombre,dni:i.dni,email:i.email,celular:i.celular,
       parroquia:i.parroquia,comunidad:i.comunidad,estado:i.estado,
-      confirmado:i.resumen.totalPagado,restricciones:i.restricciones
+      confirmado:(i.resumen || {}).totalPagado,cuotasAdeudadas:debtText(i),restricciones:i.restricciones
     }));
   }
   return groupedPayments().flatMap(per => per.pagos.map(p => ({
