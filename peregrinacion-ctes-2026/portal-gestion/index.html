@@ -672,6 +672,8 @@ let paymentMode = 'transferencia';
 let busyCount = 0;
 let localCelular = '';
 let minorPermitModalShownFor = '';
+let capacityClosedAlertShownFor = '';
+const CAPACITY_CLOSED_MESSAGE = 'El portal ya esta cerrado para cargar pagos por haber alcanzado el limite de peregrinos. Por favor comunicate con tu catequista.';
 
 function $(id){ return document.getElementById(id); }
 function showGlobalLoading(text){
@@ -803,6 +805,7 @@ async function buscarParticipante(){
 function renderState(){
   const d = estadoData;
   const r = d.resumen || {};
+  const capacityClosed = isCapacityClosedForCurrent(d);
   const totalPlan = TOTAL;
   const faltante = Math.max(0, totalPlan - (r.totalPagado || 0) - (r.totalPendConf || 0));
   const okPct = totalPlan ? Math.round((r.totalPagado || 0) / totalPlan * 100) : 0;
@@ -833,6 +836,11 @@ function renderState(){
     alert.style.display = 'block';
     alert.textContent = 'Tu inscripcion figura dada de baja.';
     setGoPayVisible(false);
+  } else if(capacityClosed){
+    alert.style.display = 'block';
+    alert.textContent = capacityClosedMessage(d);
+    setGoPayVisible(false);
+    maybeShowCapacityClosedAlert(d);
   } else {
     setGoPayVisible(true);
     const pendingCount = (d.pagos || []).filter(p => p.estado === 'pendiente').length;
@@ -860,8 +868,10 @@ function renderState(){
     const idx = PLAN_PAGOS.findIndex(x => x.key === c.key);
     const cargadas = [...new Set([...(r.confirmadas || []), ...(r.pendientes || [])])];
     const previasOk = PLAN_PAGOS.slice(0, idx).every(prev => cargadas.includes(prev.key));
-    const puedeCargar = d.estadoCupo !== 'baja' && previasOk && (!activo || activo.estado === 'rechazado');
-    const bloquear = !previasOk && (!activo || activo.estado === 'rechazado') ? '<span class="meta">Completa la cuota anterior primero.</span>' : '';
+    const puedeCargar = d.estadoCupo !== 'baja' && !capacityClosed && previasOk && (!activo || activo.estado === 'rechazado');
+    const bloquear = capacityClosed && (!activo || activo.estado === 'rechazado')
+      ? '<span class="meta">'+capacityClosedMessage(d)+'</span>'
+      : (!previasOk && (!activo || activo.estado === 'rechazado') ? '<span class="meta">Completa la cuota anterior primero.</span>' : '');
     const cargar = puedeCargar
       ? `<button class="btn small ${missingCell ? 'blocked' : ''}" onclick="showPayment('${c.key}','transferencia')">Cargar comprobante de transferencia</button><button class="btn secondary small ${missingCell ? 'blocked' : ''}" onclick="showPayment('${c.key}','efectivo')">Cargar pago en efectivo</button>`
       : bloquear;
@@ -872,6 +882,21 @@ function renderState(){
   maybeShowMinorPermitModal(d);
   $('state-loading').style.display='none';
   $('state-content').style.display='block';
+}
+
+function isCapacityClosedForCurrent(d){
+  return !!(d && d.bloqueoCupo && d.bloqueoCupo.bloqueado);
+}
+
+function capacityClosedMessage(d){
+  return (d && d.bloqueoCupo && d.bloqueoCupo.mensaje) || CAPACITY_CLOSED_MESSAGE;
+}
+
+function maybeShowCapacityClosedAlert(d){
+  const key = cleanDni(d.dni);
+  if(capacityClosedAlertShownFor === key) return;
+  capacityClosedAlertShownFor = key;
+  setTimeout(() => alert(capacityClosedMessage(d)), 200);
 }
 
 function renderMinorPermitPanel(d){
@@ -987,6 +1012,11 @@ async function submitProfileChange(){
 
 function showPayment(preselectKey, mode){
   paymentMode = mode === 'efectivo' ? 'efectivo' : 'transferencia';
+  if(isCapacityClosedForCurrent(estadoData)){
+    alert(capacityClosedMessage(estadoData));
+    showPage('page-state');
+    return;
+  }
   if(!hasCellphone(estadoData)){
     alert('Primero completa la informacion de tu celular antes de poder cargar el pago.');
     showProfile('celular_pago');
@@ -1153,6 +1183,7 @@ async function registrarPago(){
   const medioPago = (document.querySelector('input[name="medio-pago"]:checked') || {}).value || '';
   const responsableEfectivo = ($('cash-responsible').value || '').trim();
   const isCash = medioPago.toLowerCase().includes('efectivo');
+  if(isCapacityClosedForCurrent(estadoData)){ showMsg('payment-msg', capacityClosedMessage(estadoData), false); return; }
   if(!hasCellphone(estadoData)){ showMsg('payment-msg','Antes de cargar un pago, actualiza tu numero de celular en Mis datos.',false); return; }
   if(!cuotas.length){ showMsg('payment-msg','Selecciona al menos una cuota.',false); return; }
   if(!file){ showMsg('payment-msg', isCash ? 'Adjunta la foto del recibo del pago en efectivo.' : 'Adjunta el comprobante de Mercado Pago.', false); return; }

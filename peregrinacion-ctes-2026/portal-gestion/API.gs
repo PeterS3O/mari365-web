@@ -25,6 +25,8 @@ const CUOTAS = [
   { key: 'cuota4', label: '4ta cuota', monto: 35000, vencimiento: '15/09/2026' },
 ];
 const TOTAL = CUOTAS.reduce((a, c) => a + c.monto, 0);
+const MAX_PEREGRINOS_CON_PAGO = 180;
+const MENSAJE_CIERRE_CUPO = 'El portal ya esta cerrado para cargar pagos por haber alcanzado el limite de peregrinos. Por favor comunicate con tu catequista.';
 
 const SYSTEM_COLUMNS = [
   'Aviso WhatsApp',
@@ -446,6 +448,38 @@ function resumenPagos(pagos) {
   return { confirmadas, pendientes, rechazadas, totalPagado, totalPendConf };
 }
 
+function tienePagoConfirmado(pagos) {
+  return pagos.some(p => (p.estado || '').toString().trim() === 'confirmado');
+}
+
+function dnisActivosConCuota1Confirmada() {
+  const contactos = contactoPorDni();
+  const activos = new Set(Object.keys(contactos).filter(dni => contactos[dni].estadoCupo !== 'baja'));
+  const pagos = getPagosSheet().getDataRange().getValues().slice(1);
+  const dnis = new Set();
+  pagos.forEach(r => {
+    const dni = normDni(r[2]);
+    if (!dni || !activos.has(dni)) return;
+    const estado = (r[7] || '').toString().trim();
+    const cuotas = (r[4] || '').toString().split(',').map(c => c.trim());
+    if (estado === 'confirmado' && cuotas.includes('cuota1')) dnis.add(dni);
+  });
+  return dnis;
+}
+
+function estadoCierreCupo(dni, pagosExistentes, estadoCupo) {
+  const pagos = pagosExistentes || getPagos(dni);
+  const totalConCuota1 = dnisActivosConCuota1Confirmada().size;
+  const yaTienePago = tienePagoConfirmado(pagos);
+  const bloqueado = estadoCupo !== 'baja' && !yaTienePago && totalConCuota1 >= MAX_PEREGRINOS_CON_PAGO;
+  return {
+    bloqueado,
+    mensaje: bloqueado ? MENSAJE_CIERRE_CUPO : '',
+    limite: MAX_PEREGRINOS_CON_PAGO,
+    peregrinosConCuota1: totalConCuota1,
+  };
+}
+
 function estadoInscripto(d, cols, pagos) {
   const r = resumenPagos(pagos);
   const estadoCupo = (d[cols.estadoCupo] || 'con_cupo').toString().trim() || 'con_cupo';
@@ -479,6 +513,7 @@ function getEstado(p) {
   const cols = v.cols;
   const pagos = getPagos(d[cols.dni]);
   const resumen = resumenPagos(pagos);
+  const estadoCupo = (d[cols.estadoCupo] || 'con_cupo').toString().trim() || 'con_cupo';
   return {
     ok: true,
     nombre: nombreCompleto(d, cols),
@@ -495,7 +530,8 @@ function getEstado(p) {
     fechaPermisoViaje: fechaAR(d[cols.fechaPermisoViaje]),
     permisoViajeNombre: d[cols.nombreArchivoPermiso] || '',
     permisoViajeTipo: d[cols.tipoArchivoPermiso] || '',
-    estadoCupo: (d[cols.estadoCupo] || 'con_cupo').toString().trim() || 'con_cupo',
+    estadoCupo,
+    bloqueoCupo: estadoCierreCupo(d[cols.dni], pagos, estadoCupo),
     pagos,
     resumen,
     cuotas: CUOTAS,
@@ -653,6 +689,9 @@ function registrarPago(p) {
   if (invalidas.length) return { ok: false, error: 'Cuotas invalidas: ' + invalidas.join(', ') };
 
   const existentes = getPagos(d[cols.dni]);
+  const bloqueoCupo = estadoCierreCupo(d[cols.dni], existentes, estadoCupo);
+  if (bloqueoCupo.bloqueado) return { ok: false, error: bloqueoCupo.mensaje };
+
   const previasFaltantes = cuotasPreviasFaltantes(cuotasKeys, existentes);
   if (previasFaltantes.length) {
     return { ok: false, error: 'Para cargar esa cuota, primero tenes que cargar el comprobante de: ' + previasFaltantes.join(', ') };
