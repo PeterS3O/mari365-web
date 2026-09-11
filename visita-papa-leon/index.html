@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Viaje apostolico del Papa León XIV a Argentina</title>
+  <meta name="description" content="Información e inscripción para el viaje de los hermanos de las comunidades neocatecumenales de Corrientes, Chaco y Formosa al Viaje apostolico del Papa León XIV a Argentina.">
+  <link rel="icon" type="image/svg+xml" href="../favicon.svg">
+  <style>
+    :root {
+      --blue: #245f8f;
+      --blue-dark: #143d5f;
+      --gold: #c9a227;
+      --ink: #17202a;
+      --muted: #64727d;
+      --line: #dce7ec;
+      --soft: #f4f8fa;
+      --white: #ffffff;
+      --shadow: 0 18px 55px rgba(20, 61, 95, 0.18);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--soft);
+      line-height: 1.5;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(14px);
+    }
+
+    .topbar-inner {
+      width: min(1180px, calc(100% - 32px));
+      min-height: 64px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      color: var(--blue);
+    }
+
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(201, 162, 39, 0.45);
+      border-radius: 50%;
+      color: var(--gold);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .nav-actions a,
+    .btn {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 7px;
+      padding: 0 14px;
+      font-weight: 800;
+      font-size: 14px;
+      border: 1px solid transparent;
+    }
+
+    .nav-actions a { color: var(--muted); }
+    .nav-actions a:hover { color: var(--blue); background: #eaf3f7; }
+
+    .btn.primary { background: var(--blue); color: var(--white); }
+    .btn.primary:hover { background: var(--blue-dark); }
+    .btn.secondary { background: var(--white); color: var(--blue); border-color: #b8d1dc; }
+    .btn.secondary:hover { border-color: var(--blue); }
+    .btn.gold { background: var(--gold); color: #221b05; }
+
+    .hero {
+      min-height: calc(100vh - 64px);
+      display: grid;
+      align-items: end;
+      background:
+        linear-gradient(90deg, rgba(10, 28, 43, 0.86), rgba(10, 28, 43, 0.36) 52%, rgba(10, 28, 43, 0.12)),
+        url("../imagenes/visita-papa-leon/papa-leon-inscripcion.png") center / cover;
+      color: var(--white);
+    }
+
+    .hero-inner {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: clamp(54px, 8vw, 96px) 0;
+    }
+
+    .eyebrow {
+      color: #f3d675;
+      font-size: 12px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin: 0 0 14px;
+    }
+
+    h1 {
+      max-width: 720px;
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(40px, 7vw, 74px);
+      line-height: 1.02;
+      letter-spacing: 0;
+    }
+
+    .hero-copy {
+      max-width: 660px;
+      margin: 20px 0 0;
+      font-size: clamp(17px, 2vw, 21px);
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-top: 28px;
+    }
+
+    .hero-actions .btn { min-height: 50px; padding: 0 18px; }
+
+    main {
+      background: var(--white);
+    }
+
+    .section {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 52px 0;
+    }
+
+    .section h2 {
+      margin: 0 0 14px;
+      color: var(--blue-dark);
+      font-size: clamp(26px, 4vw, 38px);
+      line-height: 1.15;
+    }
+
+    .section-intro {
+      max-width: 760px;
+      margin: 0 0 26px;
+      color: var(--muted);
+      font-size: 17px;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .info-card,
+    .notice,
+    .timeline-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--white);
+      box-shadow: 0 8px 24px rgba(20, 61, 95, 0.08);
+    }
+
+    .info-card {
+      padding: 20px;
+    }
+
+    .info-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+
+    .info-card strong {
+      display: block;
+      color: var(--ink);
+      font-size: 24px;
+      line-height: 1.15;
+    }
+
+    .notice {
+      margin-top: 18px;
+      padding: 18px 20px;
+      background: #fff9e7;
+      border-color: #ead99e;
+    }
+
+    .notice strong { color: #77540b; }
+
+    .payment-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .timeline-card {
+      padding: 22px;
+    }
+
+    .timeline-card small {
+      color: var(--muted);
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .timeline-card h3 {
+      margin: 8px 0 8px;
+      font-size: 22px;
+      color: var(--blue-dark);
+    }
+
+    .timeline-card p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .portal-band {
+      background: var(--blue-dark);
+      color: var(--white);
+    }
+
+    .portal-band .section {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .portal-band h2,
+    .portal-band p { color: var(--white); }
+
+    .portal-buttons {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    @media (max-width: 900px) {
+      .info-grid,
+      .payment-grid,
+      .portal-band .section { grid-template-columns: 1fr; }
+      .portal-buttons { justify-content: flex-start; }
+    }
+
+    @media (max-width: 640px) {
+      .topbar-inner { align-items: flex-start; padding: 12px 0; flex-direction: column; }
+      .nav-actions { justify-content: flex-start; }
+      .hero { min-height: 680px; background-position: 58% center; }
+      .hero-actions .btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="../index.html">
+        <span class="brand-mark">✦</span>
+        <span>Maria365.online</span>
+      </a>
+      <nav class="nav-actions" aria-label="Accesos del viaje">
+        <a href="inscripcion-2026/">Inscripción</a>
+        <a href="portal-gestion/">Portal peregrino</a>
+        <a href="portal-gestion/#admin">Catequistas</a>
+      </nav>
+    </div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Comunidades neocatecumenales</p>
+      <h1>Viaje apostolico del Papa León XIV a Argentina</h1>
+      <p class="hero-copy">Información, inscripción y seguimiento de pagos para los hermanos de Corrientes, Chaco y Formosa.</p>
+      <div class="hero-actions">
+        <a class="btn gold" href="inscripcion-2026/">Inscribirme</a>
+        <a class="btn secondary" href="portal-gestion/">Ingresar al portal de pagos</a>
+        <a class="btn secondary" href="portal-gestion/#admin">Acceso catequistas</a>
+      </div>
+    </div>
+  </section>
+
+  <main>
+    <section class="section">
+      <h2>Datos del viaje</h2>
+      <p class="section-intro">El viaje está previsto para el encuentro en Buenos Aires por el Viaje apostolico del Papa León XIV a Argentina.</p>
+      <div class="info-grid">
+        <article class="info-card">
+          <span>Fecha</span>
+          <strong>11 de noviembre</strong>
+        </article>
+        <article class="info-card">
+          <span>Horarios</span>
+          <strong>A confirmar</strong>
+        </article>
+        <article class="info-card">
+          <span>Incluye</span>
+          <strong>Transporte ida y vuelta</strong>
+        </article>
+        <article class="info-card">
+          <span>A confirmar</span>
+          <strong>Alojamiento</strong>
+        </article>
+      </div>
+      <div class="notice">
+        <strong>Importante:</strong> el monto informado incluye solo el transporte ida y vuelta. No incluye comidas. El alojamiento está por confirmar.
+      </div>
+    </section>
+
+    <section class="section">
+      <h2>Plan de pagos</h2>
+      <p class="section-intro">Cada peregrino deberá cargar sus comprobantes desde el portal. Los catequistas revisarán y confirmarán cada pago.</p>
+      <div class="payment-grid">
+        <article class="timeline-card">
+          <small>Antes del 29/9</small>
+          <h3>Inscripción: $70.000</h3>
+          <p>Reserva inicial del lugar para el viaje.</p>
+        </article>
+        <article class="timeline-card">
+          <small>Vence 5/10</small>
+          <h3>1ra cuota: $100.000</h3>
+          <p>Se carga el comprobante desde el portal del peregrino.</p>
+        </article>
+        <article class="timeline-card">
+          <small>Vence 11/10</small>
+          <h3>2da cuota: $100.000</h3>
+          <p>Completa el pago del transporte ida y vuelta.</p>
+        </article>
+      </div>
+      <div class="notice">
+        <strong>Alias de pago:</strong> Visita.leon.bsas · <strong>Titular:</strong> Santiago Fernandez Avalos
+      </div>
+    </section>
+  </main>
+
+  <section class="portal-band">
+    <div class="section">
+      <div>
+        <h2>Gestión del viaje</h2>
+        <p class="section-intro">El portal permite consultar el estado de cuotas, cargar comprobantes y, para catequistas, revisar pagos, contactar por WhatsApp y ver la analítica de peregrinos.</p>
+      </div>
+      <div class="portal-buttons">
+        <a class="btn gold" href="inscripcion-2026/">Inscribirme</a>
+        <a class="btn secondary" href="portal-gestion/">Portal de pagos</a>
+        <a class="btn secondary" href="portal-gestion/#admin">Catequistas</a>
+      </div>
+    </div>
+  </section>
+</body>
+</html>
