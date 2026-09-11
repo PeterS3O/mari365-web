@@ -12,8 +12,8 @@ const CONFIG = {
   EMAIL_ORGANIZADOR: 'TU_EMAIL@gmail.com',
   ALIAS_TRANSFERENCIA: 'Visita.leon.bsas',
   NOMBRE_EVENTO: 'Viaje apostolico del Papa León XIV a Argentina',
-  ADMIN_PASSWORD: 'TU_CLAVE_ADMIN',
-  ADMIN_VIEW_PASSWORD: 'TU_CLAVE_VISTA',
+  ADMIN_PASSWORD: 'kikoarguello',
+  ADMIN_VIEW_PASSWORD: 'padremario',
   PORTAL_URL: 'https://maria365.online/visita-papa-leon/portal-gestion/',
 };
 

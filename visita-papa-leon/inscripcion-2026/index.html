@@ -260,7 +260,7 @@
 <body>
   <header class="topbar">
     <div class="topbar-inner">
-      <a class="brand" href="../../index.html">
+      <a class="brand" href="../">
         <span class="brand-mark">✦</span>
         <span>Maria365.online</span>
       </a>
@@ -527,6 +527,9 @@
         $('signup-form').reset();
         $('otra-restriccion-wrap').hidden = true;
         showStatus('ok', 'Registro exitoso. Tu inscripcion fue registrada correctamente.');
+        setTimeout(() => {
+          window.location.href = '../';
+        }, 1400);
       } catch (err) {
         showStatus('error', err.message || 'No se pudo registrar la inscripcion.');
       } finally {

@@ -1841,6 +1841,7 @@ document.addEventListener('DOMContentLoaded', () => {
   ['login-dni','login-email'].forEach(id => $(id).addEventListener('keydown', e => { if(e.key === 'Enter') buscarParticipante(); }));
   $('admin-pass').addEventListener('keydown', e => { if(e.key === 'Enter') loginAdmin(); });
   if(window.location.hash === '#admin') showPage('page-admin-login');
+  if(window.location.hash === '#login') showPage('page-login');
 });
 document.addEventListener('click', e => {
   const btn = e.target.closest('button');
