@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Inscripcion | Viaje apostolico del Papa León XIV a Argentina</title>
+  <meta name="description" content="Formulario de inscripcion para el viaje de los hermanos de las comunidades neocatecumenales de Corrientes, Chaco y Formosa al Viaje apostolico del Papa León XIV a Argentina.">
+  <meta name="robots" content="noindex, nofollow">
+  <link rel="icon" type="image/svg+xml" href="../../favicon.svg">
+  <style>
+    :root {
+      --blue: #245f8f;
+      --blue-dark: #163f62;
+      --gold: #c9a227;
+      --ink: #17202a;
+      --muted: #5f6f7a;
+      --line: #dbe5ea;
+      --soft: #f4f8fa;
+      --white: #ffffff;
+      --danger: #a73535;
+      --ok: #216a48;
+      --shadow: 0 18px 50px rgba(22, 63, 98, 0.14);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--ink);
+      background: var(--soft);
+      line-height: 1.5;
+    }
+
+    a { color: inherit; }
+
+    .topbar {
+      background: var(--white);
+      border-bottom: 1px solid var(--line);
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    .topbar-inner {
+      width: min(1120px, calc(100% - 32px));
+      height: 64px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      font-weight: 800;
+      color: var(--blue);
+    }
+
+    .brand-mark {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: var(--gold);
+      border: 1px solid rgba(201, 162, 39, 0.45);
+      font-size: 18px;
+    }
+
+    .home-link {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 14px;
+    }
+
+    .page {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 32px 0 56px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 0.95fr) minmax(320px, 1.05fr);
+      gap: 28px;
+      align-items: stretch;
+    }
+
+    .intro {
+      min-height: 100%;
+      color: var(--white);
+      background:
+        linear-gradient(180deg, rgba(12, 37, 58, 0.08), rgba(12, 37, 58, 0.82)),
+        url("../../imagenes/visita-papa-leon/papa-leon-inscripcion.png") center / cover;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: flex-end;
+    }
+
+    .intro-content {
+      padding: clamp(28px, 5vw, 46px);
+    }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: #f3d675;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 12px;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(34px, 6vw, 58px);
+      line-height: 1.03;
+      letter-spacing: 0;
+      max-width: 9ch;
+    }
+
+    .intro p {
+      max-width: 520px;
+      margin: 18px 0 0;
+      font-size: 17px;
+    }
+
+    .form-panel {
+      background: var(--white);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: clamp(22px, 4vw, 34px);
+    }
+
+    .form-title {
+      margin: 0 0 6px;
+      font-size: 25px;
+      color: var(--blue-dark);
+    }
+
+    .form-subtitle {
+      margin: 0 0 24px;
+      color: var(--muted);
+    }
+
+    form {
+      display: grid;
+      gap: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    label {
+      font-size: 13px;
+      font-weight: 800;
+      color: #2b3c46;
+    }
+
+    input,
+    select {
+      width: 100%;
+      min-height: 46px;
+      border: 1px solid #cfdce2;
+      border-radius: 7px;
+      padding: 10px 12px;
+      font: inherit;
+      color: var(--ink);
+      background: var(--white);
+    }
+
+    input:focus,
+    select:focus {
+      outline: 3px solid rgba(36, 95, 143, 0.17);
+      border-color: var(--blue);
+    }
+
+    .hint {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin-top: 4px;
+    }
+
+    button {
+      min-height: 48px;
+      border: 0;
+      border-radius: 7px;
+      padding: 0 20px;
+      background: var(--blue);
+      color: var(--white);
+      font: inherit;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button:hover { background: var(--blue-dark); }
+    button:disabled { opacity: 0.62; cursor: wait; }
+
+    .status {
+      display: none;
+      border-radius: 7px;
+      padding: 12px 14px;
+      font-size: 14px;
+    }
+
+    .status.show { display: block; }
+    .status.error { color: var(--danger); background: #fff1f1; border: 1px solid #f0c9c9; }
+    .status.ok { color: var(--ok); background: #effaf4; border: 1px solid #cbe8d8; }
+
+    .config-warning {
+      margin-bottom: 18px;
+      color: #8a5a00;
+      background: #fff8e1;
+      border: 1px solid #ead28d;
+      border-radius: 7px;
+      padding: 12px 14px;
+      font-size: 14px;
+    }
+
+    [hidden] { display: none !important; }
+
+    @media (max-width: 820px) {
+      .layout { grid-template-columns: 1fr; }
+      .intro { min-height: 360px; }
+      h1 { max-width: 12ch; }
+    }
+
+    @media (max-width: 560px) {
+      .topbar-inner { width: min(100% - 24px, 1120px); }
+      .page { width: min(100% - 24px, 1120px); padding-top: 20px; }
+      .grid { grid-template-columns: 1fr; }
+      .home-link { display: none; }
+      .form-panel { padding: 20px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="../../index.html">
+        <span class="brand-mark">✦</span>
+        <span>Maria365.online</span>
+      </a>
+      <a class="home-link" href="../../index.html">Volver al sitio</a>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="layout">
+      <section class="intro" aria-labelledby="page-title">
+        <div class="intro-content">
+          <p class="eyebrow">Inscripcion</p>
+          <h1 id="page-title">Viaje apostolico del Papa León XIV a Argentina</h1>
+          <p>Viaje de los hermanos de las comunidades neocatecumenales de Corrientes, Chaco y Formosa.</p>
+        </div>
+      </section>
+
+      <section class="form-panel" aria-labelledby="form-title">
+        <h2 class="form-title" id="form-title">Datos de inscripcion</h2>
+        <p class="form-subtitle">Inscripcion para hermanos de comunidades neocatecumenales de Corrientes, Chaco y Formosa. Completá los datos tal como figuran en el DNI.</p>
+
+        <div class="config-warning" id="config-warning" hidden>
+          El formulario todavia no tiene conectado el backend de inscripcion.
+        </div>
+
+        <form id="signup-form" novalidate>
+          <div class="grid">
+            <div class="field">
+              <label for="nombre">Nombre</label>
+              <input id="nombre" name="nombre" autocomplete="given-name" required>
+            </div>
+            <div class="field">
+              <label for="apellido">Apellido</label>
+              <input id="apellido" name="apellido" autocomplete="family-name" required>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="field">
+              <label for="dni">DNI</label>
+              <input id="dni" name="dni" inputmode="numeric" autocomplete="off" required>
+              <span class="hint">Solo numeros, sin puntos.</span>
+            </div>
+            <div class="field">
+              <label for="fechaNacimiento">Fecha de nacimiento</label>
+              <input id="fechaNacimiento" name="fechaNacimiento" type="date" required>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="field">
+              <label for="email">Email</label>
+              <input id="email" name="email" type="email" autocomplete="email" required>
+              <span class="hint">Será necesario para ingresar al portal del peregrino.</span>
+            </div>
+            <div class="field">
+              <label for="celular">Celular</label>
+              <input id="celular" name="celular" type="tel" inputmode="tel" autocomplete="tel" placeholder="+54 9 379 4000000" required>
+              <span class="hint">Usá formato completo con código de país, para poder enviar WhatsApp directo.</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="parroquia">Parroquia</label>
+            <select id="parroquia" name="parroquia" required></select>
+          </div>
+
+          <div class="field">
+            <label for="comunidad">Comunidad</label>
+            <select id="comunidad" name="comunidad" required></select>
+          </div>
+
+          <div class="field">
+            <label for="restricciones">Restricciones alimenticias</label>
+            <select id="restricciones" name="restricciones" required></select>
+          </div>
+
+          <div class="field" id="otra-restriccion-wrap" hidden>
+            <label for="otraRestriccion">Detalle</label>
+            <input id="otraRestriccion" name="otraRestriccion" autocomplete="off">
+          </div>
+
+          <div class="status" id="status" role="status" aria-live="polite"></div>
+
+          <div class="actions">
+            <button id="submit-btn" type="submit">Enviar inscripcion</button>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <script>
+    const API_URL = 'https://script.google.com/macros/s/AKfycbwTawcad2Uc_MeEv_NM580i1ZlmTgogeJS-SmfuIvSw1LmDVhdF4i_P7G91Kc7NFPR0sQ/exec';
+
+    const PARROQUIAS = [
+      'Cristo Obrero - Corrientes',
+      'María Auxiliadora - Formosa',
+      'Nuestra Señora de Itatí - Corrientes',
+      'Nuestra Señora de los Ángeles - Clorinda',
+      'Nuestra Señora de Pompeya - Corrientes',
+      'Nuestra Señora del Perpetuo Socorro - Corrientes',
+      'San José - Clorinda',
+      'San José - Saladas',
+      'San Pantaleón - Oberá',
+      'San Roque',
+      'Santa Teresita - Corrientes',
+      'Otros'
+    ];
+
+    const COMUNIDADES = ['1ra', '2da', '3ra', '4ta', '5ta', '6ta', 'Otra'];
+
+    const RESTRICCIONES = [
+      'Ninguna',
+      'Celiaco/a',
+      'Intolerancia a la lactosa',
+      'Alergia a frutos secos',
+      'Alergia al huevo',
+      'Diabetes',
+      'Otros'
+    ];
+
+    const $ = (id) => document.getElementById(id);
+
+    function fillSelect(select, placeholder, options) {
+      select.innerHTML = '<option value="">' + placeholder + '</option>' +
+        options.map((option) => '<option value="' + escapeHtml(option) + '">' + escapeHtml(option) + '</option>').join('');
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      })[char]);
+    }
+
+    function showStatus(type, message) {
+      const box = $('status');
+      box.className = 'status show ' + type;
+      box.textContent = message;
+    }
+
+    function cleanDni(value) {
+      return String(value || '').replace(/\D/g, '');
+    }
+
+    function cleanEmail(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function normalizePhone(value) {
+      let phone = String(value || '').trim().replace(/[^\d+]/g, '');
+      if (phone.startsWith('00')) phone = '+' + phone.slice(2);
+      if (!phone.startsWith('+')) phone = '+' + phone;
+      return phone;
+    }
+
+    function isValidEmail(value) {
+      return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+    }
+
+    function isValidWhatsappPhone(value) {
+      return /^\+\d{10,15}$/.test(value);
+    }
+
+    function isConfigured() {
+      return API_URL && !API_URL.includes('PENDIENTE');
+    }
+
+    function getPayload() {
+      return {
+        action: 'registrarInscripcion',
+        nombre: $('nombre').value.trim(),
+        apellido: $('apellido').value.trim(),
+        dni: cleanDni($('dni').value),
+        fechaNacimiento: $('fechaNacimiento').value,
+        email: cleanEmail($('email').value),
+        celular: normalizePhone($('celular').value),
+        parroquia: $('parroquia').value,
+        comunidad: $('comunidad').value,
+        restricciones: $('restricciones').value,
+        otraRestriccion: $('otraRestriccion').value.trim(),
+        origen: 'web'
+      };
+    }
+
+    function validate(payload) {
+      if (!payload.nombre) return 'Ingresá el nombre.';
+      if (!payload.apellido) return 'Ingresá el apellido.';
+      if (!/^\d{7,9}$/.test(payload.dni)) return 'Ingresá un DNI valido, sin puntos.';
+      if (!payload.fechaNacimiento) return 'Ingresá la fecha de nacimiento.';
+      if (!isValidEmail(payload.email)) return 'Ingresá un email valido. Lo vas a necesitar para entrar al portal del peregrino.';
+      if (!isValidWhatsappPhone(payload.celular)) return 'Ingresá el celular completo con codigo de pais. Ejemplo: +54 9 379 4000000.';
+      if (!payload.parroquia) return 'Seleccioná una parroquia.';
+      if (!payload.comunidad) return 'Seleccioná una comunidad.';
+      if (!payload.restricciones) return 'Seleccioná una opcion de restricciones alimenticias.';
+      if (payload.restricciones === 'Otros' && !payload.otraRestriccion) return 'Detallá la restriccion alimenticia.';
+      return '';
+    }
+
+    async function submitSignup(payload) {
+      const response = await fetch(API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+        body: JSON.stringify(payload)
+      });
+      const text = await response.text();
+      try {
+        return JSON.parse(text);
+      } catch (err) {
+        throw new Error('El servidor no devolvio una respuesta valida.');
+      }
+    }
+
+    fillSelect($('parroquia'), 'Seleccionar parroquia', PARROQUIAS);
+    fillSelect($('comunidad'), 'Seleccionar comunidad', COMUNIDADES);
+    fillSelect($('restricciones'), 'Seleccionar opcion', RESTRICCIONES);
+
+    if (!isConfigured()) $('config-warning').hidden = false;
+
+    $('restricciones').addEventListener('change', () => {
+      const showOther = $('restricciones').value === 'Otros';
+      $('otra-restriccion-wrap').hidden = !showOther;
+      $('otraRestriccion').required = showOther;
+      if (!showOther) $('otraRestriccion').value = '';
+    });
+
+    $('dni').addEventListener('input', () => {
+      $('dni').value = cleanDni($('dni').value);
+    });
+
+    $('celular').addEventListener('blur', () => {
+      $('celular').value = normalizePhone($('celular').value);
+    });
+
+    $('signup-form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const payload = getPayload();
+      const error = validate(payload);
+      if (error) {
+        showStatus('error', error);
+        return;
+      }
+      if (!isConfigured()) {
+        showStatus('error', 'El formulario todavia no esta conectado al backend de inscripcion.');
+        return;
+      }
+
+      $('submit-btn').disabled = true;
+      showStatus('ok', 'Enviando inscripcion...');
+      try {
+        const result = await submitSignup(payload);
+        if (!result.ok) {
+          if (result.code === 'DNI_DUPLICADO') {
+            alert('Ya estas registrado. Por favor comunicate con tu catequista.');
+            showStatus('error', 'Ya estas registrado. Por favor comunicate con tu catequista.');
+            return;
+          }
+          throw new Error(result.error || 'No se pudo registrar la inscripcion.');
+        }
+        $('signup-form').reset();
+        $('otra-restriccion-wrap').hidden = true;
+        showStatus('ok', 'Registro exitoso. Tu inscripcion fue registrada correctamente.');
+      } catch (err) {
+        showStatus('error', err.message || 'No se pudo registrar la inscripcion.');
+      } finally {
+        $('submit-btn').disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>
