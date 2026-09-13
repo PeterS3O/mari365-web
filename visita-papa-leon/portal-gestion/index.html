@@ -28,8 +28,9 @@ button,input,select{font:inherit}
 .center{align-items:center;justify-content:center;padding:28px 16px;position:relative;overflow:hidden}
 .center::before{content:"";position:fixed;inset:0;background:
   linear-gradient(90deg,rgba(17,29,23,.72),rgba(17,29,23,.12) 48%,rgba(17,29,23,.56)),
-  url("../../imagenes/visita-papa-leon/papa-leon-inscripcion.png") center / cover no-repeat;z-index:-2}
+  var(--center-bg-image, url("../../imagenes/visita-papa-leon/papa-leon-inscripcion.png")) var(--center-bg-position, center) / cover no-repeat;z-index:-2}
 .center::after{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(247,242,232,.82));z-index:-1}
+#page-login,#page-admin-login{--center-bg-image:url("../../imagenes/visita-papa-leon/papa-leon-login.png");--center-bg-position:center}
 .card{background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.72);border-radius:var(--radius);box-shadow:0 22px 70px rgba(18,33,24,.18)}
 .login{width:100%;max-width:430px;padding:28px}
 .home{width:100%;max-width:980px;padding:0;overflow:hidden}
@@ -335,7 +336,10 @@ tr:last-child td{border-bottom:0}
   .people-mobile-summary .warn{color:var(--amber);font-weight:800}
   .name-tags{margin-top:3px;gap:3px}
   .name-tags .pill{font-size:.58rem;padding:1px 5px}
-  .login{padding:22px}
+  #page-login,#page-admin-login{--center-bg-position:54% center}
+  .login{padding:22px;width:min(100%,430px)}
+  .login .brand{font-size:clamp(1.45rem,8vw,1.82rem);line-height:1.08;overflow-wrap:break-word}
+  .login .sub{font-size:.9rem}
 }
 </style>
 </head>
