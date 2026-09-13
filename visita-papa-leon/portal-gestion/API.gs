@@ -20,7 +20,7 @@ const CONFIG = {
 const CUOTAS = [
   { key: 'inscripcion', label: 'Inscripcion', monto: 70000, vencimiento: '29/09/2026' },
   { key: 'cuota1', label: '1ra cuota', monto: 100000, vencimiento: '05/10/2026' },
-  { key: 'cuota2', label: '2da cuota', monto: 100000, vencimiento: '11/10/2026' },
+  { key: 'cuota2', label: '2da cuota', monto: 100000, vencimiento: '05/11/2026' },
 ];
 const TOTAL = CUOTAS.reduce((a, c) => a + c.monto, 0);
 const MAX_PEREGRINOS_CON_PAGO = 9999;

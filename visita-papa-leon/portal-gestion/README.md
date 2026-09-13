@@ -22,7 +22,7 @@ https://docs.google.com/spreadsheets/d/12b2T7yNNkBGIbUe2XmWG4oQ1coLeKaXMHzikOsIK
 
 - Inscripcion: $70.000, vence 29/09/2026.
 - 1ra cuota: $100.000, vence 05/10/2026.
-- 2da cuota: $100.000, vence 11/10/2026.
+- 2da cuota: $100.000, vence 05/11/2026.
 
 El monto cubre solo transporte ida y vuelta. No incluye comidas. El alojamiento esta por confirmar.
 

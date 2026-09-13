@@ -18,14 +18,35 @@
   --radius:10px;--shadow:0 8px 28px rgba(18,33,24,.08);
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:"DM Sans",Arial,sans-serif;font-size:15px;line-height:1.5}
+body{margin:0;background:
+  radial-gradient(circle at 12% 10%, rgba(207,174,93,.20), transparent 30%),
+  linear-gradient(145deg,#f8f1e6 0%,#eef5fb 42%,#f8faf7 100%);
+  color:var(--ink);font-family:"DM Sans",Arial,sans-serif;font-size:15px;line-height:1.5}
 button,input,select{font:inherit}
 .page{display:none;min-height:100vh}.page.active{display:block}.page.center.active{display:flex}
-.center{align-items:center;justify-content:center;padding:28px 16px}
-.card{background:var(--paper);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.center{align-items:center;justify-content:center;padding:28px 16px;position:relative;overflow:hidden}
+.center::before{content:"";position:fixed;inset:0;background:
+  linear-gradient(90deg,rgba(17,29,23,.72),rgba(17,29,23,.12) 48%,rgba(17,29,23,.56)),
+  url("../../imagenes/visita-papa-leon/papa-leon-inscripcion.png") center / cover no-repeat;z-index:-2}
+.center::after{content:"";position:fixed;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.20),rgba(247,242,232,.82));z-index:-1}
+.card{background:rgba(255,255,255,.92);border:1px solid rgba(255,255,255,.72);border-radius:var(--radius);box-shadow:0 22px 70px rgba(18,33,24,.18)}
 .login{width:100%;max-width:430px;padding:28px}
-.home{width:100%;max-width:760px;padding:28px}
+.home{width:100%;max-width:980px;padding:0;overflow:hidden}
 .brand{font-family:"DM Serif Display",serif;font-size:2rem;line-height:1.05;margin:0 0 8px}
+.portal-shell{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(280px,.72fr);min-height:620px}
+.portal-copy{padding:34px;display:flex;flex-direction:column;justify-content:center}
+.portal-kicker{display:inline-flex;align-items:center;width:max-content;border:1px solid rgba(185,111,8,.22);border-radius:999px;background:rgba(255,244,222,.84);color:#8a5108;font-size:.72rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;margin-bottom:16px}
+.portal-shell .brand{font-size:clamp(2.35rem,5vw,4.5rem);max-width:640px}
+.portal-lead{font-size:1.03rem;color:#405248;max-width:570px;margin:0 0 22px}
+.portal-visual{position:relative;min-height:100%;background:
+  linear-gradient(180deg,rgba(12,23,18,.08),rgba(12,23,18,.48)),
+  url("../../imagenes/visita-papa-leon/papa-leon-inscripcion.png") center / cover no-repeat}
+.portal-visual::after{content:"";position:absolute;inset:auto 18px 18px 18px;height:96px;border-radius:8px;background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,.86));backdrop-filter:blur(10px)}
+.portal-visual-note{position:absolute;left:34px;right:34px;bottom:42px;z-index:1;color:#17211b}
+.portal-visual-note b{display:block;font-family:"DM Serif Display",serif;font-size:1.55rem;line-height:1}
+.portal-visual-note span{display:block;color:#506056;font-size:.84rem;font-weight:700;margin-top:6px}
+.portal-login{background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-color:rgba(255,255,255,.74)}
+.login-crest{display:inline-flex;align-items:center;border-radius:999px;background:var(--amber-soft);color:var(--amber);font-size:.72rem;font-weight:900;text-transform:uppercase;letter-spacing:.08em;padding:6px 10px;margin-bottom:14px}
 .sub{color:var(--muted);font-size:.92rem;margin:0 0 22px}
 .home-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
 .whatsapp-join{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#e8f8ef,#f8fffb);border:1.5px solid #b8dfc7;border-radius:8px;padding:14px;margin:12px 0 18px;text-decoration:none;color:inherit;box-shadow:0 10px 24px rgba(37,211,102,.12)}
@@ -248,6 +269,12 @@ tr:last-child td{border-bottom:0}
   .filters select,.filters input{min-width:0;width:100%;padding:7px 8px;font-size:.74rem}
   .choice{grid-template-columns:1fr}
   .home-actions,.how{grid-template-columns:1fr}
+  .portal-shell{grid-template-columns:1fr;min-height:0}
+  .portal-copy{padding:24px}
+  .portal-shell .brand{font-size:2.25rem}
+  .portal-visual{min-height:250px;order:-1}
+  .portal-visual-note{left:20px;right:20px;bottom:32px}
+  .center{padding:16px 12px}
   .whatsapp-join{align-items:flex-start;flex-wrap:wrap}
   .whatsapp-action{width:100%;border-radius:8px}
   .row,.comp{flex-direction:column}
@@ -311,29 +338,38 @@ tr:last-child td{border-bottom:0}
   </div>
 </div>
 <main id="page-home" class="page center active">
-  <section class="home card">
-    <h1 class="brand">Viaje apostolico del Papa León XIV a Argentina</h1>
-    <p class="sub">Inscripcion y gestion de pagos en un solo lugar. Si todavia no completaste el formulario, empeza por la inscripcion. Si ya estas inscripto, entra al portal con tu DNI y email.</p>
-    <div class="home-actions">
-      <button class="btn full" onclick="window.location.href='../inscripcion-2026/'">Inscribirme</button>
-      <button class="btn secondary full" onclick="showPage('page-login')">Entrar al portal de pagos</button>
+  <section class="home card portal-shell">
+    <div class="portal-copy">
+      <span class="portal-kicker">Portal del peregrino</span>
+      <h1 class="brand">Viaje apostolico del Papa León XIV a Argentina</h1>
+      <p class="portal-lead">Inscripcion y gestion de pagos para los hermanos de Corrientes, Chaco y Formosa. Ingresá con DNI y email para cargar tus comprobantes y consultar el estado de tus cuotas.</p>
+      <div class="home-actions">
+        <button class="btn full" onclick="window.location.href='../inscripcion-2026/'">Inscribirme</button>
+        <button class="btn secondary full" onclick="showPage('page-login')">Entrar al portal de pagos</button>
+      </div>
+      <a class="whatsapp-join" href="https://chat.whatsapp.com/KCFxCkFYs4KBVTduOprYVe?s=sw&p=a&ilr=1&amv=2" target="_blank" rel="noopener">
+        <span class="wa-icon" aria-hidden="true">
+          <svg viewBox="0 0 32 32" role="img" focusable="false">
+            <path fill="currentColor" d="M16.02 4.2A11.72 11.72 0 0 0 5.8 21.64L4.4 27.8l6.3-1.34A11.72 11.72 0 1 0 16.02 4.2Zm0 2.15a9.57 9.57 0 0 1 8.23 14.45 9.56 9.56 0 0 1-12.9 3.54l-.36-.2-3.72.8.82-3.6-.24-.38A9.57 9.57 0 0 1 16.02 6.35Zm-3.28 4.8c-.22 0-.58.08-.88.42-.3.34-1.16 1.13-1.16 2.76s1.18 3.2 1.35 3.43c.17.22 2.28 3.65 5.65 4.97 2.8 1.1 3.38.88 3.98.82.61-.06 1.96-.8 2.24-1.58.28-.78.28-1.45.2-1.59-.09-.14-.3-.22-.64-.39-.34-.17-1.96-.97-2.27-1.08-.3-.11-.53-.17-.75.17-.22.33-.86 1.08-1.06 1.3-.2.22-.39.25-.72.08-.34-.17-1.42-.52-2.7-1.67-1-1-1.68-2.24-1.87-2.58-.2-.33-.02-.5.15-.67.16-.16.34-.4.5-.59.17-.2.22-.34.34-.56.11-.22.06-.42-.03-.59-.08-.17-.75-1.86-1.03-2.53-.27-.65-.54-.56-.75-.57h-.55Z"/>
+          </svg>
+        </span>
+        <span class="whatsapp-copy"><b>Grupo de WhatsApp</b><span>Sumate para recibir novedades generales del viaje.</span></span>
+        <span class="whatsapp-action">Unirme al grupo</span>
+      </a>
+      <div class="how">
+        <div><b>1. Inscripcion</b><span>Completa el formulario con tus datos reales, DNI y email de acceso.</span></div>
+        <div><b>2. Portal</b><span>Ingresa con DNI y email para ver tus cuotas y vencimientos.</span></div>
+        <div><b>3. Pagos</b><span>Subi el comprobante de transferencia o la foto del recibo si pagaste en efectivo.</span></div>
+      </div>
+      <div style="text-align:center;margin-top:18px">
+        <button class="link-btn staff-link" onclick="showPage('page-admin-login')">Acceso catequistas</button>
+      </div>
     </div>
-    <a class="whatsapp-join" href="https://chat.whatsapp.com/KCFxCkFYs4KBVTduOprYVe?s=sw&p=a&ilr=1&amv=2" target="_blank" rel="noopener">
-      <span class="wa-icon" aria-hidden="true">
-        <svg viewBox="0 0 32 32" role="img" focusable="false">
-          <path fill="currentColor" d="M16.02 4.2A11.72 11.72 0 0 0 5.8 21.64L4.4 27.8l6.3-1.34A11.72 11.72 0 1 0 16.02 4.2Zm0 2.15a9.57 9.57 0 0 1 8.23 14.45 9.56 9.56 0 0 1-12.9 3.54l-.36-.2-3.72.8.82-3.6-.24-.38A9.57 9.57 0 0 1 16.02 6.35Zm-3.28 4.8c-.22 0-.58.08-.88.42-.3.34-1.16 1.13-1.16 2.76s1.18 3.2 1.35 3.43c.17.22 2.28 3.65 5.65 4.97 2.8 1.1 3.38.88 3.98.82.61-.06 1.96-.8 2.24-1.58.28-.78.28-1.45.2-1.59-.09-.14-.3-.22-.64-.39-.34-.17-1.96-.97-2.27-1.08-.3-.11-.53-.17-.75.17-.22.33-.86 1.08-1.06 1.3-.2.22-.39.25-.72.08-.34-.17-1.42-.52-2.7-1.67-1-1-1.68-2.24-1.87-2.58-.2-.33-.02-.5.15-.67.16-.16.34-.4.5-.59.17-.2.22-.34.34-.56.11-.22.06-.42-.03-.59-.08-.17-.75-1.86-1.03-2.53-.27-.65-.54-.56-.75-.57h-.55Z"/>
-        </svg>
-      </span>
-      <span class="whatsapp-copy"><b>Grupo de WhatsApp</b><span>Sumate para recibir novedades generales del viaje.</span></span>
-      <span class="whatsapp-action">Unirme al grupo</span>
-    </a>
-    <div class="how">
-      <div><b>1. Inscripcion</b><span>Completa el formulario con tus datos reales, DNI y email de acceso.</span></div>
-      <div><b>2. Portal</b><span>Ingresa con DNI y email para ver tus cuotas y vencimientos.</span></div>
-      <div><b>3. Pagos</b><span>Subi el comprobante de transferencia o la foto del recibo si pagaste en efectivo.</span></div>
-    </div>
-    <div style="text-align:center;margin-top:18px">
-      <button class="link-btn staff-link" onclick="showPage('page-admin-login')">Acceso catequistas</button>
+    <div class="portal-visual" aria-hidden="true">
+      <div class="portal-visual-note">
+        <b>11 de noviembre</b>
+        <span>Buenos Aires · horarios a confirmar</span>
+      </div>
     </div>
   </section>
 </main>
@@ -353,7 +389,8 @@ tr:last-child td{border-bottom:0}
 </main>
 
 <main id="page-login" class="page center">
-  <section class="login card">
+  <section class="login card portal-login">
+    <span class="login-crest">Portal de pagos</span>
     <h1 class="brand">Viaje apostolico del Papa León XIV a Argentina</h1>
     <p class="sub">Consulta tu estado de cuotas y carga comprobantes con tu DNI y el email usado en la inscripcion.</p>
     <div class="field"><label>DNI</label><input id="login-dni" inputmode="numeric" autocomplete="off"></div>
@@ -500,7 +537,8 @@ tr:last-child td{border-bottom:0}
 </main>
 
 <main id="page-admin-login" class="page center">
-  <section class="login card">
+  <section class="login card portal-login">
+    <span class="login-crest">Catequistas</span>
     <h1 class="brand">Acceso catequistas</h1>
     <p class="sub">Espacio reservado para responsables del viaje.</p>
     <div class="field"><label>Clave</label><input id="admin-pass" type="password"></div>
@@ -648,7 +686,7 @@ const PORTAL_URL = window.location.origin + window.location.pathname;
 const PLAN_PAGOS = [
   { key:'inscripcion', label:'Inscripcion', monto:70000, vencimiento:'29/09/2026' },
   { key:'cuota1', label:'1ra cuota', monto:100000, vencimiento:'05/10/2026' },
-  { key:'cuota2', label:'2da cuota', monto:100000, vencimiento:'11/10/2026' },
+  { key:'cuota2', label:'2da cuota', monto:100000, vencimiento:'05/11/2026' },
 ];
 const TOTAL = PLAN_PAGOS.reduce((a,c)=>a+c.monto,0);
 const MAP_PLAN = Object.fromEntries(PLAN_PAGOS.map(c=>[c.key,c]));

@@ -71,7 +71,7 @@ function registrarInscripcion(payload) {
       return {
         ok: false,
         code: 'DNI_DUPLICADO',
-        error: 'Ya estas registrado. Por favor comunicate con tu catequista.'
+        error: 'Ya estas registrado. Ingresa al portal de pagos para cargar el comprobante cuando hayas transferido la primera cuota.'
       };
     }
     const id = Utilities.getUuid();

@@ -518,8 +518,9 @@
         const result = await submitSignup(payload);
         if (!result.ok) {
           if (result.code === 'DNI_DUPLICADO') {
-            alert('Ya estas registrado. Por favor comunicate con tu catequista.');
-            showStatus('error', 'Ya estas registrado. Por favor comunicate con tu catequista.');
+            const duplicateMessage = 'Ya estas registrado. Ingresa al portal de pagos para cargar el comprobante cuando hayas transferido la primera cuota.';
+            alert(duplicateMessage);
+            showStatus('ok', duplicateMessage);
             return;
           }
           throw new Error(result.error || 'No se pudo registrar la inscripcion.');
