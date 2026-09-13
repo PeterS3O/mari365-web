@@ -18,6 +18,7 @@
   --radius:10px;--shadow:0 8px 28px rgba(18,33,24,.08);
 }
 *{box-sizing:border-box}
+html,body{overflow-x:hidden}
 body{margin:0;background:
   radial-gradient(circle at 12% 10%, rgba(207,174,93,.20), transparent 30%),
   linear-gradient(145deg,#f8f1e6 0%,#eef5fb 42%,#f8faf7 100%);
@@ -34,7 +35,7 @@ button,input,select{font:inherit}
 .home{width:100%;max-width:980px;padding:0;overflow:hidden}
 .brand{font-family:"DM Serif Display",serif;font-size:2rem;line-height:1.05;margin:0 0 8px}
 .portal-shell{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(280px,.72fr);min-height:620px}
-.portal-copy{padding:34px;display:flex;flex-direction:column;justify-content:center}
+.portal-copy{padding:34px;display:flex;flex-direction:column;justify-content:center;min-width:0}
 .portal-kicker{display:inline-flex;align-items:center;width:max-content;border:1px solid rgba(185,111,8,.22);border-radius:999px;background:rgba(255,244,222,.84);color:#8a5108;font-size:.72rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase;padding:6px 10px;margin-bottom:16px}
 .portal-shell .brand{font-size:clamp(2.35rem,5vw,4.5rem);max-width:640px}
 .portal-lead{font-size:1.03rem;color:#405248;max-width:570px;margin:0 0 22px}
@@ -49,13 +50,14 @@ button,input,select{font:inherit}
 .login-crest{display:inline-flex;align-items:center;border-radius:999px;background:var(--amber-soft);color:var(--amber);font-size:.72rem;font-weight:900;text-transform:uppercase;letter-spacing:.08em;padding:6px 10px;margin-bottom:14px}
 .sub{color:var(--muted);font-size:.92rem;margin:0 0 22px}
 .home-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+.home-actions .btn{white-space:nowrap;text-align:center}
 .whatsapp-join{display:flex;align-items:center;gap:14px;background:linear-gradient(135deg,#e8f8ef,#f8fffb);border:1.5px solid #b8dfc7;border-radius:8px;padding:14px;margin:12px 0 18px;text-decoration:none;color:inherit;box-shadow:0 10px 24px rgba(37,211,102,.12)}
 .whatsapp-join:hover{border-color:#25d366;background:#f1fbf5}
 .wa-icon{width:44px;height:44px;border-radius:50%;background:#25d366;color:white;display:inline-flex;align-items:center;justify-content:center;flex:0 0 auto;box-shadow:0 7px 16px rgba(37,211,102,.28)}
 .wa-icon svg{width:27px;height:27px;display:block}
 .whatsapp-copy{flex:1;min-width:0}
 .whatsapp-copy b{display:block;color:var(--ink);font-size:1rem;line-height:1.18;margin-bottom:3px}
-.whatsapp-copy span{display:block;color:var(--muted);font-size:.85rem;line-height:1.3}
+.whatsapp-copy span{display:block;color:var(--muted);font-size:.85rem;line-height:1.3;overflow-wrap:break-word}
 .whatsapp-action{display:inline-flex;align-items:center;justify-content:center;border-radius:999px;background:#25d366;color:white;font-weight:800;font-size:.82rem;padding:8px 12px;white-space:nowrap}
 .how{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:14px}
 .how div{background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:12px}
@@ -95,6 +97,7 @@ button,input,select{font:inherit}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
 .title{font-family:"DM Serif Display",serif;font-size:1.55rem;margin:0}
 .toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.toolbar .btn{white-space:nowrap}
 .pill{display:inline-flex;align-items:center;border-radius:999px;padding:3px 9px;font-size:.7rem;font-weight:800}
 .pill.ok{background:var(--green-soft);color:var(--green)}
 .pill.pending{background:var(--amber-soft);color:var(--amber)}
@@ -254,10 +257,11 @@ tr:last-child td{border-bottom:0}
 @keyframes spin{to{transform:rotate(360deg)}}
 @media(max-width:760px){
   .wrap{padding:10px 8px 24px}
-  .top{gap:8px;margin-bottom:8px}
+  .top{gap:8px;margin-bottom:8px;align-items:flex-start}
   .title{font-size:1.35rem}
-  .toolbar{gap:5px}
-  .toolbar .btn{padding:6px 8px;font-size:.72rem}
+  .toolbar{width:100%;gap:5px;flex-wrap:nowrap;overflow-x:auto;padding-bottom:3px;scrollbar-width:none}
+  .toolbar::-webkit-scrollbar{display:none}
+  .toolbar .btn{flex:0 0 auto;padding:6px 9px;font-size:.72rem;min-height:32px}
   .grid3,.admin-grid,.debt-summary{grid-template-columns:1fr 1fr}
   .admin-grid{display:flex;gap:6px;overflow-x:auto;margin:0 -8px 8px;padding:0 8px 4px;scroll-snap-type:x proximity}
   .admin-grid .metric{min-width:106px;scroll-snap-align:start;padding:8px 9px;border-radius:8px;box-shadow:none}
@@ -269,13 +273,18 @@ tr:last-child td{border-bottom:0}
   .filters select,.filters input{min-width:0;width:100%;padding:7px 8px;font-size:.74rem}
   .choice{grid-template-columns:1fr}
   .home-actions,.how{grid-template-columns:1fr}
+  .home-actions{gap:9px}
+  .home-actions .btn{font-size:.86rem;min-height:42px;padding-left:10px;padding-right:10px}
   .portal-shell{grid-template-columns:1fr;min-height:0}
   .portal-copy{padding:24px}
-  .portal-shell .brand{font-size:2.25rem}
+  .portal-shell .brand{font-size:1.72rem;max-width:12ch;overflow-wrap:break-word}
+  .portal-lead{font-size:.95rem;max-width:34ch;overflow-wrap:break-word}
   .portal-visual{min-height:250px;order:-1}
   .portal-visual-note{left:20px;right:20px;bottom:32px}
   .center{padding:16px 12px}
   .whatsapp-join{align-items:flex-start;flex-wrap:wrap}
+  .whatsapp-copy{flex:1 1 210px}
+  .whatsapp-copy span{max-width:28ch}
   .whatsapp-action{width:100%;border-radius:8px}
   .row,.comp{flex-direction:column}
   .actions{justify-content:flex-start}
