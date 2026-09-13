@@ -597,6 +597,7 @@ function solicitarCambioPerfil(p) {
     id, new Date(), v.d[v.cols.dni], nombreCompleto(v.d, v.cols),
     JSON.stringify(cambios), 'pendiente', '', '', '',
   ]);
+  enviarEmailCambioPerfilEnviado(v.d, v.cols, cambios);
   return { ok: true, mensaje: 'Tus cambios quedaron pendientes de aprobacion por un catequista.' };
 }
 
@@ -649,11 +650,13 @@ function resolverCambioPerfil(p) {
       if ((rows[i][5] || '').toString() !== 'pendiente') return { ok: false, error: 'Este cambio ya fue revisado.' };
       const dni = rows[i][2];
       const cambios = parseJsonSafe(rows[i][4]);
+      const ins = buscarInscripto(dni);
       if (decision === 'aprobado') aplicarCambiosPerfil(dni, cambios);
       s.getRange(i + 1, 6).setValue(decision);
       s.getRange(i + 1, 7).setValue('admin');
       s.getRange(i + 1, 8).setValue(new Date());
       s.getRange(i + 1, 9).setValue(p.motivo || '');
+      if (ins) enviarEmailCambioPerfilResuelto(ins.d, ins.cols, cambios, decision, p.motivo || '');
       return { ok: true };
     }
   }
@@ -732,6 +735,7 @@ function registrarPago(p) {
       (responsableEfectivo ? '\nResponsable efectivo: ' + responsableEfectivo : '') +
       '\nID: ' + id + '\nComprobante: ' + p.comprobanteUrl,
   });
+  enviarEmailComprobanteRecibido(d, cols, cuotaObjs, monto, medioPago);
   return { ok: true, mensaje: 'Tu comprobante quedo registrado. Cuando se revise, vas a ver el estado actualizado.' };
 }
 
@@ -759,6 +763,7 @@ function confirmarPago(p) {
   const rows = sheet.getDataRange().getValues();
   for (let i = 1; i < rows.length; i++) {
     if ((rows[i][0] || '').toString() === (p.pagoId || '').toString()) {
+      const estadoAnterior = (rows[i][7] || '').toString();
       sheet.getRange(i + 1, 8).setValue(nuevoEstado);
       sheet.getRange(i + 1, 9).setValue('admin');
       sheet.getRange(i + 1, 10).setValue(new Date());
@@ -776,6 +781,10 @@ function confirmarPago(p) {
           enviarEmailConfirmacion(ins.d, ins.cols, getPagos(rows[i][2]), rows[i][4]);
           sheet.getRange(i + 1, 11).setValue('si');
         }
+      }
+      if (nuevoEstado === 'rechazado' && estadoAnterior !== 'rechazado') {
+        const ins = buscarInscripto(rows[i][2]);
+        if (ins) enviarEmailComprobanteRechazado(ins.d, ins.cols, rows[i][4], p.motivo || '');
       }
       return { ok: true };
     }
@@ -1051,6 +1060,89 @@ function tablaEstadoCuotasHtml(resumen) {
       bg + ';color:' + color + ';border-radius:999px;padding:4px 10px;font-size:12px;font-weight:700">' +
       escapeHtmlEmail(estado) + '</span></td></tr>';
   }).join('');
+}
+
+function cuotasLabelDesdeKeys(cuotasStr) {
+  const keys = (cuotasStr || '').split(',').map(c => c.trim()).filter(Boolean);
+  return CUOTAS.filter(c => keys.includes(c.key)).map(c => c.label).join(' + ') || cuotasStr || 'cuota';
+}
+
+function cambiosPerfilTexto(cambios) {
+  const labels = {
+    celular: 'Celular',
+    emergencia: 'Telefono emergencia',
+    parroquia: 'Parroquia',
+    comunidad: 'Comunidad',
+    restricciones: 'Restricciones alimentarias',
+    vencimientoDni: 'Vencimiento DNI',
+  };
+  return Object.keys(cambios || {})
+    .map(k => '- ' + (labels[k] || k) + ': ' + cambios[k])
+    .join('\n');
+}
+
+function enviarEmailComprobanteRecibido(d, cols, cuotaObjs, monto, medioPago) {
+  const email = d[cols.emailPortal];
+  if (!email) return;
+  const nombre = (d[cols.nombre] || '').toString().trim();
+  const cuotasLabel = cuotaObjs.map(c => c.label).join(' + ');
+  const body = 'Hola, ' + nombre + '.\n\nRecibimos tu comprobante para ' + cuotasLabel +
+    ' por $' + monto + ' (' + (medioPago || 'medio de pago no indicado') + ').' +
+    '\n\nTodavia queda pendiente de revision por los catequistas. Cuando se confirme, vas a recibir otro email.' +
+    '\n\nPodes seguir el estado desde el portal:\n' + CONFIG.PORTAL_URL;
+  MailApp.sendEmail({
+    to: email,
+    subject: 'Comprobante recibido - ' + CONFIG.NOMBRE_EVENTO,
+    body,
+  });
+}
+
+function enviarEmailComprobanteRechazado(d, cols, cuotasStr, motivo) {
+  const email = d[cols.emailPortal];
+  if (!email) return;
+  const nombre = (d[cols.nombre] || '').toString().trim();
+  const cuotasLabel = cuotasLabelDesdeKeys(cuotasStr);
+  const body = 'Hola, ' + nombre + '.\n\nEl comprobante cargado para ' + cuotasLabel +
+    ' no pudo ser validado.' +
+    (motivo ? '\n\nMotivo: ' + motivo : '') +
+    '\n\nPor favor ingresa al portal para revisar el estado y cargar un nuevo comprobante si corresponde:\n' +
+    CONFIG.PORTAL_URL;
+  MailApp.sendEmail({
+    to: email,
+    subject: 'Comprobante no validado - ' + CONFIG.NOMBRE_EVENTO,
+    body,
+  });
+}
+
+function enviarEmailCambioPerfilEnviado(d, cols, cambios) {
+  const email = d[cols.emailPortal];
+  if (!email) return;
+  const nombre = (d[cols.nombre] || '').toString().trim();
+  const body = 'Hola, ' + nombre + '.\n\nRecibimos tu solicitud de modificacion de datos para ' +
+    CONFIG.NOMBRE_EVENTO + '.\n\nDatos enviados:\n' + cambiosPerfilTexto(cambios) +
+    '\n\nLa solicitud queda pendiente de revision por un catequista.';
+  MailApp.sendEmail({
+    to: email,
+    subject: 'Modificacion de datos recibida - ' + CONFIG.NOMBRE_EVENTO,
+    body,
+  });
+}
+
+function enviarEmailCambioPerfilResuelto(d, cols, cambios, decision, motivo) {
+  const email = d[cols.emailPortal];
+  if (!email) return;
+  const nombre = (d[cols.nombre] || '').toString().trim();
+  const aprobado = decision === 'aprobado';
+  const body = 'Hola, ' + nombre + '.\n\nTu solicitud de modificacion de datos fue ' +
+    (aprobado ? 'aceptada.' : 'rechazada.') +
+    '\n\nDatos revisados:\n' + cambiosPerfilTexto(cambios) +
+    (motivo ? '\n\nMotivo: ' + motivo : '') +
+    '\n\nPortal:\n' + CONFIG.PORTAL_URL;
+  MailApp.sendEmail({
+    to: email,
+    subject: (aprobado ? 'Datos actualizados - ' : 'Modificacion no aprobada - ') + CONFIG.NOMBRE_EVENTO,
+    body,
+  });
 }
 
 function enviarEmailConfirmacion(d, cols, pagos, cuotasStr) {

@@ -2,8 +2,17 @@ const CONFIG = {
   SPREADSHEET_ID: '12b2T7yNNkBGIbUe2XmWG4oQ1coLeKaXMHzikOsIKYPs',
   HOJA_INSCRIPCIONES: 'Inscripciones',
   ESTADO_INICIAL: 'inscripto',
-  ORIGEN_DEFAULT: 'web'
+  ORIGEN_DEFAULT: 'web',
+  NOMBRE_EVENTO: 'Viaje apostolico del Papa León XIV a Argentina',
+  PORTAL_URL: 'https://maria365.online/visita-papa-leon/portal-gestion/'
 };
+
+const CUOTAS = [
+  { label: 'Inscripcion', monto: 70000, vencimiento: '29/09/2026' },
+  { label: '1ra cuota', monto: 100000, vencimiento: '05/10/2026' },
+  { label: '2da cuota', monto: 100000, vencimiento: '05/11/2026' }
+];
+const TOTAL = CUOTAS.reduce((sum, cuota) => sum + cuota.monto, 0);
 
 const HEADERS = [
   'ID',
@@ -91,10 +100,28 @@ function registrarInscripcion(payload) {
       CONFIG.ESTADO_INICIAL,
       data.origen
     ]);
+    enviarEmailInscripcionExitosa(data);
     return { ok: true, id };
   } finally {
     lock.releaseLock();
   }
+}
+
+function enviarEmailInscripcionExitosa(data) {
+  if (!data.email) return;
+  const nombre = data.nombre || 'hermano/a';
+  const plan = CUOTAS.map(c => '- ' + c.label + ': $' + c.monto + ' - vence ' + c.vencimiento).join('\n');
+  const body = 'Hola, ' + nombre + '.\n\nTu inscripcion para ' + CONFIG.NOMBRE_EVENTO + ' fue registrada correctamente.' +
+    '\n\nPara cargar comprobantes y consultar el estado de tus pagos, ingresa al portal con tu DNI y este email.' +
+    '\n\nPortal de pagos:\n' + CONFIG.PORTAL_URL +
+    '\n\nPlan de pagos:\n' + plan +
+    '\n\nTotal: $' + TOTAL +
+    '\n\nRecordatorio: el valor informado incluye solo transporte ida y vuelta.';
+  MailApp.sendEmail({
+    to: data.email,
+    subject: 'Inscripcion registrada - ' + CONFIG.NOMBRE_EVENTO,
+    body
+  });
 }
 
 function normalizarInscripcion(payload) {
