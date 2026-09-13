@@ -599,6 +599,7 @@ tr:last-child td{border-bottom:0}
           <option value="debe_vencidas">Debe vencidas</option>
           <option value="pago_completo">Pago completo</option>
           <option value="comprobante_rechazado">No validado</option>
+          <option value="exento">Exentos</option>
           <option value="baja">Bajas</option>
         </select>
         <select id="people-debt" onchange="renderPeople()">
@@ -702,7 +703,7 @@ const MAP_PLAN = Object.fromEntries(PLAN_PAGOS.map(c=>[c.key,c]));
 const STATE_LABELS = {
   sin_pagos:'Sin pagos', en_revision:'En revision', al_dia:'Al dia',
   debe_vencidas:'Debe vencidas', pago_completo:'Pago completo',
-  comprobante_rechazado:'No validado', baja:'Dado de baja'
+  comprobante_rechazado:'No validado', baja:'Dado de baja', exento:'Exento'
 };
 
 let estadoData = null;
@@ -854,9 +855,10 @@ function renderState(){
   const d = estadoData;
   const r = d.resumen || {};
   const capacityClosed = isCapacityClosedForCurrent(d);
-  const totalPlan = TOTAL;
+  const isExempt = d.estadoCupo === 'exento';
+  const totalPlan = isExempt ? 1 : TOTAL;
   const faltante = Math.max(0, totalPlan - (r.totalPagado || 0) - (r.totalPendConf || 0));
-  const okPct = totalPlan ? Math.round((r.totalPagado || 0) / totalPlan * 100) : 0;
+  const okPct = isExempt ? 100 : (totalPlan ? Math.round((r.totalPagado || 0) / totalPlan * 100) : 0);
   const pendPct = totalPlan ? Math.round((r.totalPendConf || 0) / totalPlan * 100) : 0;
 
   $('state-avatar').textContent = initials(d.nombre);
@@ -869,9 +871,9 @@ function renderState(){
     profileBtn.textContent = missingCell ? 'Mis datos: falta celular' : 'Mis datos';
   }
   renderTransferData('state-alias', 'state-transfer-detail');
-  $('state-paid').textContent = money(r.totalPagado);
-  $('state-review').textContent = money(r.totalPendConf);
-  $('state-missing').textContent = money(faltante);
+  $('state-paid').textContent = isExempt ? 'EXENTO' : money(r.totalPagado);
+  $('state-review').textContent = isExempt ? '$0' : money(r.totalPendConf);
+  $('state-missing').textContent = isExempt ? '$0' : money(faltante);
   $('state-bar-ok').style.width = okPct + '%';
   $('state-bar-pend').style.width = pendPct + '%';
   $('state-leg-ok').textContent = okPct + '% confirmado';
@@ -883,6 +885,10 @@ function renderState(){
   if(d.estadoCupo === 'baja'){
     alert.style.display = 'block';
     alert.textContent = 'Tu inscripcion figura dada de baja.';
+    setGoPayVisible(false);
+  } else if(isExempt){
+    alert.style.display = 'block';
+    alert.textContent = 'Tu inscripcion figura como EXENTA. Estas liberado del pago y podes viajar sin cargar comprobantes.';
     setGoPayVisible(false);
   } else if(capacityClosed){
     alert.style.display = 'block';
@@ -907,7 +913,8 @@ function renderState(){
     const rechazado = !activo ? pagos.find(p => p.estado === 'rechazado') : null;
     const p = activo || rechazado;
     let state = 'Pendiente', kind = '';
-    if(activo && activo.estado === 'confirmado'){ state = 'Confirmado'; kind = 'ok'; }
+    if(isExempt){ state = 'Exento'; kind = 'pending'; }
+    else if(activo && activo.estado === 'confirmado'){ state = 'Confirmado'; kind = 'ok'; }
     else if(activo && activo.estado === 'pendiente'){ state = 'En revision'; kind = 'pending'; }
     else if(rechazado){ state = 'No validado'; kind = 'bad'; }
     else if(isVencida(c.vencimiento)){ state = 'Vencido'; kind = 'bad'; }
@@ -916,10 +923,10 @@ function renderState(){
     const idx = PLAN_PAGOS.findIndex(x => x.key === c.key);
     const cargadas = [...new Set([...(r.confirmadas || []), ...(r.pendientes || [])])];
     const previasOk = PLAN_PAGOS.slice(0, idx).every(prev => cargadas.includes(prev.key));
-    const puedeCargar = d.estadoCupo !== 'baja' && !capacityClosed && previasOk && (!activo || activo.estado === 'rechazado');
+    const puedeCargar = d.estadoCupo !== 'baja' && !isExempt && !capacityClosed && previasOk && (!activo || activo.estado === 'rechazado');
     const bloquear = capacityClosed && (!activo || activo.estado === 'rechazado')
       ? '<span class="meta">'+capacityClosedMessage(d)+'</span>'
-      : (!previasOk && (!activo || activo.estado === 'rechazado') ? '<span class="meta">Completa la cuota anterior primero.</span>' : '');
+      : (isExempt ? '<span class="meta">Liberado de pago por catequista.</span>' : (!previasOk && (!activo || activo.estado === 'rechazado') ? '<span class="meta">Completa la cuota anterior primero.</span>' : ''));
     const cargar = puedeCargar
       ? `<button class="btn small ${missingCell ? 'blocked' : ''}" onclick="showPayment('${c.key}','transferencia')">Cargar comprobante de transferencia</button><button class="btn secondary small ${missingCell ? 'blocked' : ''}" onclick="showPayment('${c.key}','efectivo')">Cargar pago en efectivo</button>`
       : bloquear;
@@ -1062,6 +1069,11 @@ function showPayment(preselectKey, mode){
   paymentMode = mode === 'efectivo' ? 'efectivo' : 'transferencia';
   if(isCapacityClosedForCurrent(estadoData)){
     alert(capacityClosedMessage(estadoData));
+    showPage('page-state');
+    return;
+  }
+  if(estadoData && estadoData.estadoCupo === 'exento'){
+    alert('Tu inscripcion figura exenta de pago. No hace falta cargar comprobantes.');
     showPage('page-state');
     return;
   }
@@ -1232,6 +1244,7 @@ async function registrarPago(){
   const responsableEfectivo = ($('cash-responsible').value || '').trim();
   const isCash = medioPago.toLowerCase().includes('efectivo');
   if(isCapacityClosedForCurrent(estadoData)){ showMsg('payment-msg', capacityClosedMessage(estadoData), false); return; }
+  if(estadoData && estadoData.estadoCupo === 'exento'){ showMsg('payment-msg','Tu inscripcion figura exenta de pago. No hace falta cargar comprobantes.',false); return; }
   if(!hasCellphone(estadoData)){ showMsg('payment-msg','Antes de cargar un pago, actualiza tu numero de celular en Mis datos.',false); return; }
   if(!cuotas.length){ showMsg('payment-msg','Selecciona al menos una cuota.',false); return; }
   if(!file){ showMsg('payment-msg', isCash ? 'Adjunta la foto del recibo del pago en efectivo.' : 'Adjunta el comprobante de Mercado Pago.', false); return; }
@@ -1333,6 +1346,7 @@ function renderAdminStats(){
   const recaudado = people.reduce((a,p)=>a+confirmedTotal(p),0);
   $('admin-stats').innerHTML =
     metric(adminData.totalActivos ?? adminData.totalInscriptos ?? 0, 'Inscriptos activos', 'var(--blue)') +
+    metric(adminData.totalExentos || 0, 'Exentos', 'var(--amber)') +
     metric(pending, 'Por revisar', 'var(--amber)') +
     metric(money(recaudado), 'Recaudado', 'var(--green)') +
     metric(adminData.totalBajas || 0, 'Dados de baja', 'var(--red)') +
@@ -1387,7 +1401,9 @@ function renderPaymentCard(person){
   }).join('');
   const details = person.pagos.map(p=>renderComp(p, person)).join('');
   const bajaInfo = person.estadoCupo === 'baja' ? '<span class="pill bad">Dado de baja - devolver '+money(confirmedTotal(person))+'</span>' : '';
-  return '<article class="pay-card card '+cls+'"><div class="pay-head" onclick="toggleDetails(\'det-'+person.dni+'\')"><div class="avatar">'+initials(person.nombre)+'</div><div class="grow"><b>'+person.nombre+'</b>'+personAlertTags(person)+'<span>DNI '+person.dni+' - '+person.pagos.length+' comprobante(s)</span>'+bajaInfo+'</div><div><b>'+money(confirmedTotal(person))+'</b><span>de '+money(TOTAL)+'</span></div></div><div class="chips">'+chips+'</div><div id="det-'+person.dni+'" class="details">'+details+'</div></article>';
+  const exentoInfo = person.estadoCupo === 'exento' ? '<span class="pill pending">EXENTO · viaja sin pagar</span>' : '';
+  const totalLabel = person.estadoCupo === 'exento' ? 'exento' : 'de ' + money(TOTAL);
+  return '<article class="pay-card card '+cls+'"><div class="pay-head" onclick="toggleDetails(\'det-'+person.dni+'\')"><div class="avatar">'+initials(person.nombre)+'</div><div class="grow"><b>'+person.nombre+'</b>'+personAlertTags(person)+'<span>DNI '+person.dni+' - '+person.pagos.length+' comprobante(s)</span>'+bajaInfo+exentoInfo+'</div><div><b>'+money(confirmedTotal(person))+'</b><span>'+totalLabel+'</span></div></div><div class="chips">'+chips+'</div><div id="det-'+person.dni+'" class="details">'+details+'</div></article>';
 }
 function renderComp(p, person){
   let actions = '';
@@ -1443,6 +1459,29 @@ async function markLow(dni, orden){
   }
 }
 
+async function toggleExempt(dni, orden, makeExempt){
+  if(!canEdit()) return;
+  const msg = makeExempt
+    ? 'Vas a marcar a esta persona como EXENTA. Podra viajar sin pagar y dejara de figurar como deudora. ¿Continuar?'
+    : 'Vas a quitar la exencion. La persona volvera al plan de pagos normal. ¿Continuar?';
+  if(!confirm(msg)) return;
+  const nota = makeExempt ? (prompt('Nota opcional para la exencion:') || '') : '';
+  try{
+    const data = await api('marcarExento', { dni, ordenInscripcion:orden || '', exento:String(!!makeExempt), nota, adminToken });
+    if(!data.ok){ alert(data.error || 'No se pudo actualizar la exencion.'); return; }
+    alert((data.nombre || 'La persona') + (makeExempt ? ' fue marcada como EXENTA.' : ' ya no figura como exenta.'));
+    adminData = null;
+    peopleData = null;
+    await refreshAdmin();
+    if(adminView === 'people') {
+      await loadPeople();
+      renderPeople();
+    }
+  }catch(e){
+    alert(e.message || 'No se pudo actualizar la exencion.');
+  }
+}
+
 async function loadPeople(){
   if(!await ensurePeopleData()) return;
   renderPeople();
@@ -1472,15 +1511,18 @@ function resetPeopleFilters(){
   });
 }
 function paidInstallments(person){
+  if(String(person.estadoCupo || '') === 'exento') return PLAN_PAGOS.length;
   const cuotaMonto = PLAN_PAGOS[0] ? PLAN_PAGOS[0].monto : 0;
   if(!cuotaMonto) return 0;
   const totalPagado = Number((person.resumen || {}).totalPagado || 0);
   return Math.max(0, Math.min(PLAN_PAGOS.length, Math.floor(totalPagado / cuotaMonto)));
 }
 function owedInstallments(person){
+  if(String(person.estadoCupo || '') === 'exento') return 0;
   return Math.max(0, PLAN_PAGOS.length - paidInstallments(person));
 }
 function debtFilterKey(person){
+  if(String(person.estadoCupo || '') === 'exento') return 'exento';
   const paid = paidInstallments(person);
   const owed = owedInstallments(person);
   if(paid === 0) return 'no_pagos';
@@ -1488,6 +1530,7 @@ function debtFilterKey(person){
   return owed === 0 ? 'completo' : 'deben_' + owed;
 }
 function debtText(person){
+  if(String(person.estadoCupo || '') === 'exento') return 'Exento';
   const paid = paidInstallments(person);
   const owed = owedInstallments(person);
   if(paid === 0) return 'No pago nada';
@@ -1525,8 +1568,8 @@ function renderPeople(){
   if(permitFilter === 'menores_sin_permiso') list = list.filter(i=>isMinorPerson(i) && !i.permisoViajeUrl);
   if(permitFilter === 'menores_con_permiso') list = list.filter(i=>isMinorPerson(i) && !!i.permisoViajeUrl);
   if(q) list = list.filter(i=>i.nombre.toLowerCase().includes(q) || String(i.dni).includes(q));
-  renderDebtSummary(list.filter(i=>String(i.estadoCupo || '') !== 'baja'));
-  if(debt) list = list.filter(i=>String(i.estadoCupo || '') !== 'baja' && debtFilterKey(i) === debt);
+  renderDebtSummary(list.filter(i=>String(i.estadoCupo || '') !== 'baja' && String(i.estadoCupo || '') !== 'exento'));
+  if(debt) list = list.filter(i=>String(i.estadoCupo || '') !== 'baja' && String(i.estadoCupo || '') !== 'exento' && debtFilterKey(i) === debt);
   if(dniOrder){
     list = list.slice().sort((a,b) => {
       const da = dateFromAR(a.vencimientoDni);
@@ -1544,6 +1587,9 @@ function renderPeople(){
     const wa = i.whatsapp ? '<a class="btn secondary small" target="_blank" href="https://wa.me/'+i.whatsapp+'?text='+encodeURIComponent('Hola '+(i.nombre||'').split(' ')[0]+', te escribimos por '+EVENTO+'.')+'">WA</a>' : '';
     const orden = String(i.orden || '');
     const edit = canEdit() ? '<button class="btn secondary tiny" onclick="showAdminEdit(\''+String(i.dni).replace(/\D/g,'')+'\',\''+escapeJsArg(orden)+'\')">Editar</button>' : '';
+    const exempt = canEdit() && i.estadoCupo !== 'baja'
+      ? '<button class="btn secondary tiny" title="'+(i.estadoCupo === 'exento' ? 'Quitar exento' : 'Marcar exento')+'" onclick="toggleExempt(\''+String(i.dni).replace(/\D/g,'')+'\',\''+escapeJsArg(orden)+'\','+(i.estadoCupo === 'exento' ? 'false' : 'true')+')">'+(i.estadoCupo === 'exento' ? 'Quitar exento' : 'Exento')+'</button>'
+      : '';
     const baja = canEdit() && i.estadoCupo !== 'baja' ? '<button class="btn icon-danger" title="Dar de baja" onclick="markLow(\''+String(i.dni).replace(/\D/g,'')+'\',\''+escapeJsArg(orden)+'\')">×</button>' : '';
     const restricciones = (i.restricciones || '').trim();
     const restrictionsCell = restricciones
@@ -1554,7 +1600,7 @@ function renderPeople(){
     const permitSummary = isMinorPerson(i) ? (i.permisoViajeUrl ? 'Permiso cargado' : 'Falta permiso') : 'Permiso no aplica';
     const totalPagado = (i.resumen || {}).totalPagado;
     const mobileSummary = '<div class="people-mobile-summary">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+' · <b>'+(STATE_LABELS[i.estado] || i.estado)+'</b> · '+money(totalPagado)+' · Debe: '+debtText(i)+' · '+permitSummary+(restricciones ? ' · <span class="warn">'+escapeHtml(restricciones)+'</span>' : '')+'</div>';
-    return '<tr><td class="people-order">'+displayNumber+'</td><td><span class="people-name">'+escapeHtml(i.nombre || '')+'<span class="people-inline-dni">DNI '+escapeHtml(String(i.dni || ''))+'</span></span>'+mobileSummary+personAlertTags(i)+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+parishCommunity+'</td><td>'+restrictionsCell+'</td><td>'+permitCell+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(totalPagado)+'</td><td>'+debtText(i)+'</td><td><div class="actions">'+wa+edit+baja+'</div></td></tr>';
+    return '<tr><td class="people-order">'+displayNumber+'</td><td><span class="people-name">'+escapeHtml(i.nombre || '')+'<span class="people-inline-dni">DNI '+escapeHtml(String(i.dni || ''))+'</span></span>'+mobileSummary+personAlertTags(i)+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+parishCommunity+'</td><td>'+restrictionsCell+'</td><td>'+permitCell+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(totalPagado)+'</td><td>'+debtText(i)+'</td><td><div class="actions">'+wa+edit+exempt+baja+'</div></td></tr>';
   }).join('') : '<tr><td colspan="10" class="empty">Sin resultados</td></tr>';
 }
 
@@ -1576,10 +1622,13 @@ async function loadAnalytics(){
 
 function renderAnalytics(){
   const all = uniqueLatestByDni(peopleData && peopleData.inscriptos || []).filter(i=>String(i.estadoCupo || '') !== 'baja');
+  const payable = all.filter(i=>String(i.estadoCupo || '') !== 'exento');
   const total = all.length || 1;
-  const withPayments = all.filter(i=>(i.pagos || []).length > 0).length;
-  const upToDate = all.filter(i=>i.estado === 'al_dia' || i.estado === 'pago_completo').length;
-  const overdue = all.filter(i=>installmentsDueMissing(i).length > 0).length;
+  const totalPayable = payable.length || 1;
+  const totalExentos = all.filter(i=>String(i.estadoCupo || '') === 'exento').length;
+  const withPayments = payable.filter(i=>(i.pagos || []).length > 0).length;
+  const upToDate = payable.filter(i=>i.estado === 'al_dia' || i.estado === 'pago_completo').length;
+  const overdue = payable.filter(i=>installmentsDueMissing(i).length > 0).length;
   const minors = all.filter(i=>isMinorPerson(i)).length;
   const dniRisk = all.filter(i=>isDniExpired(i.vencimientoDni) || isDniExpiringSoon(i.vencimientoDni)).length;
   const missingCell = all.filter(i=>!hasCellphone(i)).length;
@@ -1587,27 +1636,29 @@ function renderAnalytics(){
   const minorsMissingPermit = all.filter(i=>isMinorPerson(i) && !i.permisoViajeUrl).length;
   const debtBuckets = [1,2,3,4].map(n => ({
     label: n + ' cuota' + (n === 1 ? '' : 's') + ' vencida' + (n === 1 ? '' : 's'),
-    value: all.filter(i=>installmentsDueMissing(i).length === n).length
+    value: payable.filter(i=>installmentsDueMissing(i).length === n).length
   }));
   const parishCounts = countBy(all, i=>i.parroquia || 'Sin parroquia');
   const statusPies = [
     binaryPie('Con pagos cargados', withPayments, all.length, 'Con pagos', 'Sin pagos', 'info'),
     binaryPie('Al dia / pago completo', upToDate, all.length, 'Al dia', 'Pendiente/debe', 'ok'),
     binaryPie('Con cuotas vencidas', overdue, all.length, 'Con deuda', 'Sin deuda vencida', 'bad'),
+    binaryPie('Exentos', totalExentos, all.length, 'Exentos', 'Plan de pagos', 'warn'),
     binaryPie('Menores de edad', minors, all.length, 'Menores', 'Mayores', 'info'),
     binaryPie('DNI vencido/proximo', dniRisk, all.length, 'Con alerta DNI', 'Sin alerta', 'warn'),
     binaryPie('Sin celular actualizado', missingCell, all.length, 'Sin celular', 'Con celular', 'warn'),
     binaryPie('Restricciones alimentarias', restrictions, all.length, 'Con restricciones', 'Sin restricciones', 'info'),
     binaryPie('Menores sin permiso de viaje', minorsMissingPermit, all.length, 'Falta permiso', 'Otros inscriptos', 'bad')
   ];
-  const quotaPies = PLAN_PAGOS.map(c => quotaPie(c, all));
+  const quotaPies = PLAN_PAGOS.map(c => quotaPie(c, payable));
 
   $('analytics-content').innerHTML =
     '<div class="analytics-grid">' +
       analyticsKpi(all.length, 'Inscriptos activos') +
-      analyticsKpi(percent(withPayments,total), 'Con pagos cargados') +
-      analyticsKpi(percent(upToDate,total), 'Al dia') +
-      analyticsKpi(percent(overdue,total), 'Con deuda vencida') +
+      analyticsKpi(totalExentos, 'Exentos') +
+      analyticsKpi(percent(withPayments,totalPayable), 'Con pagos cargados') +
+      analyticsKpi(percent(upToDate,totalPayable), 'Al dia') +
+      analyticsKpi(percent(overdue,totalPayable), 'Con deuda vencida') +
       analyticsKpi(percent(minors,total), 'Menores de edad') +
       analyticsKpi(percent(dniRisk,total), 'DNI vencido/proximo') +
       analyticsKpi(percent(missingCell,total), 'Sin celular actualizado') +
@@ -1714,6 +1765,7 @@ function countBy(list, getter){
 function percent(value, total){ return percentNumber(value, total) + '%'; }
 function percentNumber(value, total){ return total ? Math.round((value / total) * 100) : 0; }
 function installmentsDueMissing(person){
+  if(String(person.estadoCupo || '') === 'exento') return [];
   const loaded = new Set([...(person.resumen.confirmadas || []), ...(person.resumen.pendientes || [])]);
   return PLAN_PAGOS.filter(c=>isInstallmentDue(c) && !loaded.has(c.key));
 }
@@ -1796,6 +1848,7 @@ function renderDniExpiry(value){
 
 function personAlertTags(person){
   const tags = [];
+  if(String(person.estadoCupo || '') === 'exento') tags.push(badge('EXENTO','pending'));
   if(isMinorPerson(person)) tags.push(badge('Menor de edad','info'));
   if(isMinorPerson(person) && !person.permisoViajeUrl) tags.push(badge('Falta permiso viaje','bad'));
   if(isDniExpired(person.vencimientoDni)) tags.push(badge('DNI vencido','bad'));

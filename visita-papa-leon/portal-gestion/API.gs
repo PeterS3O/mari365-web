@@ -83,6 +83,7 @@ function handleRequest(e) {
     if (action === 'getInscriptos') return json(getInscriptos(p));
     if (action === 'actualizarInscripto') return json(actualizarInscripto(p));
     if (action === 'marcarBaja') return json(marcarBaja(p));
+    if (action === 'marcarExento') return json(marcarExento(p));
     if (action === 'liberarCupo') return json(liberarCupo(p));
     if (action === 'marcarAvisoWA') return json(marcarAvisoWA(p));
     if (action === 'marcarAvisoWAPago') return json(marcarAvisoWAPago(p));
@@ -491,6 +492,7 @@ function estadoInscripto(d, cols, pagos) {
   const r = resumenPagos(pagos);
   const estadoCupo = (d[cols.estadoCupo] || 'con_cupo').toString().trim() || 'con_cupo';
   if (estadoCupo === 'baja') return 'baja';
+  if (estadoCupo === 'exento') return 'exento';
   if (r.confirmadas.length === CUOTAS.length) return 'pago_completo';
   if (r.rechazadas.length > 0 && r.pendientes.length === 0) return 'comprobante_rechazado';
   if (r.pendientes.length > 0) return 'en_revision';
@@ -689,6 +691,7 @@ function registrarPago(p) {
   const cols = v.cols;
   const estadoCupo = (d[cols.estadoCupo] || 'con_cupo').toString().trim() || 'con_cupo';
   if (estadoCupo === 'baja') return { ok: false, error: 'Tu inscripcion fue dada de baja.' };
+  if (estadoCupo === 'exento') return { ok: false, error: 'Tu inscripcion figura exenta de pago. No hace falta cargar comprobantes.' };
 
   const cuotasKeys = (p.cuotas || '').split(',').map(c => c.trim()).filter(Boolean);
   if (!cuotasKeys.length) return { ok: false, error: 'Selecciona al menos una cuota.' };
@@ -859,6 +862,7 @@ function getAdmin(p) {
   });
   const totalInscriptos = Object.keys(contactos).length;
   const totalActivos = Object.values(contactos).filter(c => c.estadoCupo !== 'baja').length;
+  const totalExentos = Object.values(contactos).filter(c => c.estadoCupo === 'exento').length;
   const totalBajas = Object.values(contactos).filter(c => c.estadoCupo === 'baja').length;
   const dineroADevolver = Object.keys(contactos).reduce((total, dni) => {
     if (contactos[dni].estadoCupo !== 'baja') return total;
@@ -866,7 +870,7 @@ function getAdmin(p) {
       .filter(p => normDni(p.dni) === dni && p.estado === 'confirmado')
       .reduce((a, p) => a + Number(p.monto || 0), 0);
   }, 0);
-  return { ok: true, totalInscriptos, totalActivos, totalBajas, dineroADevolver, pagos, cambiosPerfil: cambiosPerfilPendientes() };
+  return { ok: true, totalInscriptos, totalActivos, totalExentos, totalBajas, dineroADevolver, pagos, cambiosPerfil: cambiosPerfilPendientes() };
 }
 
 function getInscriptos(p) {
@@ -958,6 +962,19 @@ function marcarBaja(p) {
   s.getRange(ins.row, ins.cols.notaBaja + 1).setValue(p.nota || '');
   s.getRange(ins.row, ins.cols.reemplazo + 1).setValue(p.reemplazo || '');
   return { ok: true, dni: normDni(p.dni), nombre: nombreCompleto(ins.d, ins.cols), estadoCupo: 'baja' };
+}
+
+function marcarExento(p) {
+  if (!validarAdminEdicion(p)) return { ok: false, error: 'No autorizado.' };
+  const ins = buscarInscriptoPorDniOrden(p.dni, p.ordenInscripcion);
+  if (!ins) return { ok: false, error: 'Inscripto no encontrado.' };
+  const exento = (p.exento || '').toString() === 'true';
+  const s = getSheet(CONFIG.HOJA_INSCRIPTOS);
+  const estadoActual = (ins.d[ins.cols.estadoCupo] || 'con_cupo').toString().trim() || 'con_cupo';
+  if (estadoActual === 'baja') return { ok: false, error: 'No se puede marcar como exento a una persona dada de baja.' };
+  s.getRange(ins.row, ins.cols.estadoCupo + 1).setValue(exento ? 'exento' : 'con_cupo');
+  if (p.nota !== undefined) s.getRange(ins.row, ins.cols.notaBaja + 1).setValue(p.nota || '');
+  return { ok: true, dni: normDni(p.dni), nombre: nombreCompleto(ins.d, ins.cols), estadoCupo: exento ? 'exento' : 'con_cupo' };
 }
 
 function liberarCupo(p) {
