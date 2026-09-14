@@ -192,11 +192,6 @@ tr:last-child td{border-bottom:0}
 .people-place{white-space:nowrap;font-size:.78rem}
 .people-restrictions{max-width:180px;color:var(--ink);font-size:.76rem;line-height:1.2;text-align:left;margin:0}
 .people-restrictions.empty{color:var(--muted)}
-.permit-cell{font-size:.76rem;line-height:1.2;min-width:120px}
-.permit-cell .meta{display:block;margin-top:3px}
-.minor-permit-panel{border-left:4px solid var(--amber)}
-.permit-status{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.permit-upload{display:grid;gap:8px;margin-top:12px}
 .modal-backdrop{position:fixed;inset:0;background:rgba(11,24,18,.48);z-index:50;display:none;align-items:center;justify-content:center;padding:18px}
 .modal-backdrop.active{display:flex}
 .modal-card{background:white;border-radius:14px;box-shadow:0 22px 55px rgba(0,0,0,.2);max-width:520px;width:100%;padding:20px;border:1px solid var(--line)}
@@ -325,8 +320,8 @@ tr:last-child td{border-bottom:0}
   .people-table tbody{display:block}
   .people-table tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px;align-items:center;background:white;border:1px solid var(--line);border-left:3px solid var(--green);border-radius:8px;margin-bottom:6px;padding:8px}
   .people-table td{display:none;border:0;padding:0;font-size:.76rem}
-  .people-table td:nth-child(2),.people-table td:nth-child(10){display:block}
-  .people-table td:nth-child(10){align-self:start}
+  .people-table td:nth-child(2),.people-table td:nth-child(9){display:block}
+  .people-table td:nth-child(9){align-self:start}
   .people-table .actions{justify-content:flex-end;gap:4px}
   .people-table .btn.small,.people-table .btn.tiny{padding:4px 6px;font-size:.66rem;border-radius:6px}
   .people-name{display:block;line-height:1.12}
@@ -448,7 +443,6 @@ tr:last-child td{border-bottom:0}
         <p>Para acreditar cada cuota, subi el comprobante de transferencia o la foto del recibo si pagaste en efectivo. Los pagos en efectivo quedan pendientes hasta que el responsable entregue el dinero.</p>
       </section>
       <section id="state-alert" class="panel card" style="display:none;background:var(--amber-soft);color:var(--amber)"></section>
-      <section id="minor-permit-panel" class="card panel minor-permit-panel" style="display:none"></section>
       <section class="grid3">
         <div class="metric card"><b id="state-paid">$0</b><span>Confirmado</span></div>
         <div class="metric card"><b id="state-review">$0</b><span>En revision</span></div>
@@ -624,15 +618,10 @@ tr:last-child td{border-bottom:0}
           <option value="">Todas las restricciones</option>
           <option value="con_restricciones">Solo con restricciones</option>
         </select>
-        <select id="people-permit-filter" onchange="renderPeople()">
-          <option value="">Permiso menores</option>
-          <option value="menores_sin_permiso">Menores sin permiso</option>
-          <option value="menores_con_permiso">Menores con permiso</option>
-        </select>
         <input id="people-search" placeholder="Buscar..." oninput="renderPeople()">
       </div>
       <div id="people-debt-summary" class="debt-summary"></div>
-      <div class="table-wrap"><table class="people-table"><thead><tr><th>#</th><th>Nombre</th><th>Vto. DNI</th><th>Parroquia / Comunidad</th><th>Restricciones</th><th>Permiso viaje</th><th>Estado</th><th>Confirmado</th><th>Debe</th><th>Acciones</th></tr></thead><tbody id="people-body"></tbody></table></div>
+      <div class="table-wrap"><table class="people-table"><thead><tr><th>#</th><th>Nombre</th><th>Vto. DNI</th><th>Parroquia / Comunidad</th><th>Restricciones</th><th>Estado</th><th>Confirmado</th><th>Debe</th><th>Acciones</th></tr></thead><tbody id="people-body"></tbody></table></div>
     </section>
     <section id="admin-profile" style="display:none">
       <div id="profile-requests"></div>
@@ -675,18 +664,6 @@ tr:last-child td{border-bottom:0}
   </div>
 </main>
 
-<div id="minor-permit-modal" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="minor-permit-title">
-  <div class="modal-card">
-    <h3 id="minor-permit-title">Permiso de viaje obligatorio</h3>
-    <p>Como sos menor de edad, necesitás cargar una foto o PDF de la autorización de viaje firmada por tus padres o responsables.</p>
-    <p>También es importante llevar la autorización/documento original el día del viaje si la organización lo solicita.</p>
-    <div class="actions">
-      <button class="btn secondary small" onclick="closeMinorPermitModal()">Entendido</button>
-      <button class="btn small" onclick="closeMinorPermitModal();scrollToMinorPermit()">Cargar permiso</button>
-    </div>
-  </div>
-</div>
-
 <script>
 const API = 'https://script.google.com/macros/s/AKfycbxFZ2f0mjK9LcbRlBdMia8qQfGRLtkk3S1wDFZHoJHRE1VhCGqXROM_UjOcuru9TwHu/exec';
 const ALIAS = 'Visita.leon.bsas';
@@ -722,7 +699,6 @@ let adminSearch = '';
 let paymentMode = 'transferencia';
 let busyCount = 0;
 let localCelular = '';
-let minorPermitModalShownFor = '';
 let capacityClosedAlertShownFor = '';
 const CAPACITY_CLOSED_MESSAGE = 'El portal ya esta cerrado para cargar pagos por haber alcanzado el limite de peregrinos. Por favor comunicate con tu catequista.';
 
@@ -937,8 +913,6 @@ function renderState(){
     return '<div class="row"><div><div class="name">'+c.label+'</div><div class="meta">Vence '+c.vencimiento+' - '+money(c.monto)+'</div>'+link+'</div><div class="actions">'+badge(state,kind)+cargar+'</div></div>';
   }).join('');
 
-  renderMinorPermitPanel(d);
-  maybeShowMinorPermitModal(d);
   $('state-loading').style.display='none';
   $('state-content').style.display='block';
 }
@@ -956,55 +930,6 @@ function maybeShowCapacityClosedAlert(d){
   if(capacityClosedAlertShownFor === key) return;
   capacityClosedAlertShownFor = key;
   setTimeout(() => alert(capacityClosedMessage(d)), 200);
-}
-
-function renderMinorPermitPanel(d){
-  const panel = $('minor-permit-panel');
-  if(!panel) return;
-  const confirmedMinor = d.esMenor || isMinor(d.fechaNacimiento);
-  const confirmedAdult = d.esMenor === false && !!d.fechaNacimiento && !isMinor(d.fechaNacimiento);
-  if(confirmedAdult){
-    panel.style.display = 'none';
-    panel.innerHTML = '';
-    return;
-  }
-  const hasPermit = !!d.permisoViajeUrl;
-  panel.style.display = 'block';
-  panel.innerHTML =
-    '<div class="permit-status"><div><b>Permiso de viaje para menor de edad</b><p class="sub" style="margin:4px 0 0">'+
-    (confirmedMinor
-      ? 'Como sos menor de edad, cargá una foto o PDF de la autorización firmada por tus padres o responsables cuando la tengas.'
-      : 'Si sos menor de edad, carga aca una foto o PDF de la autorizacion de viaje y lleva el permiso original el dia del viaje.')+
-    '</p></div>' +
-    '<div>' + badge(hasPermit ? 'Cargado' : (confirmedMinor ? 'Falta cargar' : 'Solo menores'), hasPermit ? 'ok' : (confirmedMinor ? 'bad' : 'pending')) + '</div></div>' +
-    (hasPermit ? '<p style="margin:10px 0 0"><a class="link-btn" href="'+d.permisoViajeUrl+'" target="_blank">Ver permiso cargado</a>'+(d.fechaPermisoViaje ? '<span class="meta"> · Cargado el '+d.fechaPermisoViaje+'</span>' : '')+'</p>' : '') +
-    '<div class="permit-upload"><label class="file-upload"><input id="permit-file" type="file" accept="image/*,.pdf" onchange="onPermitFile()"><span id="permit-file-name">'+(hasPermit ? 'Reemplazar archivo, imagen o PDF hasta 10 MB' : 'Imagen o PDF del permiso, hasta 10 MB')+'</span></label><button id="btn-submit-permit" class="btn small" onclick="registrarPermisoViaje()" disabled>'+(hasPermit ? 'Reemplazar permiso' : 'Cargar permiso')+'</button><div id="permit-msg" class="message"></div></div>';
-}
-
-function maybeShowMinorPermitModal(d){
-  const key = cleanDni(d.dni);
-  if((d.esMenor || isMinor(d.fechaNacimiento)) && !d.permisoViajeUrl && minorPermitModalShownFor !== key){
-    minorPermitModalShownFor = key;
-    const modal = $('minor-permit-modal');
-    if(modal) modal.classList.add('active');
-  }
-}
-
-function closeMinorPermitModal(){
-  const modal = $('minor-permit-modal');
-  if(modal) modal.classList.remove('active');
-}
-
-function scrollToMinorPermit(){
-  const panel = $('minor-permit-panel');
-  if(panel) panel.scrollIntoView({ behavior:'smooth', block:'start' });
-}
-
-function onPermitFile(){
-  const f = $('permit-file').files[0];
-  $('permit-file-name').textContent = f ? f.name : 'Imagen o PDF del permiso, hasta 10 MB';
-  const btn = $('btn-submit-permit');
-  if(btn) btn.disabled = !f;
 }
 
 function showProfile(reason){
@@ -1182,51 +1107,6 @@ async function subirACloudinary(file, opts){
   }
 }
 
-async function registrarPermisoViaje(){
-  if(!estadoData) return;
-  const file = $('permit-file') && $('permit-file').files[0];
-  if(!file){ showMsg('permit-msg', 'Adjunta una foto o PDF del permiso de viaje.', false); return; }
-  if(file.size > 10 * 1024 * 1024){ showMsg('permit-msg','El archivo supera 10 MB.',false); return; }
-  const btn = $('btn-submit-permit');
-  if(btn) btn.disabled = true;
-  showMsg('permit-msg', 'Verificando portal...', true);
-  try{
-    const check = await api('registrarPermisoViaje', {
-      dni: estadoData.dni,
-      email: loginEmail,
-      permisoUrl: '',
-      permisoNombre: '',
-      permisoTipo: ''
-    });
-    if(!check.ok && /accion desconocida/i.test(check.error || '')){
-      throw new Error('El API publicado todavia no tiene habilitada la carga de permiso de viaje. Hay que revisar la URL o la version desplegada de Apps Script.');
-    }
-    if(!check.ok && /solo los menores/i.test(check.error || '')){
-      throw new Error(check.error);
-    }
-    showMsg('permit-msg', 'Subiendo permiso...', true);
-    const permisoUrl = await subirACloudinary(file, {
-      folder: 'visita-papa-leon/' + estadoData.dni + '/permisos-viaje',
-      loadingText: 'Subiendo permiso de viaje...'
-    });
-    const data = await api('registrarPermisoViaje', {
-      dni: estadoData.dni,
-      email: loginEmail,
-      permisoUrl,
-      permisoNombre: file.name,
-      permisoTipo: file.type || ''
-    });
-    if(!data.ok){ showMsg('permit-msg', data.error || 'No se pudo registrar el permiso.', false); if(btn) btn.disabled = false; return; }
-    estadoData.permisoViajeUrl = permisoUrl;
-    estadoData.fechaPermisoViaje = 'hoy';
-    estadoData.permisoViajeNombre = file.name;
-    showMsg('permit-msg', data.mensaje || 'Permiso registrado. Recorda llevar el original al viaje.', true);
-    setTimeout(refreshState, 900);
-  }catch(e){
-    showMsg('permit-msg', e.message || 'No se pudo subir el permiso.', false);
-    if(btn) btn.disabled = false;
-  }
-}
 function showMsg(id, text, ok){ const el=$(id); el.textContent=text; el.className='message '+(ok?'ok':'bad'); }
 function showPaymentLoading(){
   const el = $('payment-msg');
@@ -1316,11 +1196,11 @@ async function loginAdmin(){
 function canEdit(){ return adminRole === 'edit'; }
 async function refreshAdmin(){
   $('payments-list').innerHTML = '<div class="loading"><div class="spinner"></div><span>Cargando...</span></div>';
-  $('people-body').innerHTML = '<tr><td colspan="10" class="empty">Cargando...</td></tr>';
+  $('people-body').innerHTML = '<tr><td colspan="9" class="empty">Cargando...</td></tr>';
   adminData = await api('getAdmin', { adminToken });
   if(!adminData.ok){
     $('payments-list').innerHTML = '<div class="empty">'+(adminData.error || 'No autorizado')+'</div>';
-    $('people-body').innerHTML = '<tr><td colspan="10" class="empty">'+(adminData.error || 'No autorizado')+'</td></tr>';
+    $('people-body').innerHTML = '<tr><td colspan="9" class="empty">'+(adminData.error || 'No autorizado')+'</td></tr>';
     return;
   }
   peopleData = null;
@@ -1494,7 +1374,7 @@ async function ensurePeopleData(){
   if(!peopleData){
     peopleData = await api('getInscriptos', { adminToken });
     if(!peopleData.ok){
-      $('people-body').innerHTML = '<tr><td colspan="10">'+(peopleData.error || 'Error')+'</td></tr>';
+      $('people-body').innerHTML = '<tr><td colspan="9">'+(peopleData.error || 'Error')+'</td></tr>';
       $('analytics-content').innerHTML = '<div class="empty">'+(peopleData.error || 'No se pudieron cargar los datos')+'</div>';
       return false;
     }
@@ -1509,7 +1389,7 @@ function fillPeopleFilters(){
   $('people-community').innerHTML = '<option value="">Todas las comunidades</option>' + communities.map(x=>'<option>'+x+'</option>').join('');
 }
 function resetPeopleFilters(){
-  ['people-state','people-debt','people-parish','people-community','people-dni-order','people-restrictions-filter','people-permit-filter','people-search'].forEach(id => {
+  ['people-state','people-debt','people-parish','people-community','people-dni-order','people-restrictions-filter','people-search'].forEach(id => {
     const el = $(id);
     if(el) el.value = '';
   });
@@ -1563,14 +1443,11 @@ function renderPeople(){
   const community = $('people-community').value;
   const dniOrder = $('people-dni-order').value;
   const restrictionsFilter = $('people-restrictions-filter').value;
-  const permitFilter = $('people-permit-filter').value;
   const q = $('people-search').value.toLowerCase();
   if(state && state !== 'baja') list = list.filter(i=>i.estado === state || i.estadoCupo === state);
   if(parish) list = list.filter(i=>i.parroquia === parish);
   if(community) list = list.filter(i=>i.comunidad === community);
   if(restrictionsFilter === 'con_restricciones') list = list.filter(i=>(i.restricciones || '').trim());
-  if(permitFilter === 'menores_sin_permiso') list = list.filter(i=>isMinorPerson(i) && !i.permisoViajeUrl);
-  if(permitFilter === 'menores_con_permiso') list = list.filter(i=>isMinorPerson(i) && !!i.permisoViajeUrl);
   if(q) list = list.filter(i=>i.nombre.toLowerCase().includes(q) || String(i.dni).includes(q));
   renderDebtSummary(list.filter(i=>String(i.estadoCupo || '') !== 'baja' && String(i.estadoCupo || '') !== 'exento'));
   if(debt) list = list.filter(i=>String(i.estadoCupo || '') !== 'baja' && String(i.estadoCupo || '') !== 'exento' && debtFilterKey(i) === debt);
@@ -1599,23 +1476,11 @@ function renderPeople(){
     const restrictionsCell = restricciones
       ? '<div class="people-restrictions">'+escapeHtml(restricciones)+'</div>'
       : '<div class="people-restrictions empty">Sin restricciones</div>';
-    const permitCell = renderPermitCell(i);
     const parishCommunity = '<div class="people-place">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+'</div>';
-    const permitSummary = isMinorPerson(i) ? (i.permisoViajeUrl ? 'Permiso cargado' : 'Falta permiso') : 'Permiso no aplica';
     const totalPagado = (i.resumen || {}).totalPagado;
-    const mobileSummary = '<div class="people-mobile-summary">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+' · <b>'+(STATE_LABELS[i.estado] || i.estado)+'</b> · '+money(totalPagado)+' · Debe: '+debtText(i)+' · '+permitSummary+(restricciones ? ' · <span class="warn">'+escapeHtml(restricciones)+'</span>' : '')+'</div>';
-    return '<tr><td class="people-order">'+displayNumber+'</td><td><span class="people-name">'+escapeHtml(i.nombre || '')+'<span class="people-inline-dni">DNI '+escapeHtml(String(i.dni || ''))+'</span></span>'+mobileSummary+personAlertTags(i)+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+parishCommunity+'</td><td>'+restrictionsCell+'</td><td>'+permitCell+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(totalPagado)+'</td><td>'+debtText(i)+'</td><td><div class="actions">'+wa+edit+exempt+baja+'</div></td></tr>';
-  }).join('') : '<tr><td colspan="10" class="empty">Sin resultados</td></tr>';
-}
-
-function renderPermitCell(person){
-  if(!isMinorPerson(person)){
-    return '<div class="permit-cell"><span class="meta">No aplica</span></div>';
-  }
-  if(person.permisoViajeUrl){
-    return '<div class="permit-cell">'+badge('Cargado','ok')+'<a class="link-btn" href="'+person.permisoViajeUrl+'" target="_blank">Ver permiso</a>'+(person.fechaPermisoViaje ? '<span class="meta">'+escapeHtml(person.fechaPermisoViaje)+'</span>' : '')+'</div>';
-  }
-  return '<div class="permit-cell">'+badge('Falta','bad')+'<span class="meta">Obligatorio para viajar</span></div>';
+    const mobileSummary = '<div class="people-mobile-summary">'+escapeHtml(i.parroquia || '-')+' / '+escapeHtml(i.comunidad || '-')+' · <b>'+(STATE_LABELS[i.estado] || i.estado)+'</b> · '+money(totalPagado)+' · Debe: '+debtText(i)+(restricciones ? ' · <span class="warn">'+escapeHtml(restricciones)+'</span>' : '')+'</div>';
+    return '<tr><td class="people-order">'+displayNumber+'</td><td><span class="people-name">'+escapeHtml(i.nombre || '')+'<span class="people-inline-dni">DNI '+escapeHtml(String(i.dni || ''))+'</span></span>'+mobileSummary+personAlertTags(i)+'</td><td>'+renderDniExpiry(i.vencimientoDni)+'</td><td>'+parishCommunity+'</td><td>'+restrictionsCell+'</td><td>'+(STATE_LABELS[i.estado] || i.estado)+'</td><td>'+money(totalPagado)+'</td><td>'+debtText(i)+'</td><td><div class="actions">'+wa+edit+exempt+baja+'</div></td></tr>';
+  }).join('') : '<tr><td colspan="9" class="empty">Sin resultados</td></tr>';
 }
 
 async function loadAnalytics(){
@@ -1637,7 +1502,6 @@ function renderAnalytics(){
   const dniRisk = all.filter(i=>isDniExpired(i.vencimientoDni) || isDniExpiringSoon(i.vencimientoDni)).length;
   const missingCell = all.filter(i=>!hasCellphone(i)).length;
   const restrictions = all.filter(i=>(i.restricciones || '').trim()).length;
-  const minorsMissingPermit = all.filter(i=>isMinorPerson(i) && !i.permisoViajeUrl).length;
   const debtBuckets = [1,2,3,4].map(n => ({
     label: n + ' cuota' + (n === 1 ? '' : 's') + ' vencida' + (n === 1 ? '' : 's'),
     value: payable.filter(i=>installmentsDueMissing(i).length === n).length
@@ -1651,8 +1515,7 @@ function renderAnalytics(){
     binaryPie('Menores de edad', minors, all.length, 'Menores', 'Mayores', 'info'),
     binaryPie('DNI vencido/proximo', dniRisk, all.length, 'Con alerta DNI', 'Sin alerta', 'warn'),
     binaryPie('Sin celular actualizado', missingCell, all.length, 'Sin celular', 'Con celular', 'warn'),
-    binaryPie('Restricciones alimentarias', restrictions, all.length, 'Con restricciones', 'Sin restricciones', 'info'),
-    binaryPie('Menores sin permiso de viaje', minorsMissingPermit, all.length, 'Falta permiso', 'Otros inscriptos', 'bad')
+    binaryPie('Restricciones alimentarias', restrictions, all.length, 'Con restricciones', 'Sin restricciones', 'info')
   ];
   const quotaPies = PLAN_PAGOS.map(c => quotaPie(c, payable));
 
@@ -1667,7 +1530,6 @@ function renderAnalytics(){
       analyticsKpi(percent(dniRisk,total), 'DNI vencido/proximo') +
       analyticsKpi(percent(missingCell,total), 'Sin celular actualizado') +
       analyticsKpi(restrictions, 'Con restricciones') +
-      analyticsKpi(minorsMissingPermit, 'Menores sin permiso') +
     '</div>' +
     analyticsSection('Estado general', '<div class="pie-grid">'+statusPies.join('')+'</div>') +
     analyticsSection('Cuotas pagadas vs adeudadas', '<div class="pie-grid">'+quotaPies.join('')+'</div>') +
@@ -1854,7 +1716,6 @@ function personAlertTags(person){
   const tags = [];
   if(String(person.estadoCupo || '') === 'exento') tags.push(badge('EXENTO','pending'));
   if(isMinorPerson(person)) tags.push(badge('Menor de edad','info'));
-  if(isMinorPerson(person) && !person.permisoViajeUrl) tags.push(badge('Falta permiso viaje','bad'));
   if(isDniExpired(person.vencimientoDni)) tags.push(badge('DNI vencido','bad'));
   else if(isDniExpiringSoon(person.vencimientoDni)) tags.push(badge('DNI proximo a vencer','pending'));
   return tags.length ? '<div class="name-tags">'+tags.join('')+'</div>' : '';

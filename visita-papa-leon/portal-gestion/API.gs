@@ -73,7 +73,6 @@ function handleRequest(e) {
     if (action === 'health') return json({ ok: true, service: 'portal-gestion', evento: CONFIG.NOMBRE_EVENTO });
     if (action === 'getEstado') return json(getEstado(p));
     if (action === 'registrarPago') return json(registrarPago(p));
-    if (action === 'registrarPermisoViaje') return json(registrarPermisoViaje(p));
     if (action === 'solicitarCambioPerfil') return json(solicitarCambioPerfil(p));
     if (action === 'reportarError') return json(reportarError(p));
     if (action === 'loginAdmin') return json(loginAdmin(p));
@@ -535,10 +534,6 @@ function getEstado(p) {
     fechaNacimiento: fechaAR(d[cols.fechaNacimiento]),
     vencimientoDni: fechaAR(d[cols.vencimientoDni]),
     esMenor: esMenorFechaNacimiento(d[cols.fechaNacimiento]),
-    permisoViajeUrl: d[cols.permisoViajeUrl] || '',
-    fechaPermisoViaje: fechaAR(d[cols.fechaPermisoViaje]),
-    permisoViajeNombre: d[cols.nombreArchivoPermiso] || '',
-    permisoViajeTipo: d[cols.tipoArchivoPermiso] || '',
     estadoCupo,
     bloqueoCupo: estadoCierreCupo(d[cols.dni], pagos, estadoCupo),
     pagos,
@@ -546,28 +541,6 @@ function getEstado(p) {
     cuotas: CUOTAS,
     total: TOTAL,
   };
-}
-
-function registrarPermisoViaje(p) {
-  const v = buscarInscriptoPorDniEmail(p.dni, p.email);
-  if (!v.ok) return { ok: false, error: 'Datos no validos.' };
-  if (!esMenorFechaNacimiento(v.d[v.cols.fechaNacimiento])) {
-    return { ok: false, error: 'El permiso de viaje solo es requerido para menores de edad.' };
-  }
-  const url = (p.permisoUrl || '').toString().trim();
-  if (!url) return { ok: false, error: 'No se recibio el archivo del permiso.' };
-  const s = getSheet(CONFIG.HOJA_INSCRIPTOS);
-  s.getRange(v.row, v.cols.permisoViajeUrl + 1).setValue(url);
-  s.getRange(v.row, v.cols.fechaPermisoViaje + 1).setValue(new Date());
-  s.getRange(v.row, v.cols.nombreArchivoPermiso + 1).setValue(p.permisoNombre || '');
-  s.getRange(v.row, v.cols.tipoArchivoPermiso + 1).setValue(p.permisoTipo || '');
-  MailApp.sendEmail({
-    to: CONFIG.EMAIL_ORGANIZADOR,
-    subject: 'Permiso de viaje cargado - ' + nombreCompleto(v.d, v.cols),
-    body: 'Persona: ' + nombreCompleto(v.d, v.cols) + '\nDNI: ' + v.d[v.cols.dni] +
-      '\nArchivo: ' + url + '\n\nRecordatorio: el menor debe llevar el permiso original/documento fisico al viaje.',
-  });
-  return { ok: true, mensaje: 'Permiso de viaje registrado. Recorda llevar el documento original al viaje.' };
 }
 
 function normalizarCambiosPerfil(p) {
@@ -813,9 +786,6 @@ function contactoPorDni() {
       comunidad: d[info.cols.comunidad] || '',
       vencimientoDni: fechaAR(d[info.cols.vencimientoDni]),
       esMenor: esMenorFechaNacimiento(d[info.cols.fechaNacimiento]),
-      permisoViajeUrl: d[info.cols.permisoViajeUrl] || '',
-      fechaPermisoViaje: fechaAR(d[info.cols.fechaPermisoViaje]),
-      permisoViajeNombre: d[info.cols.nombreArchivoPermiso] || '',
       fechaAvisoWhatsapp: fechaAR(d[info.cols.fechaAvisoWhatsapp]),
       estadoCupo: (d[info.cols.estadoCupo] || 'con_cupo').toString().trim() || 'con_cupo',
     };
@@ -855,9 +825,6 @@ function getAdmin(p) {
       estadoCupo: c.estadoCupo || '',
       vencimientoDni: c.vencimientoDni || '',
       esMenor: c.esMenor || false,
-      permisoViajeUrl: c.permisoViajeUrl || '',
-      fechaPermisoViaje: c.fechaPermisoViaje || '',
-      permisoViajeNombre: c.permisoViajeNombre || '',
     };
   });
   const totalInscriptos = Object.keys(contactos).length;
@@ -909,10 +876,6 @@ function getInscriptos(p) {
         comunidad: d[info.cols.comunidad] || '',
         restricciones: d[info.cols.restricciones] || '',
         vencimientoDni: fechaAR(d[info.cols.vencimientoDni]),
-        permisoViajeUrl: d[info.cols.permisoViajeUrl] || '',
-        fechaPermisoViaje: fechaAR(d[info.cols.fechaPermisoViaje]),
-        permisoViajeNombre: d[info.cols.nombreArchivoPermiso] || '',
-        permisoViajeTipo: d[info.cols.tipoArchivoPermiso] || '',
         whatsapp: normTel(d[info.cols.celular]),
         fechaInscripcion: fechaAR(d[info.cols.timestamp]),
         horaInscripcion: horaAR(d[info.cols.timestamp]),
@@ -1038,7 +1001,6 @@ function exportar(p) {
       'Estado cupo': ins.estadoCupo,
       'Estado pagos': ins.estado,
       'Menor de edad': ins.esMenor ? 'si' : 'no',
-      'Permiso viaje': ins.permisoViajeUrl ? 'cargado' : (ins.esMenor ? 'falta' : 'no aplica'),
       'Total confirmado': ins.resumen.totalPagado,
       'En revision': ins.resumen.totalPendConf,
       'Falta abonar': TOTAL - ins.resumen.totalPagado - ins.resumen.totalPendConf,
