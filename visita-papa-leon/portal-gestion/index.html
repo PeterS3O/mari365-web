@@ -574,7 +574,6 @@ tr:last-child td{border-bottom:0}
     <div class="tabs">
       <button id="tab-payments" class="tab" onclick="setAdminView('payments')">Pagos</button>
       <button id="tab-people" class="tab active" onclick="setAdminView('people')">Inscriptos</button>
-      <button id="tab-manual-payment" class="tab" style="display:none" onclick="setAdminView('manual-payment')">Carga manual</button>
       <button id="tab-analytics" class="tab" onclick="setAdminView('analytics')">Analytics</button>
       <button id="tab-profile" class="tab" onclick="setAdminView('profile')">Cambios de datos</button>
     </div>
@@ -627,15 +626,6 @@ tr:last-child td{border-bottom:0}
     <section id="admin-profile" style="display:none">
       <div id="profile-requests"></div>
     </section>
-    <section id="admin-manual-payment" style="display:none;max-width:680px">
-      <div class="card panel">
-        <h3 style="margin-top:0">Cargar comprobante por un peregrino</h3>
-        <p class="sub">Usalo solo cuando el peregrino no pueda cargar su comprobante desde su acceso. El pago quedara pendiente de revision.</p>
-        <div class="field"><label>Peregrino</label><select id="admin-manual-person" onchange="renderAdminManualPayment()"></select></div>
-        <div id="admin-manual-payment-form"></div>
-        <div id="admin-manual-msg" class="message"></div>
-      </div>
-    </section>
     <section id="admin-analytics" style="display:none">
       <div id="analytics-content" class="loading"><div class="spinner"></div><span>Cargando analytics...</span></div>
     </section>
@@ -670,6 +660,15 @@ tr:last-child td{border-bottom:0}
       <div class="field"><label>Restricciones alimentarias</label><textarea id="admin-edit-restricciones"></textarea></div>
       <button class="btn full" onclick="submitAdminEdit()">Guardar cambios</button>
       <div id="admin-edit-msg" class="message"></div>
+      <div style="border-top:1px solid var(--line);margin-top:22px;padding-top:20px">
+        <h3 style="margin:0 0 6px">Comprobantes</h3>
+        <p class="sub">Para excepciones en las que este peregrino no pueda cargar el comprobante desde su acceso.</p>
+        <button class="btn secondary" onclick="showAdminManualPayment()">Cargar comprobante</button>
+        <div id="admin-manual-payment" style="display:none;margin-top:16px">
+          <div id="admin-manual-payment-form"></div>
+          <div id="admin-manual-msg" class="message"></div>
+        </div>
+      </div>
     </section>
   </div>
 </main>
@@ -1190,7 +1189,6 @@ async function loginAdmin(){
     adminToken = data.token;
     adminRole = data.role || 'view';
     $('admin-role').textContent = adminRole === 'edit' ? 'Modo edicion' : 'Solo vista';
-    $('tab-manual-payment').style.display = canEdit() ? '' : 'none';
     adminView = 'people';
     paymentFilter = 'todos';
     adminSearch = '';
@@ -1220,7 +1218,6 @@ async function refreshAdmin(){
   if(adminView === 'people') await loadPeople();
   if(adminView === 'analytics') await loadAnalytics();
   if(adminView === 'profile') renderProfileRequests();
-  if(adminView === 'manual-payment') await loadAdminManualPayment();
 }
 function groupedPayments(){
   const map = {};
@@ -1250,23 +1247,19 @@ function renderAdminStats(){
 }
 function metric(n,label,color){ return '<div class="metric card"><b style="color:'+color+'">'+n+'</b><span>'+label+'</span></div>'; }
 function setAdminView(view){
-  if(view === 'manual-payment' && !canEdit()) view = 'people';
   adminView = view;
   $('tab-payments').classList.toggle('active', view === 'payments');
   $('tab-people').classList.toggle('active', view === 'people');
-  $('tab-manual-payment').classList.toggle('active', view === 'manual-payment');
   $('tab-analytics').classList.toggle('active', view === 'analytics');
   $('tab-profile').classList.toggle('active', view === 'profile');
   $('admin-payments').style.display = view === 'payments' ? 'block' : 'none';
   $('admin-people').style.display = view === 'people' ? 'block' : 'none';
-  $('admin-manual-payment').style.display = view === 'manual-payment' ? 'block' : 'none';
   $('admin-analytics').style.display = view === 'analytics' ? 'block' : 'none';
   $('admin-profile').style.display = view === 'profile' ? 'block' : 'none';
   if(view === 'payments') renderPayments();
   if(view === 'people') loadPeople();
   if(view === 'analytics') loadAnalytics();
   if(view === 'profile') renderProfileRequests();
-  if(view === 'manual-payment') loadAdminManualPayment();
 }
 function setPaymentFilter(f){
   paymentFilter = f;
@@ -1387,21 +1380,15 @@ async function loadPeople(){
   renderPeople();
 }
 
-async function loadAdminManualPayment(){
-  if(!canEdit() || !await ensurePeopleData()) return;
-  const select = $('admin-manual-person');
-  const selected = select.value;
-  const people = (peopleData.inscriptos || [])
-    .filter(p => p.estadoCupo !== 'baja' && p.estadoCupo !== 'exento')
-    .sort((a,b) => (a.nombre || '').localeCompare(b.nombre || ''));
-  select.innerHTML = '<option value="">Selecciona un peregrino</option>' + people.map(p => '<option value="'+cleanDni(p.dni)+'">'+escapeHtml(p.nombre)+' - DNI '+escapeHtml(String(p.dni))+'</option>').join('');
-  if(people.some(p => cleanDni(p.dni) === selected)) select.value = selected;
-  renderAdminManualPayment();
+function adminManualPerson(){
+  const dni = cleanDni($('admin-edit-dni').value);
+  return (peopleData && peopleData.inscriptos || []).find(p => cleanDni(p.dni) === dni);
 }
 
-function adminManualPerson(){
-  const dni = cleanDni($('admin-manual-person').value);
-  return (peopleData && peopleData.inscriptos || []).find(p => cleanDni(p.dni) === dni);
+function showAdminManualPayment(){
+  if(!canEdit()) return;
+  $('admin-manual-payment').style.display = 'block';
+  renderAdminManualPayment();
 }
 
 function renderAdminManualPayment(){
@@ -1410,7 +1397,7 @@ function renderAdminManualPayment(){
   const msg = $('admin-manual-msg');
   msg.className = 'message';
   msg.textContent = '';
-  if(!person){ form.innerHTML = '<div class="empty">Selecciona un peregrino para ver las cuotas disponibles.</div>'; return; }
+  if(!person){ form.innerHTML = '<div class="empty">No se pudo cargar los datos del peregrino.</div>'; return; }
   const pagos = person.pagos || [];
   const cargadas = paymentKeys(pagos.filter(p => p.estado !== 'rechazado'));
   const disponibles = PLAN_PAGOS.filter(c => !cargadas.includes(c.key));
@@ -1486,6 +1473,7 @@ async function submitAdminManualPayment(){
     adminData = null;
     peopleData = null;
     await refreshAdmin();
+    showPage('page-admin');
     setAdminView('payments');
   }catch(e){
     showMsg('admin-manual-msg', e.message || 'No se pudo subir el comprobante.', false);
@@ -1784,6 +1772,10 @@ function showAdminEdit(dni, orden){
   $('admin-edit-restricciones').value = p.restricciones || '';
   $('admin-edit-msg').className = 'message';
   $('admin-edit-msg').textContent = '';
+  $('admin-manual-payment').style.display = 'none';
+  $('admin-manual-payment-form').innerHTML = '';
+  $('admin-manual-msg').className = 'message';
+  $('admin-manual-msg').textContent = '';
   showPage('page-admin-edit');
 }
 
