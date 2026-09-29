@@ -45,7 +45,7 @@ const PAGOS_HEADERS = [
   'ID', 'Timestamp', 'DNI', 'Nombre', 'Cuotas', 'Monto', 'Comprobante',
   'Estado', 'Revisado Por', 'Fecha Revision', 'Email Enviado',
   'Motivo Rechazo', 'Nombre Archivo', 'Tipo Archivo',
-  'WhatsApp Enviado', 'Fecha WhatsApp', 'Tipo WhatsApp', 'Medio Pago', 'Responsable Efectivo',
+  'WhatsApp Enviado', 'Fecha WhatsApp', 'Tipo WhatsApp', 'Medio Pago', 'Responsable Efectivo', 'Cargado Por',
 ];
 
 const CAMBIOS_PERFIL_HEADERS = [
@@ -73,6 +73,7 @@ function handleRequest(e) {
     if (action === 'health') return json({ ok: true, service: 'portal-gestion', evento: CONFIG.NOMBRE_EVENTO });
     if (action === 'getEstado') return json(getEstado(p));
     if (action === 'registrarPago') return json(registrarPago(p));
+    if (action === 'registrarPagoAdmin') return json(registrarPagoAdmin(p));
     if (action === 'solicitarCambioPerfil') return json(solicitarCambioPerfil(p));
     if (action === 'reportarError') return json(reportarError(p));
     if (action === 'loginAdmin') return json(loginAdmin(p));
@@ -440,6 +441,7 @@ function getPagos(dni) {
       tipoWhatsapp: r[16] || '',
       medioPago: r[17] || '',
       responsableEfectivo: r[18] || '',
+      cargadoPor: r[19] || 'Peregrino',
     }));
 }
 
@@ -660,8 +662,17 @@ function aplicarCambiosPerfil(dni, cambios) {
 function registrarPago(p) {
   const v = buscarInscriptoPorDniEmail(p.dni, p.email);
   if (!v.ok) return { ok: false, error: 'Datos no validos.' };
-  const d = v.d;
-  const cols = v.cols;
+  return registrarPagoParaInscripto(p, v.d, v.cols, 'Peregrino');
+}
+
+function registrarPagoAdmin(p) {
+  if (!validarAdminEdicion(p)) return { ok: false, error: 'No autorizado.' };
+  const ins = buscarInscripto(p.dni);
+  if (!ins) return { ok: false, error: 'Inscripto no encontrado.' };
+  return registrarPagoParaInscripto(p, ins.d, ins.cols, 'Catequista');
+}
+
+function registrarPagoParaInscripto(p, d, cols, cargadoPor) {
   const estadoCupo = (d[cols.estadoCupo] || 'con_cupo').toString().trim() || 'con_cupo';
   if (estadoCupo === 'baja') return { ok: false, error: 'Tu inscripcion fue dada de baja.' };
   if (estadoCupo === 'exento') return { ok: false, error: 'Tu inscripcion figura exenta de pago. No hace falta cargar comprobantes.' };
@@ -700,7 +711,7 @@ function registrarPago(p) {
   getPagosSheet().appendRow([
     id, new Date(), d[cols.dni], nombre, cuotasKeys.join(','), monto, p.comprobanteUrl,
     'pendiente', '', '', 'no', '', p.comprobanteNombre || '', p.comprobanteTipo || '',
-    'no', '', '', medioPago, responsableEfectivo,
+    'no', '', '', medioPago, responsableEfectivo, cargadoPor,
   ]);
 
   MailApp.sendEmail({
@@ -815,6 +826,7 @@ function getAdmin(p) {
       tipoWhatsapp: r[16] || '',
       medioPago: r[17] || '',
       responsableEfectivo: r[18] || '',
+      cargadoPor: r[19] || 'Peregrino',
       email: c.email || '',
       celular: c.celular || '',
       whatsapp: c.whatsapp || '',
@@ -858,6 +870,7 @@ function getInscriptos(p) {
         estado: r[7] || '',
         fecha: fechaAR(r[1]),
         medioPago: r[17] || '',
+        cargadoPor: r[19] || 'Peregrino',
       }));
       const resumen = resumenPagos(pagosPersona);
       const estadoCupo = (d[info.cols.estadoCupo] || 'con_cupo').toString().trim() || 'con_cupo';

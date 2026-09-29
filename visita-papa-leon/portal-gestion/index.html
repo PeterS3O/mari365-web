@@ -574,6 +574,7 @@ tr:last-child td{border-bottom:0}
     <div class="tabs">
       <button id="tab-payments" class="tab" onclick="setAdminView('payments')">Pagos</button>
       <button id="tab-people" class="tab active" onclick="setAdminView('people')">Inscriptos</button>
+      <button id="tab-manual-payment" class="tab" style="display:none" onclick="setAdminView('manual-payment')">Carga manual</button>
       <button id="tab-analytics" class="tab" onclick="setAdminView('analytics')">Analytics</button>
       <button id="tab-profile" class="tab" onclick="setAdminView('profile')">Cambios de datos</button>
     </div>
@@ -625,6 +626,15 @@ tr:last-child td{border-bottom:0}
     </section>
     <section id="admin-profile" style="display:none">
       <div id="profile-requests"></div>
+    </section>
+    <section id="admin-manual-payment" style="display:none;max-width:680px">
+      <div class="card panel">
+        <h3 style="margin-top:0">Cargar comprobante por un peregrino</h3>
+        <p class="sub">Usalo solo cuando el peregrino no pueda cargar su comprobante desde su acceso. El pago quedara pendiente de revision.</p>
+        <div class="field"><label>Peregrino</label><select id="admin-manual-person" onchange="renderAdminManualPayment()"></select></div>
+        <div id="admin-manual-payment-form"></div>
+        <div id="admin-manual-msg" class="message"></div>
+      </div>
     </section>
     <section id="admin-analytics" style="display:none">
       <div id="analytics-content" class="loading"><div class="spinner"></div><span>Cargando analytics...</span></div>
@@ -1180,6 +1190,7 @@ async function loginAdmin(){
     adminToken = data.token;
     adminRole = data.role || 'view';
     $('admin-role').textContent = adminRole === 'edit' ? 'Modo edicion' : 'Solo vista';
+    $('tab-manual-payment').style.display = canEdit() ? '' : 'none';
     adminView = 'people';
     paymentFilter = 'todos';
     adminSearch = '';
@@ -1209,6 +1220,7 @@ async function refreshAdmin(){
   if(adminView === 'people') await loadPeople();
   if(adminView === 'analytics') await loadAnalytics();
   if(adminView === 'profile') renderProfileRequests();
+  if(adminView === 'manual-payment') await loadAdminManualPayment();
 }
 function groupedPayments(){
   const map = {};
@@ -1238,19 +1250,23 @@ function renderAdminStats(){
 }
 function metric(n,label,color){ return '<div class="metric card"><b style="color:'+color+'">'+n+'</b><span>'+label+'</span></div>'; }
 function setAdminView(view){
+  if(view === 'manual-payment' && !canEdit()) view = 'people';
   adminView = view;
   $('tab-payments').classList.toggle('active', view === 'payments');
   $('tab-people').classList.toggle('active', view === 'people');
+  $('tab-manual-payment').classList.toggle('active', view === 'manual-payment');
   $('tab-analytics').classList.toggle('active', view === 'analytics');
   $('tab-profile').classList.toggle('active', view === 'profile');
   $('admin-payments').style.display = view === 'payments' ? 'block' : 'none';
   $('admin-people').style.display = view === 'people' ? 'block' : 'none';
+  $('admin-manual-payment').style.display = view === 'manual-payment' ? 'block' : 'none';
   $('admin-analytics').style.display = view === 'analytics' ? 'block' : 'none';
   $('admin-profile').style.display = view === 'profile' ? 'block' : 'none';
   if(view === 'payments') renderPayments();
   if(view === 'people') loadPeople();
   if(view === 'analytics') loadAnalytics();
   if(view === 'profile') renderProfileRequests();
+  if(view === 'manual-payment') loadAdminManualPayment();
 }
 function setPaymentFilter(f){
   paymentFilter = f;
@@ -1299,7 +1315,7 @@ function renderComp(p, person){
   } else if(p.estado === 'rechazado'){
     actions = badge('No validado','bad') + (canEdit()?'<button class="btn secondary small" onclick="setPaymentStatus(\''+p.id+'\',\'pendiente\')">Revisar</button>':'') + whatsappButton('rechazo', p, person, 'Avisar');
   }
-  return '<div class="comp"><div><b>'+cuotaLabel(p.cuotas)+'</b><div class="meta">'+(p.fecha || '')+' - '+money(p.monto)+(p.medioPago ? ' - '+p.medioPago : '')+(p.responsableEfectivo ? ' - Resp: '+p.responsableEfectivo : '')+'</div></div><div class="actions">'+file+actions+'</div></div>';
+  return '<div class="comp"><div><b>'+cuotaLabel(p.cuotas)+'</b><div class="meta">'+(p.fecha || '')+' - '+money(p.monto)+(p.medioPago ? ' - '+p.medioPago : '')+(p.responsableEfectivo ? ' - Resp: '+p.responsableEfectivo : '')+(p.cargadoPor === 'Catequista' ? ' - Cargado por catequista' : '')+'</div></div><div class="actions">'+file+actions+'</div></div>';
 }
 function toggleDetails(id){ const el=$(id); if(el) el.style.display = el.style.display === 'none' ? 'block' : 'none'; }
 async function setPaymentStatus(id, status){
@@ -1369,6 +1385,111 @@ async function toggleExempt(dni, orden, makeExempt){
 async function loadPeople(){
   if(!await ensurePeopleData()) return;
   renderPeople();
+}
+
+async function loadAdminManualPayment(){
+  if(!canEdit() || !await ensurePeopleData()) return;
+  const select = $('admin-manual-person');
+  const selected = select.value;
+  const people = (peopleData.inscriptos || [])
+    .filter(p => p.estadoCupo !== 'baja' && p.estadoCupo !== 'exento')
+    .sort((a,b) => (a.nombre || '').localeCompare(b.nombre || ''));
+  select.innerHTML = '<option value="">Selecciona un peregrino</option>' + people.map(p => '<option value="'+cleanDni(p.dni)+'">'+escapeHtml(p.nombre)+' - DNI '+escapeHtml(String(p.dni))+'</option>').join('');
+  if(people.some(p => cleanDni(p.dni) === selected)) select.value = selected;
+  renderAdminManualPayment();
+}
+
+function adminManualPerson(){
+  const dni = cleanDni($('admin-manual-person').value);
+  return (peopleData && peopleData.inscriptos || []).find(p => cleanDni(p.dni) === dni);
+}
+
+function renderAdminManualPayment(){
+  const person = adminManualPerson();
+  const form = $('admin-manual-payment-form');
+  const msg = $('admin-manual-msg');
+  msg.className = 'message';
+  msg.textContent = '';
+  if(!person){ form.innerHTML = '<div class="empty">Selecciona un peregrino para ver las cuotas disponibles.</div>'; return; }
+  const pagos = person.pagos || [];
+  const cargadas = paymentKeys(pagos.filter(p => p.estado !== 'rechazado'));
+  const disponibles = PLAN_PAGOS.filter(c => !cargadas.includes(c.key));
+  if(!disponibles.length){ form.innerHTML = '<div class="empty">Este peregrino ya tiene comprobantes para todas las cuotas.</div>'; return; }
+  form.innerHTML =
+    '<div class="field"><label>Cuotas</label><div id="admin-manual-checks" class="checks">'+disponibles.map(c => {
+      const idx = PLAN_PAGOS.findIndex(x => x.key === c.key);
+      const previas = PLAN_PAGOS.slice(0, idx).filter(prev => !cargadas.includes(prev.key));
+      const disabled = previas.length ? ' disabled' : '';
+      const hint = previas.length ? '<br><span class="meta">Primero debe cargarse: '+previas.map(x => x.label).join(', ')+'</span>' : '';
+      return '<label class="check"><input type="checkbox" value="'+c.key+'"'+disabled+' onchange="toggleAdminManualCheck(this)"><span><b>'+c.label+'</b><br><span class="meta">'+money(c.monto)+' - vence '+c.vencimiento+'</span>'+hint+'</span></label>';
+    }).join('')+'</div></div>'+
+    '<div id="admin-manual-total" class="transfer" style="display:none;background:var(--blue-soft);color:var(--blue)"></div>'+
+    '<div class="field"><label>Medio de pago</label><select id="admin-manual-method" onchange="updateAdminManualPaymentMethod()"><option value="Transferencia Mercado Pago">Transferencia</option><option value="Efectivo">Efectivo</option><option value="Otro">Otro</option></select></div>'+
+    '<div id="admin-manual-cash-wrap" class="field" style="display:none"><label>Responsable que recibio el efectivo</label><input id="admin-manual-cash-responsible" placeholder="Nombre y apellido" oninput="updateAdminManualSubmit()"></div>'+
+    '<div class="drop"><input id="admin-manual-file" type="file" accept="image/*,.pdf" onchange="onAdminManualFile()"><b>Adjuntar comprobante</b><div id="admin-manual-file-name">Imagen o PDF, hasta 10 MB</div></div>'+
+    '<button id="btn-admin-manual-submit" class="btn full" style="margin-top:12px" onclick="submitAdminManualPayment()" disabled>Registrar comprobante</button>';
+  updateAdminManualPaymentMethod();
+  updateAdminManualTotal();
+}
+
+function toggleAdminManualCheck(input){ input.closest('.check').classList.toggle('selected', input.checked); updateAdminManualTotal(); }
+function selectedAdminManualKeys(){ return Array.from(document.querySelectorAll('#admin-manual-checks input:checked')).map(i => i.value); }
+function updateAdminManualTotal(){
+  const total = selectedAdminManualKeys().reduce((sum, key) => sum + (MAP_PLAN[key] ? MAP_PLAN[key].monto : 0), 0);
+  const el = $('admin-manual-total');
+  el.style.display = total ? 'block' : 'none';
+  el.textContent = total ? 'Total seleccionado: ' + money(total) : '';
+  updateAdminManualSubmit();
+}
+function updateAdminManualPaymentMethod(){
+  const cash = ($('admin-manual-method').value || '').toLowerCase().includes('efectivo');
+  $('admin-manual-cash-wrap').style.display = cash ? 'block' : 'none';
+  updateAdminManualSubmit();
+}
+function onAdminManualFile(){
+  const file = $('admin-manual-file').files[0];
+  $('admin-manual-file-name').textContent = file ? file.name : 'Imagen o PDF, hasta 10 MB';
+  updateAdminManualSubmit();
+}
+function updateAdminManualSubmit(){
+  const btn = $('btn-admin-manual-submit');
+  if(!btn) return;
+  const file = $('admin-manual-file').files[0];
+  const cash = ($('admin-manual-method').value || '').toLowerCase().includes('efectivo');
+  const responsible = $('admin-manual-cash-responsible');
+  btn.disabled = !selectedAdminManualKeys().length || !file || (cash && !(responsible && responsible.value.trim().length > 3));
+}
+async function submitAdminManualPayment(){
+  if(!canEdit()) return;
+  const person = adminManualPerson();
+  const cuotas = selectedAdminManualKeys();
+  const file = $('admin-manual-file').files[0];
+  const medioPago = $('admin-manual-method').value;
+  const responsableEfectivo = ($('admin-manual-cash-responsible') || {}).value || '';
+  if(!person || !cuotas.length || !file) return;
+  if(file.size > 10 * 1024 * 1024){ showMsg('admin-manual-msg', 'El archivo supera 10 MB.', false); return; }
+  try{
+    showMsg('admin-manual-msg', 'Subiendo comprobante...', true);
+    const comprobanteUrl = await subirACloudinary(file, { folder:'visita-papa-leon/' + cleanDni(person.dni), loadingText:'Subiendo comprobante...' });
+    const data = await api('registrarPagoAdmin', {
+      adminToken,
+      dni: person.dni,
+      cuotas: cuotas.join(','),
+      medioPago,
+      responsableEfectivo,
+      comprobanteUrl,
+      comprobanteNombre: file.name,
+      comprobanteTipo: file.type || ''
+    });
+    if(!data.ok){ showMsg('admin-manual-msg', data.error || 'No se pudo registrar el comprobante.', false); return; }
+    showMsg('admin-manual-msg', 'Comprobante registrado para ' + person.nombre + '. Quedo pendiente de revision.', true);
+    adminData = null;
+    peopleData = null;
+    await refreshAdmin();
+    setAdminView('payments');
+  }catch(e){
+    showMsg('admin-manual-msg', e.message || 'No se pudo subir el comprobante.', false);
+  }
 }
 async function ensurePeopleData(){
   if(!peopleData){
