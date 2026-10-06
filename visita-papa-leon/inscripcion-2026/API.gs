@@ -221,30 +221,21 @@ function prepararCupos(sheet, cols) {
     rows.push({ row: i + 1, values: data[i], orden: rows.length + 1 });
   }
   const hayListaEspera = rows.some(item => String(item.values[cols.estadoCupo] || '').trim() === ESTADO_LISTA_ESPERA);
-  const migrarPrimerCupo = !hayListaEspera && rows.length > CONFIG.CUPOS_DISPONIBLES;
-  let cuposOcupados = 0;
+  let cuposOcupados = rows.filter(item => {
+    const estado = String(item.values[cols.estadoCupo] || '').trim();
+    return estado === ESTADO_CUPO_CONFIRMADO || estado === 'exento';
+  }).length;
   rows.forEach(item => {
     const actual = String(item.values[cols.estadoCupo] || '').trim();
     let siguiente = actual;
-    if (migrarPrimerCupo) {
-      if (actual !== 'baja') {
-        if (cuposOcupados < CONFIG.CUPOS_DISPONIBLES) {
-          siguiente = actual === 'exento' ? 'exento' : ESTADO_CUPO_CONFIRMADO;
-          cuposOcupados += 1;
-        } else {
-          siguiente = ESTADO_LISTA_ESPERA;
-        }
-      }
-    } else {
-      if (!actual || actual === 'cupo_liberado') {
-        siguiente = hayListaEspera || cuposOcupados >= CONFIG.CUPOS_DISPONIBLES ? ESTADO_LISTA_ESPERA : ESTADO_CUPO_CONFIRMADO;
-      }
-      if (siguiente === ESTADO_CUPO_CONFIRMADO || siguiente === 'exento') cuposOcupados += 1;
+    if (!actual || actual === 'cupo_liberado') {
+      siguiente = hayListaEspera || cuposOcupados >= CONFIG.CUPOS_DISPONIBLES ? ESTADO_LISTA_ESPERA : ESTADO_CUPO_CONFIRMADO;
+      if (siguiente === ESTADO_CUPO_CONFIRMADO) cuposOcupados += 1;
     }
     if (!item.values[cols.ordenInscripcion]) sheet.getRange(item.row, cols.ordenInscripcion + 1).setValue(item.orden);
     if (siguiente !== actual) sheet.getRange(item.row, cols.estadoCupo + 1).setValue(siguiente);
   });
-  return { totalInscriptos: rows.length, cuposOcupados, hayListaEspera: hayListaEspera || migrarPrimerCupo };
+  return { totalInscriptos: rows.length, cuposOcupados, hayListaEspera };
 }
 
 function dniYaInscripto(sheet, dni) {

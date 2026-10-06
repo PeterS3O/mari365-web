@@ -311,25 +311,16 @@ function inicializarCupos() {
     personas.push({ row: i + 1, data: data[i], orden: personas.length + 1 });
   }
   const hayListaEspera = personas.some(p => (p.data[cols.estadoCupo] || '').toString().trim() === ESTADO_LISTA_ESPERA);
-  const migrarPrimerCupo = !hayListaEspera && personas.length > MAX_PEREGRINOS_CON_PAGO;
-  let cuposOcupados = 0;
+  let cuposOcupados = personas.filter(persona => {
+    const estado = (persona.data[cols.estadoCupo] || '').toString().trim();
+    return estado === 'con_cupo' || estado === 'exento';
+  }).length;
   personas.forEach(persona => {
     const estadoActual = (persona.data[cols.estadoCupo] || '').toString().trim();
     let siguiente = estadoActual;
-    if (migrarPrimerCupo) {
-      if (estadoActual !== 'baja') {
-        if (cuposOcupados < MAX_PEREGRINOS_CON_PAGO) {
-          siguiente = estadoActual === 'exento' ? 'exento' : 'con_cupo';
-          cuposOcupados += 1;
-        } else {
-          siguiente = ESTADO_LISTA_ESPERA;
-        }
-      }
-    } else {
-      if (!estadoActual || estadoActual === 'cupo_liberado') {
-        siguiente = hayListaEspera || cuposOcupados >= MAX_PEREGRINOS_CON_PAGO ? ESTADO_LISTA_ESPERA : 'con_cupo';
-      }
-      if (siguiente === 'con_cupo' || siguiente === 'exento') cuposOcupados += 1;
+    if (!estadoActual || estadoActual === 'cupo_liberado') {
+      siguiente = hayListaEspera || cuposOcupados >= MAX_PEREGRINOS_CON_PAGO ? ESTADO_LISTA_ESPERA : 'con_cupo';
+      if (siguiente === 'con_cupo') cuposOcupados += 1;
     }
     if (!persona.data[cols.ordenInscripcion]) s.getRange(persona.row, cols.ordenInscripcion + 1).setValue(persona.orden);
     if (siguiente !== estadoActual) s.getRange(persona.row, cols.estadoCupo + 1).setValue(siguiente);
