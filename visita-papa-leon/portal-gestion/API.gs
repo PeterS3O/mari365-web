@@ -23,8 +23,9 @@ const CUOTAS = [
   { key: 'cuota2', label: '2da cuota', monto: 100000, vencimiento: '05/11/2026' },
 ];
 const TOTAL = CUOTAS.reduce((a, c) => a + c.monto, 0);
-const MAX_PEREGRINOS_CON_PAGO = 9999;
-const MENSAJE_CIERRE_CUPO = 'El portal ya esta cerrado para cargar pagos por haber alcanzado el limite de peregrinos. Por favor comunicate con tu catequista.';
+const MAX_PEREGRINOS_CON_PAGO = 97;
+const ESTADO_LISTA_ESPERA = 'lista_espera';
+const MENSAJE_CIERRE_CUPO = 'Tu inscripcion esta en lista de espera. Un catequista te avisara cuando pueda habilitar tu lugar.';
 
 const SYSTEM_COLUMNS = [
   'Aviso WhatsApp',
@@ -84,6 +85,7 @@ function handleRequest(e) {
     if (action === 'actualizarInscripto') return json(actualizarInscripto(p));
     if (action === 'marcarBaja') return json(marcarBaja(p));
     if (action === 'marcarExento') return json(marcarExento(p));
+    if (action === 'habilitarCupo') return json(habilitarCupo(p));
     if (action === 'liberarCupo') return json(liberarCupo(p));
     if (action === 'marcarAvisoWA') return json(marcarAvisoWA(p));
     if (action === 'marcarAvisoWAPago') return json(marcarAvisoWAPago(p));
@@ -303,18 +305,35 @@ function inicializarCupos() {
   const s = info.sheet;
   const cols = info.cols;
   const data = s.getDataRange().getValues();
-  let orden = 0;
+  const personas = [];
   for (let i = 1; i < data.length; i++) {
     if (!normDni(data[i][cols.dni])) continue;
-    orden += 1;
-    if (!data[i][cols.ordenInscripcion]) {
-      s.getRange(i + 1, cols.ordenInscripcion + 1).setValue(orden);
-    }
-    const estadoActual = (data[i][cols.estadoCupo] || '').toString().trim();
-    if (!estadoActual || estadoActual === 'lista_espera' || estadoActual === 'cupo_liberado') {
-      s.getRange(i + 1, cols.estadoCupo + 1).setValue('con_cupo');
-    }
+    personas.push({ row: i + 1, data: data[i], orden: personas.length + 1 });
   }
+  const hayListaEspera = personas.some(p => (p.data[cols.estadoCupo] || '').toString().trim() === ESTADO_LISTA_ESPERA);
+  const migrarPrimerCupo = !hayListaEspera && personas.length > MAX_PEREGRINOS_CON_PAGO;
+  let cuposOcupados = 0;
+  personas.forEach(persona => {
+    const estadoActual = (persona.data[cols.estadoCupo] || '').toString().trim();
+    let siguiente = estadoActual;
+    if (migrarPrimerCupo) {
+      if (estadoActual !== 'baja') {
+        if (cuposOcupados < MAX_PEREGRINOS_CON_PAGO) {
+          siguiente = estadoActual === 'exento' ? 'exento' : 'con_cupo';
+          cuposOcupados += 1;
+        } else {
+          siguiente = ESTADO_LISTA_ESPERA;
+        }
+      }
+    } else {
+      if (!estadoActual || estadoActual === 'cupo_liberado') {
+        siguiente = hayListaEspera || cuposOcupados >= MAX_PEREGRINOS_CON_PAGO ? ESTADO_LISTA_ESPERA : 'con_cupo';
+      }
+      if (siguiente === 'con_cupo' || siguiente === 'exento') cuposOcupados += 1;
+    }
+    if (!persona.data[cols.ordenInscripcion]) s.getRange(persona.row, cols.ordenInscripcion + 1).setValue(persona.orden);
+    if (siguiente !== estadoActual) s.getRange(persona.row, cols.estadoCupo + 1).setValue(siguiente);
+  });
   return true;
 }
 
@@ -477,22 +496,29 @@ function dnisActivosConCuota1Confirmada() {
 }
 
 function estadoCierreCupo(dni, pagosExistentes, estadoCupo) {
-  const pagos = pagosExistentes || getPagos(dni);
-  const totalConCuota1 = dnisActivosConCuota1Confirmada().size;
-  const yaTienePago = tienePagoConfirmado(pagos);
-  const bloqueado = estadoCupo !== 'baja' && !yaTienePago && totalConCuota1 >= MAX_PEREGRINOS_CON_PAGO;
+  const bloqueado = estadoCupo === ESTADO_LISTA_ESPERA;
   return {
     bloqueado,
     mensaje: bloqueado ? MENSAJE_CIERRE_CUPO : '',
     limite: MAX_PEREGRINOS_CON_PAGO,
-    peregrinosConCuota1: totalConCuota1,
+    peregrinosConCuota1: contarCuposOcupados(),
   };
+}
+
+function contarCuposOcupados() {
+  const info = columnasInscriptos();
+  const data = info.sheet.getDataRange().getValues();
+  return data.slice(1).filter(d => {
+    const estado = (d[info.cols.estadoCupo] || '').toString().trim();
+    return estado === 'con_cupo' || estado === 'exento';
+  }).length;
 }
 
 function estadoInscripto(d, cols, pagos) {
   const r = resumenPagos(pagos);
   const estadoCupo = (d[cols.estadoCupo] || 'con_cupo').toString().trim() || 'con_cupo';
   if (estadoCupo === 'baja') return 'baja';
+  if (estadoCupo === ESTADO_LISTA_ESPERA) return ESTADO_LISTA_ESPERA;
   if (estadoCupo === 'exento') return 'exento';
   if (r.confirmadas.length === CUOTAS.length) return 'pago_completo';
   if (r.rechazadas.length > 0 && r.pendientes.length === 0) return 'comprobante_rechazado';
@@ -675,6 +701,7 @@ function registrarPagoAdmin(p) {
 function registrarPagoParaInscripto(p, d, cols, cargadoPor) {
   const estadoCupo = (d[cols.estadoCupo] || 'con_cupo').toString().trim() || 'con_cupo';
   if (estadoCupo === 'baja') return { ok: false, error: 'Tu inscripcion fue dada de baja.' };
+  if (estadoCupo === ESTADO_LISTA_ESPERA) return { ok: false, error: MENSAJE_CIERRE_CUPO };
   if (estadoCupo === 'exento') return { ok: false, error: 'Tu inscripcion figura exenta de pago. No hace falta cargar comprobantes.' };
 
   const cuotasKeys = (p.cuotas || '').split(',').map(c => c.trim()).filter(Boolean);
@@ -840,7 +867,8 @@ function getAdmin(p) {
     };
   });
   const totalInscriptos = Object.keys(contactos).length;
-  const totalActivos = Object.values(contactos).filter(c => c.estadoCupo !== 'baja').length;
+  const totalActivos = Object.values(contactos).filter(c => c.estadoCupo === 'con_cupo' || c.estadoCupo === 'exento').length;
+  const totalListaEspera = Object.values(contactos).filter(c => c.estadoCupo === ESTADO_LISTA_ESPERA).length;
   const totalExentos = Object.values(contactos).filter(c => c.estadoCupo === 'exento').length;
   const totalBajas = Object.values(contactos).filter(c => c.estadoCupo === 'baja').length;
   const dineroADevolver = Object.keys(contactos).reduce((total, dni) => {
@@ -849,7 +877,7 @@ function getAdmin(p) {
       .filter(p => normDni(p.dni) === dni && p.estado === 'confirmado')
       .reduce((a, p) => a + Number(p.monto || 0), 0);
   }, 0);
-  return { ok: true, totalInscriptos, totalActivos, totalExentos, totalBajas, dineroADevolver, pagos, cambiosPerfil: cambiosPerfilPendientes() };
+  return { ok: true, totalInscriptos, totalActivos, totalListaEspera, totalExentos, totalBajas, dineroADevolver, pagos, cambiosPerfil: cambiosPerfilPendientes() };
 }
 
 function getInscriptos(p) {
@@ -948,9 +976,35 @@ function marcarExento(p) {
   const s = getSheet(CONFIG.HOJA_INSCRIPTOS);
   const estadoActual = (ins.d[ins.cols.estadoCupo] || 'con_cupo').toString().trim() || 'con_cupo';
   if (estadoActual === 'baja') return { ok: false, error: 'No se puede marcar como exento a una persona dada de baja.' };
+  if (estadoActual === ESTADO_LISTA_ESPERA && !exento) return { ok: false, error: 'Primero habilita el cupo de esta persona.' };
+  if (estadoActual === ESTADO_LISTA_ESPERA && exento && contarCuposOcupados() >= MAX_PEREGRINOS_CON_PAGO) {
+    return { ok: false, error: 'No hay cupos disponibles para habilitar esta persona.' };
+  }
   s.getRange(ins.row, ins.cols.estadoCupo + 1).setValue(exento ? 'exento' : 'con_cupo');
   if (p.nota !== undefined) s.getRange(ins.row, ins.cols.notaBaja + 1).setValue(p.nota || '');
   return { ok: true, dni: normDni(p.dni), nombre: nombreCompleto(ins.d, ins.cols), estadoCupo: exento ? 'exento' : 'con_cupo' };
+}
+
+function habilitarCupo(p) {
+  if (!validarAdminEdicion(p)) return { ok: false, error: 'No autorizado.' };
+  const lock = LockService.getScriptLock();
+  lock.waitLock(10000);
+  try {
+    inicializarCupos();
+    const ins = buscarInscriptoPorDniOrden(p.dni, p.ordenInscripcion);
+    if (!ins) return { ok: false, error: 'Inscripto no encontrado.' };
+    const estadoActual = (ins.d[ins.cols.estadoCupo] || '').toString().trim();
+    if (estadoActual !== ESTADO_LISTA_ESPERA) return { ok: false, error: 'Esta persona no esta en lista de espera.' };
+    if (contarCuposOcupados() >= MAX_PEREGRINOS_CON_PAGO) {
+      return { ok: false, error: 'No hay cupos disponibles. Da de baja a un inscripto o espera una vacante antes de habilitar este lugar.' };
+    }
+    const s = getSheet(CONFIG.HOJA_INSCRIPTOS);
+    s.getRange(ins.row, ins.cols.estadoCupo + 1).setValue('con_cupo');
+    enviarEmailCupoHabilitado(ins.d, ins.cols);
+    return { ok: true, nombre: nombreCompleto(ins.d, ins.cols), estadoCupo: 'con_cupo' };
+  } finally {
+    lock.releaseLock();
+  }
 }
 
 function liberarCupo(p) {
@@ -1087,6 +1141,22 @@ function enviarEmailComprobanteRecibido(d, cols, cuotaObjs, monto, medioPago) {
     subject: 'Comprobante recibido - ' + CONFIG.NOMBRE_EVENTO,
     body,
   });
+}
+
+function enviarEmailCupoHabilitado(d, cols) {
+  const email = d[cols.emailPortal];
+  if (!email) return;
+  const nombre = (d[cols.nombre] || '').toString().trim() || 'hermano/a';
+  try {
+    MailApp.sendEmail({
+      to: email,
+      subject: 'Cupo habilitado - ' + CONFIG.NOMBRE_EVENTO,
+      body: 'Hola, ' + nombre + '.\n\nUn catequista habilito tu lugar para ' + CONFIG.NOMBRE_EVENTO +
+        '. Ya podes ingresar al portal para consultar tus cuotas y cargar comprobantes.\n\nPortal:\n' + CONFIG.PORTAL_URL,
+    });
+  } catch (err) {
+    console.warn('No se pudo enviar el email de cupo habilitado: ' + (err && err.message ? err.message : err));
+  }
 }
 
 function enviarEmailComprobanteRechazado(d, cols, cuotasStr, motivo) {

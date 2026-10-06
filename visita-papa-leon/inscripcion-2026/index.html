@@ -527,10 +527,15 @@
         }
         $('signup-form').reset();
         $('otra-restriccion-wrap').hidden = true;
-        showStatus('ok', 'Registro exitoso. Tu inscripcion fue registrada correctamente.');
-        setTimeout(() => {
-          window.location.href = '../';
-        }, 1400);
+        const enEspera = result.estadoCupo === 'lista_espera';
+        showStatus('ok', result.mensaje || (enEspera
+          ? 'Tu inscripcion fue registrada en la lista de espera. Te avisaremos cuando un catequista pueda habilitar tu lugar.'
+          : 'Registro exitoso. Tu inscripcion fue registrada correctamente.'));
+        if (!enEspera) {
+          setTimeout(() => {
+            window.location.href = '../';
+          }, 1400);
+        }
       } catch (err) {
         showStatus('error', err.message || 'No se pudo registrar la inscripcion.');
       } finally {
