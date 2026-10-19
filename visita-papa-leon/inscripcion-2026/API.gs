@@ -222,7 +222,7 @@ function prepararCupos(sheet, cols) {
     if (!cleanDni(data[i][4])) continue;
     rows.push({ row: i + 1, values: data[i], orden: rows.length + 1 });
   }
-  const pagos = getPagosConfirmadosPorDni();
+  const pagos = getPagosConPrimeraCuotaCargadaPorDni();
   let cuposOcupados = rows.filter(item => {
     const dni = cleanDni(item.values[4]);
     const estado = String(item.values[cols.estadoCupo] || '').trim();
@@ -240,13 +240,14 @@ function prepararCupos(sheet, cols) {
   return { totalInscriptos: rows.length, cuposOcupados };
 }
 
-function getPagosConfirmadosPorDni() {
+function getPagosConPrimeraCuotaCargadaPorDni() {
   const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
   const sheet = ss.getSheetByName(CONFIG.HOJA_PAGOS);
   if (!sheet || sheet.getLastRow() < 2) return new Set();
   return new Set(sheet.getDataRange().getValues().slice(1).filter(row => {
     const cuotas = String(row[4] || '').split(',').map(value => value.trim());
-    return cleanDni(row[2]) && String(row[7] || '').trim() === 'confirmado' && cuotas.includes(PRIMERA_CUOTA_KEY);
+    const estado = String(row[7] || '').trim();
+    return cleanDni(row[2]) && (estado === 'confirmado' || estado === 'pendiente') && cuotas.includes(PRIMERA_CUOTA_KEY);
   }).map(row => cleanDni(row[2])));
 }
 
