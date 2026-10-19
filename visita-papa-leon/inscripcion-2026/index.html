@@ -529,8 +529,8 @@
         $('otra-restriccion-wrap').hidden = true;
         const enEspera = result.estadoCupo === 'lista_espera';
         showStatus('ok', result.mensaje || (enEspera
-          ? 'Tu inscripcion fue registrada en la lista de espera. Te avisaremos cuando un catequista pueda habilitar tu lugar.'
-          : 'Registro exitoso. Tu inscripcion fue registrada correctamente.'));
+          ? 'Tu inscripcion fue registrada en la lista de espera porque ya se completo el cupo de peregrinos con la 1ra cuota paga.'
+          : 'Registro exitoso. Para formalizar tu lugar, paga la 1ra cuota y carga el comprobante en el portal.'));
         if (!enEspera) {
           setTimeout(() => {
             window.location.href = '../';
