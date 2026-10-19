@@ -309,21 +309,44 @@ function inicializarCupos() {
   const personas = [];
   for (let i = 1; i < data.length; i++) {
     if (!normDni(data[i][cols.dni])) continue;
-    personas.push({ row: i + 1, data: data[i], orden: personas.length + 1 });
+    const orden = Number(data[i][cols.ordenInscripcion] || personas.length + 1);
+    personas.push({ row: i + 1, data: data[i], orden });
+    if (!data[i][cols.ordenInscripcion]) s.getRange(i + 1, cols.ordenInscripcion + 1).setValue(orden);
   }
-  const dnisConCuota1 = dnisActivosConCuota1Cargada();
-  let cuposOcupados = personas.filter(persona => {
-    const estado = (persona.data[cols.estadoCupo] || '').toString().trim();
-    return estado === 'exento' || dnisConCuota1.has(normDni(persona.data[cols.dni]));
-  }).length;
+
+  // El cupo se asigna por el momento en que se cargo la 1ra cuota. Un pago
+  // pendiente tambien reserva lugar hasta que sea rechazado; asi no depende
+  // de que un catequista lo revise antes que los siguientes comprobantes.
+  const primeraCuotaPorDni = {};
+  getPagosSheet().getDataRange().getValues().slice(1).forEach(r => {
+    const dni = normDni(r[2]);
+    const estado = (r[7] || '').toString().trim();
+    const cuotas = (r[4] || '').toString().split(',').map(c => c.trim());
+    if (!dni || !cuotas.includes(PRIMERA_CUOTA_KEY) || !['pendiente', 'confirmado'].includes(estado)) return;
+    const fecha = r[1] instanceof Date ? r[1].getTime() : new Date(r[1]).getTime();
+    const momento = isNaN(fecha) ? Number.MAX_SAFE_INTEGER : fecha;
+    if (!primeraCuotaPorDni[dni] || momento < primeraCuotaPorDni[dni]) primeraCuotaPorDni[dni] = momento;
+  });
+
+  const exentos = personas.filter(persona => (persona.data[cols.estadoCupo] || '').toString().trim() === 'exento');
+  const conPrimeraCuota = personas
+    .filter(persona => {
+      const estado = (persona.data[cols.estadoCupo] || '').toString().trim();
+      return estado !== 'baja' && estado !== 'exento' && primeraCuotaPorDni[normDni(persona.data[cols.dni])] !== undefined;
+    })
+    .sort((a, b) => {
+      const diferencia = primeraCuotaPorDni[normDni(a.data[cols.dni])] - primeraCuotaPorDni[normDni(b.data[cols.dni])];
+      return diferencia || a.orden - b.orden;
+    });
+  const cuposParaPagos = Math.max(0, MAX_PEREGRINOS_CON_PAGO - exentos.length);
+  const dnisConCupo = new Set(conPrimeraCuota.slice(0, cuposParaPagos).map(persona => normDni(persona.data[cols.dni])));
+
   personas.forEach(persona => {
     const estadoActual = (persona.data[cols.estadoCupo] || '').toString().trim();
-    let siguiente = estadoActual;
-    if (!estadoActual || estadoActual === 'cupo_liberado') {
-      siguiente = cuposOcupados >= MAX_PEREGRINOS_CON_PAGO ? ESTADO_LISTA_ESPERA : 'con_cupo';
-    }
-    if (!persona.data[cols.ordenInscripcion]) s.getRange(persona.row, cols.ordenInscripcion + 1).setValue(persona.orden);
-    if (cuposOcupados < MAX_PEREGRINOS_CON_PAGO && estadoActual === ESTADO_LISTA_ESPERA) siguiente = 'con_cupo';
+    if (estadoActual === 'baja' || estadoActual === 'exento') return;
+    const dni = normDni(persona.data[cols.dni]);
+    const tienePrimeraCuota = primeraCuotaPorDni[dni] !== undefined;
+    const siguiente = tienePrimeraCuota && !dnisConCupo.has(dni) ? ESTADO_LISTA_ESPERA : 'con_cupo';
     if (siguiente !== estadoActual) s.getRange(persona.row, cols.estadoCupo + 1).setValue(siguiente);
   });
   return true;
@@ -507,7 +530,7 @@ function contarCuposOcupados() {
   const dnisConCuota1 = dnisActivosConCuota1Cargada();
   return data.slice(1).filter(d => {
     const estado = (d[info.cols.estadoCupo] || '').toString().trim();
-    return estado === 'exento' || dnisConCuota1.has(normDni(d[info.cols.dni]));
+    return estado === 'exento' || (estado === 'con_cupo' && dnisConCuota1.has(normDni(d[info.cols.dni])));
   }).length;
 }
 
@@ -736,6 +759,7 @@ function registrarPagoParaInscripto(p, d, cols, cargadoPor) {
     'pendiente', '', '', 'no', '', p.comprobanteNombre || '', p.comprobanteTipo || '',
     'no', '', '', medioPago, responsableEfectivo, cargadoPor,
   ]);
+  inicializarCupos();
 
   MailApp.sendEmail({
     to: CONFIG.EMAIL_ORGANIZADOR,
@@ -796,6 +820,7 @@ function confirmarPago(p) {
         const ins = buscarInscripto(rows[i][2]);
         if (ins) enviarEmailComprobanteRechazado(ins.d, ins.cols, rows[i][4], p.motivo || '');
       }
+      inicializarCupos();
       return { ok: true };
     }
   }
@@ -961,6 +986,7 @@ function marcarBaja(p) {
   s.getRange(ins.row, ins.cols.estadoCupo + 1).setValue('baja');
   s.getRange(ins.row, ins.cols.notaBaja + 1).setValue(p.nota || '');
   s.getRange(ins.row, ins.cols.reemplazo + 1).setValue(p.reemplazo || '');
+  inicializarCupos();
   return { ok: true, dni: normDni(p.dni), nombre: nombreCompleto(ins.d, ins.cols), estadoCupo: 'baja' };
 }
 
@@ -978,6 +1004,7 @@ function marcarExento(p) {
   }
   s.getRange(ins.row, ins.cols.estadoCupo + 1).setValue(exento ? 'exento' : 'con_cupo');
   if (p.nota !== undefined) s.getRange(ins.row, ins.cols.notaBaja + 1).setValue(p.nota || '');
+  inicializarCupos();
   return { ok: true, dni: normDni(p.dni), nombre: nombreCompleto(ins.d, ins.cols), estadoCupo: exento ? 'exento' : 'con_cupo' };
 }
 
@@ -1014,6 +1041,7 @@ function liberarCupo(p) {
       break;
     }
   }
+  inicializarCupos();
   return { ok: true, nuevoCupo: null };
 }
 
