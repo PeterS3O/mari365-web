@@ -311,7 +311,7 @@ function inicializarCupos() {
     if (!normDni(data[i][cols.dni])) continue;
     personas.push({ row: i + 1, data: data[i], orden: personas.length + 1 });
   }
-  const dnisConCuota1 = dnisActivosConCuota1Confirmada();
+  const dnisConCuota1 = dnisActivosConCuota1Cargada();
   let cuposOcupados = personas.filter(persona => {
     const estado = (persona.data[cols.estadoCupo] || '').toString().trim();
     return estado === 'exento' || dnisConCuota1.has(normDni(persona.data[cols.dni]));
@@ -323,6 +323,7 @@ function inicializarCupos() {
       siguiente = cuposOcupados >= MAX_PEREGRINOS_CON_PAGO ? ESTADO_LISTA_ESPERA : 'con_cupo';
     }
     if (!persona.data[cols.ordenInscripcion]) s.getRange(persona.row, cols.ordenInscripcion + 1).setValue(persona.orden);
+    if (cuposOcupados < MAX_PEREGRINOS_CON_PAGO && estadoActual === ESTADO_LISTA_ESPERA) siguiente = 'con_cupo';
     if (siguiente !== estadoActual) s.getRange(persona.row, cols.estadoCupo + 1).setValue(siguiente);
   });
   return true;
@@ -471,7 +472,7 @@ function tienePagoConfirmado(pagos) {
   return pagos.some(p => (p.estado || '').toString().trim() === 'confirmado');
 }
 
-function dnisActivosConCuota1Confirmada() {
+function dnisActivosConCuota1Cargada() {
   const info = columnasInscriptos();
   const inscriptos = info.sheet.getDataRange().getValues().slice(1);
   const activos = new Set(inscriptos
@@ -485,16 +486,16 @@ function dnisActivosConCuota1Confirmada() {
     if (!dni || !activos.has(dni)) return;
     const estado = (r[7] || '').toString().trim();
     const cuotas = (r[4] || '').toString().split(',').map(c => c.trim());
-    if (estado === 'confirmado' && cuotas.includes('cuota1')) dnis.add(dni);
+    if ((estado === 'confirmado' || estado === 'pendiente') && cuotas.includes(PRIMERA_CUOTA_KEY)) dnis.add(dni);
   });
   return dnis;
 }
 
 function estadoCierreCupo(dni, pagosExistentes, estadoCupo) {
-  const bloqueado = estadoCupo === ESTADO_LISTA_ESPERA;
+  const bloqueado = false;
   return {
     bloqueado,
-    mensaje: bloqueado ? MENSAJE_CIERRE_CUPO : '',
+    mensaje: '',
     limite: MAX_PEREGRINOS_CON_PAGO,
     peregrinosConCuota1: contarCuposOcupados(),
   };
@@ -503,7 +504,7 @@ function estadoCierreCupo(dni, pagosExistentes, estadoCupo) {
 function contarCuposOcupados() {
   const info = columnasInscriptos();
   const data = info.sheet.getDataRange().getValues();
-  const dnisConCuota1 = dnisActivosConCuota1Confirmada();
+  const dnisConCuota1 = dnisActivosConCuota1Cargada();
   return data.slice(1).filter(d => {
     const estado = (d[info.cols.estadoCupo] || '').toString().trim();
     return estado === 'exento' || dnisConCuota1.has(normDni(d[info.cols.dni]));
@@ -697,7 +698,6 @@ function registrarPagoAdmin(p) {
 function registrarPagoParaInscripto(p, d, cols, cargadoPor) {
   const estadoCupo = (d[cols.estadoCupo] || 'con_cupo').toString().trim() || 'con_cupo';
   if (estadoCupo === 'baja') return { ok: false, error: 'Tu inscripcion fue dada de baja.' };
-  if (estadoCupo === ESTADO_LISTA_ESPERA) return { ok: false, error: MENSAJE_CIERRE_CUPO };
   if (estadoCupo === 'exento') return { ok: false, error: 'Tu inscripcion figura exenta de pago. No hace falta cargar comprobantes.' };
 
   const cuotasKeys = (p.cuotas || '').split(',').map(c => c.trim()).filter(Boolean);
