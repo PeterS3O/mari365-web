@@ -1,6 +1,7 @@
 const CONFIG = {
   SPREADSHEET_ID: '12b2T7yNNkBGIbUe2XmWG4oQ1coLeKaXMHzikOsIKYPs',
   HOJA_INSCRIPCIONES: 'Inscripciones',
+  HOJA_PAGOS: 'Pagos',
   ESTADO_INICIAL: 'inscripto',
   ORIGEN_DEFAULT: 'web',
   CUPOS_DISPONIBLES: 97,
@@ -16,6 +17,7 @@ const CUOTAS = [
 const TOTAL = CUOTAS.reduce((sum, cuota) => sum + cuota.monto, 0);
 const ESTADO_CUPO_CONFIRMADO = 'con_cupo';
 const ESTADO_LISTA_ESPERA = 'lista_espera';
+const PRIMERA_CUOTA_KEY = 'cuota1';
 
 const HEADERS = [
   'ID',
@@ -87,7 +89,7 @@ function registrarInscripcion(payload) {
       };
     }
     const resumenCupos = prepararCupos(sheet, cols);
-    const estadoCupo = resumenCupos.hayListaEspera || resumenCupos.cuposOcupados >= CONFIG.CUPOS_DISPONIBLES
+    const estadoCupo = resumenCupos.cuposOcupados >= CONFIG.CUPOS_DISPONIBLES
       ? ESTADO_LISTA_ESPERA
       : ESTADO_CUPO_CONFIRMADO;
     const id = Utilities.getUuid();
@@ -118,8 +120,8 @@ function registrarInscripcion(payload) {
       email,
       estadoCupo,
       mensaje: enEspera
-        ? 'Tu inscripcion fue registrada en la lista de espera. Te avisaremos cuando un catequista pueda habilitar tu lugar.'
-        : 'Tu inscripcion fue registrada correctamente.'
+        ? 'Tu inscripcion fue registrada en la lista de espera porque ya se completo el cupo de peregrinos con la 1ra cuota paga.'
+        : 'Tu inscripcion fue registrada provisoriamente. Para formalizarla tenes que pagar la 1ra cuota.'
     };
   } finally {
     lock.releaseLock();
@@ -132,11 +134,11 @@ function enviarEmailInscripcionExitosa(data, estadoCupo) {
   const plan = CUOTAS.map(c => '- ' + c.label + ': $' + c.monto + ' - vence ' + c.vencimiento).join('\n');
   const enEspera = estadoCupo === ESTADO_LISTA_ESPERA;
   const body = 'Hola, ' + nombre + '.\n\n' + (enEspera
-    ? 'Tu inscripcion para ' + CONFIG.NOMBRE_EVENTO + ' fue registrada en la lista de espera. Te avisaremos cuando un catequista pueda habilitar tu lugar. Mientras tanto no es necesario que cargues pagos.'
-    : 'Tu inscripcion para ' + CONFIG.NOMBRE_EVENTO + ' fue registrada correctamente.') +
+    ? 'Tu inscripcion para ' + CONFIG.NOMBRE_EVENTO + ' fue registrada en la lista de espera porque ya se completo el cupo de peregrinos con la 1ra cuota paga.'
+    : 'Tu inscripcion para ' + CONFIG.NOMBRE_EVENTO + ' fue registrada provisoriamente. La inscripcion se formaliza recien cuando pagues la 1ra cuota.') +
     '\n\n' + (enEspera
       ? 'Podes consultar el estado de tu inscripcion en el portal con tu DNI y este email.'
-      : 'Para cargar comprobantes y consultar el estado de tus pagos, ingresa al portal con tu DNI y este email.') +
+      : 'Para formalizar tu lugar, paga la 1ra cuota y carga el comprobante en el portal con tu DNI y este email.') +
     '\n\nPortal de pagos:\n' + CONFIG.PORTAL_URL +
     (enEspera ? '' : '\n\nPlan de pagos:\n' + plan +
       '\n\nTotal: $' + TOTAL +
@@ -220,22 +222,32 @@ function prepararCupos(sheet, cols) {
     if (!cleanDni(data[i][4])) continue;
     rows.push({ row: i + 1, values: data[i], orden: rows.length + 1 });
   }
-  const hayListaEspera = rows.some(item => String(item.values[cols.estadoCupo] || '').trim() === ESTADO_LISTA_ESPERA);
+  const pagos = getPagosConfirmadosPorDni();
   let cuposOcupados = rows.filter(item => {
+    const dni = cleanDni(item.values[4]);
     const estado = String(item.values[cols.estadoCupo] || '').trim();
-    return estado === ESTADO_CUPO_CONFIRMADO || estado === 'exento';
+    return estado === 'exento' || pagos.has(dni);
   }).length;
   rows.forEach(item => {
     const actual = String(item.values[cols.estadoCupo] || '').trim();
     let siguiente = actual;
     if (!actual || actual === 'cupo_liberado') {
-      siguiente = hayListaEspera || cuposOcupados >= CONFIG.CUPOS_DISPONIBLES ? ESTADO_LISTA_ESPERA : ESTADO_CUPO_CONFIRMADO;
-      if (siguiente === ESTADO_CUPO_CONFIRMADO) cuposOcupados += 1;
+      siguiente = cuposOcupados >= CONFIG.CUPOS_DISPONIBLES ? ESTADO_LISTA_ESPERA : ESTADO_CUPO_CONFIRMADO;
     }
     if (!item.values[cols.ordenInscripcion]) sheet.getRange(item.row, cols.ordenInscripcion + 1).setValue(item.orden);
     if (siguiente !== actual) sheet.getRange(item.row, cols.estadoCupo + 1).setValue(siguiente);
   });
-  return { totalInscriptos: rows.length, cuposOcupados, hayListaEspera };
+  return { totalInscriptos: rows.length, cuposOcupados };
+}
+
+function getPagosConfirmadosPorDni() {
+  const ss = SpreadsheetApp.openById(CONFIG.SPREADSHEET_ID);
+  const sheet = ss.getSheetByName(CONFIG.HOJA_PAGOS);
+  if (!sheet || sheet.getLastRow() < 2) return new Set();
+  return new Set(sheet.getDataRange().getValues().slice(1).filter(row => {
+    const cuotas = String(row[4] || '').split(',').map(value => value.trim());
+    return cleanDni(row[2]) && String(row[7] || '').trim() === 'confirmado' && cuotas.includes(PRIMERA_CUOTA_KEY);
+  }).map(row => cleanDni(row[2])));
 }
 
 function dniYaInscripto(sheet, dni) {
