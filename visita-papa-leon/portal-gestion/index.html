@@ -888,9 +888,12 @@ function renderState(){
     alert.textContent = 'Tu inscripcion figura como EXENTA. Estas liberado del pago y podes viajar sin cargar comprobantes.';
     setGoPayVisible(false);
   } else if(isWaiting){
+    // Aunque una fila vieja conserve el estado de lista de espera, nunca
+    // impedir que el peregrino cargue la cuota 1: esa carga es la que
+    // formaliza la inscripcion y define el cupo.
     alert.style.display = 'block';
-    alert.textContent = 'Tu inscripcion esta en lista de espera. Un catequista te avisara cuando pueda habilitar tu lugar. Mientras tanto no cargues pagos.';
-    setGoPayVisible(false);
+    alert.textContent = 'Importante: tu inscripcion se confirma recien cuando pagues la 1ra cuota y cargues el comprobante en este portal. Hasta ese momento queda pendiente de formalizacion.';
+    setGoPayVisible(true);
   } else if(capacityClosed){
     alert.style.display = 'block';
     alert.textContent = capacityClosedMessage(d);
@@ -903,10 +906,10 @@ function renderState(){
     const primeraCuotaEnRevision = (r.pendientes || []).includes('cuota1');
     if(!primeraCuotaConfirmada && primeraCuotaEnRevision){
       alert.style.display = 'block';
-      alert.textContent = 'Tu inscripcion se confirmara cuando se valide el pago de la 1ra cuota. Tu comprobante esta en revision.';
+      alert.textContent = 'Importante: tu inscripcion se confirmara cuando se valide el pago de la 1ra cuota. Tu comprobante ya esta en revision.';
     } else if(!primeraCuotaConfirmada){
       alert.style.display = 'block';
-      alert.textContent = 'Tu inscripcion todavia no esta confirmada. Se confirma recien cuando pagues la 1ra cuota y cargues el comprobante en este portal.';
+      alert.textContent = 'Importante: tu inscripcion todavia no esta confirmada. Se confirma recien cuando pagues la 1ra cuota y cargues el comprobante en este portal.';
     } else if(missingCell){
       alert.style.display = 'block';
       alert.textContent = 'Falta cargar tu numero de celular. Actualizalo en Mis datos para poder cargar comprobantes o pagos en efectivo.';
