@@ -899,7 +899,15 @@ function renderState(){
   } else {
     setGoPayVisible(true);
     const pendingCount = (d.pagos || []).filter(p => p.estado === 'pendiente').length;
-    if(missingCell){
+    const primeraCuotaConfirmada = (r.confirmadas || []).includes('cuota1');
+    const primeraCuotaEnRevision = (r.pendientes || []).includes('cuota1');
+    if(!primeraCuotaConfirmada && primeraCuotaEnRevision){
+      alert.style.display = 'block';
+      alert.textContent = 'Tu inscripcion se confirmara cuando se valide el pago de la 1ra cuota. Tu comprobante esta en revision.';
+    } else if(!primeraCuotaConfirmada){
+      alert.style.display = 'block';
+      alert.textContent = 'Tu inscripcion todavia no esta confirmada. Se confirma recien cuando pagues la 1ra cuota y cargues el comprobante en este portal.';
+    } else if(missingCell){
       alert.style.display = 'block';
       alert.textContent = 'Falta cargar tu numero de celular. Actualizalo en Mis datos para poder cargar comprobantes o pagos en efectivo.';
     } else if(pendingCount){
@@ -1594,7 +1602,9 @@ function renderPeople(){
     const displayNumber = state === 'baja'
       ? '<span class="historic-order">Baja</span><small>Hist. '+escapeHtml(String(i.orden || '-'))+'</small>'
       : (activeNumbers[clean] || '-');
-    const wa = i.whatsapp ? '<a class="btn secondary small" target="_blank" href="https://wa.me/'+i.whatsapp+'?text='+encodeURIComponent('Hola '+(i.nombre||'').split(' ')[0]+', te escribimos por '+EVENTO+'.')+'">WA</a>' : '';
+    const sinPagos = Number((i.resumen || {}).totalPagado || 0) === 0 && !(i.pagos || []).length && i.estadoCupo !== 'baja' && i.estadoCupo !== 'exento';
+    const mensajeFormalizacion = 'Hola '+(i.nombre||'').split(' ')[0]+', te escribimos por '+EVENTO+'. Tu inscripcion se formaliza recien cuando pagues la 1ra cuota. Por favor carga el comprobante en '+PORTAL_URL;
+    const wa = i.whatsapp ? '<a class="btn secondary small" target="_blank" href="https://wa.me/'+i.whatsapp+'?text='+encodeURIComponent(sinPagos ? mensajeFormalizacion : 'Hola '+(i.nombre||'').split(' ')[0]+', te escribimos por '+EVENTO+'.')+'" onclick="markFormalizationWA(\''+String(i.dni).replace(/\D/g,'')+'\')">'+(sinPagos ? 'Avisar 1ra cuota' : 'WA')+'</a>' : '';
     const orden = String(i.orden || '');
     const edit = canEdit() ? '<button class="btn secondary tiny" onclick="showAdminEdit(\''+String(i.dni).replace(/\D/g,'')+'\',\''+escapeJsArg(orden)+'\')">Editar</button>' : '';
     const exempt = canEdit() && i.estadoCupo !== 'baja' && i.estadoCupo !== 'lista_espera'
@@ -1868,11 +1878,16 @@ function renderDniExpiry(value){
 
 function personAlertTags(person){
   const tags = [];
+  if(Number((person.resumen || {}).totalPagado || 0) === 0 && !(person.pagos || []).length && String(person.estadoCupo || '') !== 'baja' && String(person.estadoCupo || '') !== 'exento') tags.push(badge('Formalizar con 1ra cuota','pending'));
   if(String(person.estadoCupo || '') === 'exento') tags.push(badge('EXENTO','pending'));
   if(isMinorPerson(person)) tags.push(badge('Menor de edad','info'));
   if(isDniExpired(person.vencimientoDni)) tags.push(badge('DNI vencido','bad'));
   else if(isDniExpiringSoon(person.vencimientoDni)) tags.push(badge('DNI proximo a vencer','pending'));
   return tags.length ? '<div class="name-tags">'+tags.join('')+'</div>' : '';
+}
+
+async function markFormalizationWA(dni){
+  try{ await api('marcarAvisoWA', { dni, adminToken }); }catch(e){}
 }
 
 function isDniExpired(value){
