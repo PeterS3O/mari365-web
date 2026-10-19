@@ -888,11 +888,8 @@ function renderState(){
     alert.textContent = 'Tu inscripcion figura como EXENTA. Estas liberado del pago y podes viajar sin cargar comprobantes.';
     setGoPayVisible(false);
   } else if(isWaiting){
-    // Aunque una fila vieja conserve el estado de lista de espera, nunca
-    // impedir que el peregrino cargue la cuota 1: esa carga es la que
-    // formaliza la inscripcion y define el cupo.
     alert.style.display = 'block';
-    alert.textContent = 'Importante: tu inscripcion se confirma recien cuando pagues la 1ra cuota y cargues el comprobante en este portal. Hasta ese momento queda pendiente de formalizacion.';
+    alert.textContent = 'Tu comprobante de la 1ra cuota fue cargado, pero el cupo ya se completo con pagos anteriores. Quedaste en lista de espera. Podes seguir cargando comprobantes; un catequista te avisara si se libera un lugar.';
     setGoPayVisible(true);
   } else if(capacityClosed){
     alert.style.display = 'block';
