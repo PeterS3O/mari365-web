@@ -24,8 +24,9 @@ const CUOTAS = [
 ];
 const TOTAL = CUOTAS.reduce((a, c) => a + c.monto, 0);
 const MAX_PEREGRINOS_CON_PAGO = 97;
+const PRIMERA_CUOTA_KEY = 'cuota1';
 const ESTADO_LISTA_ESPERA = 'lista_espera';
-const MENSAJE_CIERRE_CUPO = 'Tu inscripcion esta en lista de espera. Un catequista te avisara cuando pueda habilitar tu lugar.';
+const MENSAJE_CIERRE_CUPO = 'Tu inscripcion esta en lista de espera porque ya se completo el cupo de peregrinos con la 1ra cuota paga. Un catequista te avisara si se libera un lugar.';
 
 const SYSTEM_COLUMNS = [
   'Aviso WhatsApp',
@@ -310,17 +311,16 @@ function inicializarCupos() {
     if (!normDni(data[i][cols.dni])) continue;
     personas.push({ row: i + 1, data: data[i], orden: personas.length + 1 });
   }
-  const hayListaEspera = personas.some(p => (p.data[cols.estadoCupo] || '').toString().trim() === ESTADO_LISTA_ESPERA);
+  const dnisConCuota1 = dnisActivosConCuota1Confirmada();
   let cuposOcupados = personas.filter(persona => {
     const estado = (persona.data[cols.estadoCupo] || '').toString().trim();
-    return estado === 'con_cupo' || estado === 'exento';
+    return estado === 'exento' || dnisConCuota1.has(normDni(persona.data[cols.dni]));
   }).length;
   personas.forEach(persona => {
     const estadoActual = (persona.data[cols.estadoCupo] || '').toString().trim();
     let siguiente = estadoActual;
     if (!estadoActual || estadoActual === 'cupo_liberado') {
-      siguiente = hayListaEspera || cuposOcupados >= MAX_PEREGRINOS_CON_PAGO ? ESTADO_LISTA_ESPERA : 'con_cupo';
-      if (siguiente === 'con_cupo') cuposOcupados += 1;
+      siguiente = cuposOcupados >= MAX_PEREGRINOS_CON_PAGO ? ESTADO_LISTA_ESPERA : 'con_cupo';
     }
     if (!persona.data[cols.ordenInscripcion]) s.getRange(persona.row, cols.ordenInscripcion + 1).setValue(persona.orden);
     if (siguiente !== estadoActual) s.getRange(persona.row, cols.estadoCupo + 1).setValue(siguiente);
@@ -472,8 +472,12 @@ function tienePagoConfirmado(pagos) {
 }
 
 function dnisActivosConCuota1Confirmada() {
-  const contactos = contactoPorDni();
-  const activos = new Set(Object.keys(contactos).filter(dni => contactos[dni].estadoCupo !== 'baja'));
+  const info = columnasInscriptos();
+  const inscriptos = info.sheet.getDataRange().getValues().slice(1);
+  const activos = new Set(inscriptos
+    .filter(row => (row[info.cols.estadoCupo] || '').toString().trim() !== 'baja')
+    .map(row => normDni(row[info.cols.dni]))
+    .filter(Boolean));
   const pagos = getPagosSheet().getDataRange().getValues().slice(1);
   const dnis = new Set();
   pagos.forEach(r => {
@@ -499,9 +503,10 @@ function estadoCierreCupo(dni, pagosExistentes, estadoCupo) {
 function contarCuposOcupados() {
   const info = columnasInscriptos();
   const data = info.sheet.getDataRange().getValues();
+  const dnisConCuota1 = dnisActivosConCuota1Confirmada();
   return data.slice(1).filter(d => {
     const estado = (d[info.cols.estadoCupo] || '').toString().trim();
-    return estado === 'con_cupo' || estado === 'exento';
+    return estado === 'exento' || dnisConCuota1.has(normDni(d[info.cols.dni]));
   }).length;
 }
 
